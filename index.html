@@ -13,6 +13,9 @@
   <meta name="apple-mobile-web-app-title" content="Daily Fortune">
   <link rel="apple-touch-icon" href="icon-192.png">
 
+  <!-- Lightweight Particle Animation Library -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
   <style>
     :root {
       --bg-color: #FAF7F2;
@@ -38,13 +41,18 @@
       min-height: 100vh;
       padding: 24px 16px;
       touch-action: manipulation;
+      overflow-x: hidden;
     }
 
-    /* Top Level Display */
+    /* Top Level & Streak Display */
     .header {
       width: 100%;
       text-align: center;
       padding-top: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
     }
 
     .level-badge {
@@ -58,6 +66,14 @@
       border-radius: 20px;
       text-transform: uppercase;
       box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+      transition: all 0.5s ease;
+    }
+
+    .streak-badge {
+      font-size: 13px;
+      font-weight: 600;
+      color: #D4A373;
+      display: none; /* Hidden until streak > 0 */
     }
 
     /* Main Advice Card Container */
@@ -75,7 +91,19 @@
       justify-content: center;
       align-items: center;
       min-height: 360px;
-      transition: transform 0.3s ease;
+      position: relative;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    /* Evolution Animation Classes */
+    .evolving {
+      animation: evolvePulse 2s ease-in-out forwards;
+    }
+
+    @keyframes evolvePulse {
+      0% { transform: scale(1); box-shadow: 0 12px 32px rgba(0,0,0,0.05); }
+      50% { transform: scale(1.05); box-shadow: 0 0 40px rgba(212, 163, 115, 0.6); background-color: #FFFAEE; }
+      100% { transform: scale(1); box-shadow: 0 12px 32px rgba(0,0,0,0.05); }
     }
 
     .category-tag {
@@ -122,43 +150,64 @@
       transition: background 0.2s, opacity 0.2s;
     }
 
-    .btn-share {
-      background-color: #EFE8DE;
-      color: #555555;
-    }
+    .btn-share { background-color: #EFE8DE; color: #555555; }
+    .btn-push { background-color: #2D2B2A; color: #FFFFFF; }
+    .btn:active { opacity: 0.85; }
+    .btn-push:disabled { background-color: #CCC6BD; }
 
-    .btn-push {
-      background-color: #2D2B2A;
-      color: #FFFFFF;
-    }
-
-    .btn:active {
-      opacity: 0.85;
-    }
-
-    .btn-push:disabled {
-      background-color: #CCC6BD;
-    }
-
-    /* iOS Installation Notice Banner */
-    #ios-banner {
+    /* Modal Styles (Check-in & Evolution Flash) */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
       display: none;
-      background: #FFF;
-      border: 1px solid #E5DEC9;
-      padding: 12px 16px;
-      border-radius: 12px;
-      font-size: 13px;
-      color: #555;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      padding: 20px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-card {
+      background: #FFFFFF;
+      width: 100%;
+      max-width: 340px;
+      border-radius: 24px;
+      padding: 32px 24px;
       text-align: center;
-      margin-bottom: 4px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+    }
+
+    .modal-card h3 { font-size: 18px; margin-bottom: 12px; color: #1A1918; }
+    .modal-card p { font-size: 15px; color: #6B5E52; margin-bottom: 24px; line-height: 1.5; font-style: italic;}
+    
+    .btn-yes { background-color: #D4A373; color: white; margin-bottom: 10px; }
+    .btn-no { background-color: transparent; border: 1.5px solid #CCC6BD; color: #9C8E80; }
+
+    #flash-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: white;
+      z-index: 200;
+      display: none;
+      opacity: 0;
+      pointer-events: none;
     }
   </style>
 </head>
 <body>
 
-  <!-- Level Display -->
+  <!-- Screen Flash for Evolution -->
+  <div id="flash-overlay"></div>
+
+  <!-- Level & Streak Display -->
   <div class="header">
     <div class="level-badge" id="levelBadge">LEVEL 1</div>
+    <div class="streak-badge" id="streakBadge">🔥 0 Days</div>
   </div>
 
   <!-- Main Card -->
@@ -172,97 +221,183 @@
 
   <!-- Controls -->
   <div class="footer-actions">
-    <div id="ios-banner">
-      📱 Tap the <b>Share</b> button and select <b>Add to Home Screen</b> to enable daily notifications.
-    </div>
-
     <button class="btn btn-share" onclick="shareCard()">
       ✨ Share Today's Advice
     </button>
-
     <button class="btn btn-push" id="notifyBtn" onclick="enableNotifications()">
       Enable Daily Notifications
     </button>
   </div>
 
+  <!-- 8 PM Evening Check-In Modal -->
+  <div class="modal-overlay" id="checkinModal">
+    <div class="modal-card" id="modalContent">
+      <h3>Did you complete today's task?</h3>
+      <p id="checkinTaskText">"Drink 8 glasses of water today..."</p>
+      <button class="btn btn-yes" onclick="answerCheckin(true)">YES, I DID IT ✨</button>
+      <button class="btn btn-no" onclick="answerCheckin(false)">NOT TODAY</button>
+    </div>
+  </div>
+
   <script>
-    // 1. Parse URL parameters (e.g. ?token=abc123&join=2026-09-21)
+    // 1. Initial Setup & State
     const urlParams = new URLSearchParams(window.location.search);
     const joinDateStr = urlParams.get('join') || new Date().toISOString().split('T')[0];
     const userToken = urlParams.get('token') || 'default';
+    const todayStr = new Date().toLocaleDateString();
 
-    // 2. Calculate Level (1 Month = 1 Level)
+    let currentAdviceText = "Drink 8 glasses of water today. Feel your refreshed body. You will feel lighter, making room for good luck.";
+
+    // 2. Load Streak from LocalStorage
+    let userStreak = parseInt(localStorage.getItem('fortuneStreak')) || 0;
+    const streakBadge = document.getElementById('streakBadge');
+    if (userStreak > 0) {
+      streakBadge.style.display = 'block';
+      streakBadge.innerText = `🔥 Streak: ${userStreak} Days`;
+    }
+
+    // 3. Level Calculation & Evolution Logic
     function calculateLevel(joinDateString) {
       const joinDate = new Date(joinDateString);
       const today = new Date();
-      
       let months = (today.getFullYear() - joinDate.getFullYear()) * 12;
       months -= joinDate.getMonth();
       months += today.getMonth();
-      
-      const level = Math.max(1, months + 1);
-      return level;
+      return Math.max(1, months + 1);
     }
 
-    document.getElementById('levelBadge').innerText = `LEVEL ${calculateLevel(joinDateStr)}`;
+    function checkEvolution() {
+      const calculatedLevel = calculateLevel(joinDateStr);
+      const savedLevel = parseInt(localStorage.getItem('savedLevel')) || calculatedLevel;
 
-    // 3. Fetch Today's Advice Card from n8n Webhook Endpoint
+      const levelBadge = document.getElementById('levelBadge');
+
+      if (calculatedLevel > savedLevel) {
+        // Trigger Pokémon-Style Evolution
+        levelBadge.innerText = `LEVEL ${savedLevel}`; // Start at old level
+        
+        setTimeout(() => {
+          document.getElementById('cardContainer').classList.add('evolving');
+          
+          // Confetti Burst
+          confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#D4A373', '#FFD700', '#FFFFFF'] });
+
+          // Screen Flash effect
+          const flash = document.getElementById('flash-overlay');
+          flash.style.display = 'block';
+          flash.style.opacity = '1';
+          flash.style.transition = 'opacity 0.5s ease-out';
+          
+          setTimeout(() => { 
+            flash.style.opacity = '0'; 
+            levelBadge.innerText = `LEVEL ${calculatedLevel}`;
+            levelBadge.style.backgroundColor = '#D4A373';
+            levelBadge.style.color = '#FFFFFF';
+            localStorage.setItem('savedLevel', calculatedLevel);
+          }, 500);
+
+          setTimeout(() => { flash.style.display = 'none'; }, 1000);
+        }, 1000);
+
+      } else {
+        // Normal Load
+        levelBadge.innerText = `LEVEL ${calculatedLevel}`;
+        localStorage.setItem('savedLevel', calculatedLevel);
+      }
+    }
+
+    // 4. Fetch Advice (from n8n webhook)
     async function loadTodayAdvice() {
       try {
-        // Replace with your live n8n webhook URL once deployed:
         const webhookUrl = `https://your-n8n-instance.com/webhook/daily-card?token=${userToken}`;
         const response = await fetch(webhookUrl);
         const data = await response.json();
         
         if (data.advice) {
           document.getElementById('categoryTag').innerText = (data.category || "DAILY GUIDANCE").toUpperCase();
-          document.getElementById('adviceText').innerText = data.advice;
+          currentAdviceText = data.advice;
+          document.getElementById('adviceText').innerText = currentAdviceText;
         }
       } catch (err) {
-        // Keeps the default fallback card rendered if there is no internet connection
+        // Keeps fallback card on offline/error
+      }
+      
+      checkEvolution();
+      checkEveningPrompt();
+    }
+
+    // 5. 8:00 PM Check-In Logic
+    function checkEveningPrompt() {
+      const currentHour = new Date().getHours();
+      const lastCheckin = localStorage.getItem('lastCheckinDate');
+
+      // If it is 8 PM (20:00) or later, and they haven't checked in today
+      if (currentHour >= 20 && lastCheckin !== todayStr) {
+        document.getElementById('checkinTaskText').innerText = `"${currentAdviceText}"`;
+        const modal = document.getElementById('checkinModal');
+        modal.style.display = 'flex';
+        // Small delay to allow CSS transitions to pop
+        setTimeout(() => {
+          modal.style.opacity = '1';
+          document.getElementById('modalContent').style.transform = 'translateY(0)';
+        }, 50);
       }
     }
 
-    // 4. Native Web Share API
+    function answerCheckin(didComplete) {
+      localStorage.setItem('lastCheckinDate', todayStr);
+      
+      const modalContent = document.getElementById('modalContent');
+      
+      if (didComplete) {
+        // Reward Yes
+        userStreak++;
+        localStorage.setItem('fortuneStreak', userStreak);
+        streakBadge.style.display = 'block';
+        streakBadge.innerText = `🔥 Streak: ${userStreak} Days`;
+        
+        confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 }, colors: ['#D4A373', '#FAF7F2'] });
+        modalContent.innerHTML = `<h3>Beautifully done. ✨</h3><p>Your karma and aura grow stronger today.</p>`;
+      } else {
+        // Reward No (Gentle)
+        modalContent.innerHTML = `<h3>That is perfectly okay. 🤍</h3><p>Rest and gentleness are also steps forward. Tomorrow is a fresh start.</p>`;
+      }
+
+      // Close modal after 2.5 seconds
+      setTimeout(() => {
+        const modal = document.getElementById('checkinModal');
+        modal.style.opacity = '0';
+        setTimeout(() => { modal.style.display = 'none'; }, 300);
+      }, 2500);
+    }
+
+    // 6. Share & Notifications Features
     function shareCard() {
-      const text = document.getElementById('adviceText').innerText;
       if (navigator.share) {
         navigator.share({
           title: "Today's Guidance",
-          text: `"${text}" — Daily Fortune`,
+          text: `"${currentAdviceText}" — Daily Fortune`,
           url: window.location.href
         }).catch(() => {});
       } else {
-        navigator.clipboard.writeText(`"${text}" — Daily Fortune`);
+        navigator.clipboard.writeText(`"${currentAdviceText}" — Daily Fortune`);
         alert("Advice copied to clipboard!");
       }
     }
 
-    // 5. Detect iOS and Display "Add to Home Screen" Banner
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    
-    if (isIOS && !isStandalone) {
-      document.getElementById('ios-banner').style.display = 'block';
-    }
-
-    // 6. Request Web Push Permission
     async function enableNotifications() {
       if (!('Notification' in window)) {
-        alert("This browser does not support web push notifications.");
+        alert("This browser does not support web push.");
         return;
       }
-
       const permission = await Notification.requestPermission();
       if (permission === 'granted') {
         document.getElementById('notifyBtn').innerText = "Notifications Enabled ✓";
         document.getElementById('notifyBtn').disabled = true;
-      } else {
-        alert("Notification permissions were denied.");
       }
     }
 
-    // Initialize Card Load
+    // Initialize App
     loadTodayAdvice();
   </script>
 </body>
