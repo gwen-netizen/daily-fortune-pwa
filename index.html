@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Daily Fortune</title>
+  
+  <!-- PWA Settings -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#FAF7F2">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Daily Fortune">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <style>
+    :root {
+      --bg-color: #FAF7F2;
+      --text-color: #2D2B2A;
+      --card-bg: #FFFFFF;
+      --accent-color: #D4A373;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 100vh;
+      padding: 24px 16px;
+      touch-action: manipulation;
+    }
+
+    /* Top Level Display */
+    .header {
+      width: 100%;
+      text-align: center;
+      padding-top: 12px;
+    }
+
+    .level-badge {
+      display: inline-block;
+      background: #EFE8DE;
+      color: #6B5E52;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 1px;
+      padding: 8px 18px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+
+    /* Main Advice Card Container */
+    .card-container {
+      width: 100%;
+      max-width: 380px;
+      background-color: var(--card-bg);
+      border-radius: 24px;
+      padding: 40px 28px;
+      text-align: center;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(0,0,0,0.03);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 360px;
+      transition: transform 0.3s ease;
+    }
+
+    .category-tag {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #9C8E80;
+      margin-bottom: 24px;
+      font-weight: 600;
+    }
+
+    .advice-text {
+      font-size: 20px;
+      line-height: 1.6;
+      font-weight: 500;
+      color: #1A1918;
+      word-break: break-word;
+    }
+
+    .sparkle-icon {
+      font-size: 24px;
+      margin-top: 24px;
+      opacity: 0.8;
+    }
+
+    /* Bottom Action Controls */
+    .footer-actions {
+      width: 100%;
+      max-width: 380px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-push {
+      background-color: #2D2B2A;
+      color: #FFFFFF;
+    }
+
+    .btn-push:disabled {
+      background-color: #CCC6BD;
+    }
+
+    /* iOS Installation Notice Banner */
+    #ios-banner {
+      display: none;
+      background: #FFF;
+      border: 1px solid #E5DEC9;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      color: #555;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Level Display -->
+  <div class="header">
+    <div class="level-badge" id="levelBadge">Level 1</div>
+  </div>
+
+  <!-- Main Card -->
+  <div class="card-container" id="cardContainer">
+    <div class="category-tag" id="categoryTag">Daily Guidance</div>
+    <div class="advice-text" id="adviceText">
+      Loading today's advice...
+    </div>
+    <div class="sparkle-icon">✨</div>
+  </div>
+
+  <!-- Controls -->
+  <div class="footer-actions">
+    <div id="ios-banner">
+      📱 Tap the <b>Share</b> button and select <b>Add to Home Screen</b> to enable daily notifications.
+    </div>
+
+    <button class="btn btn-push" id="notifyBtn" onclick="enableNotifications()">
+      Enable Daily Notifications
+    </button>
+  </div>
+
+  <script>
+    // 1. Parse URL parameters (e.g. ?token=abc123&join=2026-09-21)
+    const urlParams = new URLSearchParams(window.location.search);
+    const joinDateStr = urlParams.get('join') || new Date().toISOString().split('T')[0];
+
+    // 2. Calculate Level (1 Month = 1 Level)
+    function calculateLevel(joinDateString) {
+      const joinDate = new Date(joinDateString);
+      const today = new Date();
+      
+      let months = (today.getFullYear() - joinDate.getFullYear()) * 12;
+      months -= joinDate.getMonth();
+      months += today.getMonth();
+      
+      const level = Math.max(1, months + 1);
+      return level;
+    }
+
+    document.getElementById('levelBadge').innerText = `LEVEL ${calculateLevel(joinDateStr)}`;
+
+    // 3. Fetch Today's Advice Card from API or JSON file
+    async function loadTodayAdvice() {
+      try {
+        // Replace this URL with your endpoint or web app trigger
+        // For demonstration, it parses a static JSON payload
+        const response = await fetch('/api/todays-card');
+        const data = await response.json();
+        
+        document.getElementById('categoryTag').innerText = data.category || "DAILY GUIDANCE";
+        document.getElementById('adviceText').innerText = data.advice;
+      } catch (err) {
+        // Fallback placeholder card if offline or initial load
+        document.getElementById('adviceText').innerText = 
+          "Drink 8 glasses of water today. Feel your refreshed body. You will feel lighter, making room for good luck.";
+        document.getElementById('categoryTag').innerText = "HEALTH & FORTUNE";
+      }
+    }
+
+    // 4. Handle iOS Notice
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    
+    if (isIOS && !isStandalone) {
+      document.getElementById('ios-banner').style.display = 'block';
+    }
+
+    // 5. Request Push Notification Permission
+    async function enableNotifications() {
+      if (!('Notification' in window)) {
+        alert("This browser does not support web push notifications.");
+        return;
+      }
+
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        document.getElementById('notifyBtn').innerText = "Notifications Enabled ✓";
+        document.getElementById('notifyBtn').disabled = true;
+        // Logic to send registration token to your n8n workflow goes here
+      } else {
+        alert("Notification permissions were denied.");
+      }
+    }
+
+    // Initialize
+    loadTodayAdvice();
+  </script>
+</body>
+</html>
