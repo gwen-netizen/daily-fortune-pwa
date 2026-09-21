@@ -119,12 +119,21 @@
       font-size: 15px;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: background 0.2s, opacity 0.2s;
+    }
+
+    .btn-share {
+      background-color: #EFE8DE;
+      color: #555555;
     }
 
     .btn-push {
       background-color: #2D2B2A;
       color: #FFFFFF;
+    }
+
+    .btn:active {
+      opacity: 0.85;
     }
 
     .btn-push:disabled {
@@ -141,7 +150,7 @@
       font-size: 13px;
       color: #555;
       text-align: center;
-      margin-bottom: 8px;
+      margin-bottom: 4px;
     }
   </style>
 </head>
@@ -149,14 +158,14 @@
 
   <!-- Level Display -->
   <div class="header">
-    <div class="level-badge" id="levelBadge">Level 1</div>
+    <div class="level-badge" id="levelBadge">LEVEL 1</div>
   </div>
 
   <!-- Main Card -->
   <div class="card-container" id="cardContainer">
-    <div class="category-tag" id="categoryTag">Daily Guidance</div>
+    <div class="category-tag" id="categoryTag">HEALTH & FORTUNE</div>
     <div class="advice-text" id="adviceText">
-      Loading today's advice...
+      Drink 8 glasses of water today. Feel your refreshed body. You will feel lighter, making room for good luck.
     </div>
     <div class="sparkle-icon">✨</div>
   </div>
@@ -167,6 +176,10 @@
       📱 Tap the <b>Share</b> button and select <b>Add to Home Screen</b> to enable daily notifications.
     </div>
 
+    <button class="btn btn-share" onclick="shareCard()">
+      ✨ Share Today's Advice
+    </button>
+
     <button class="btn btn-push" id="notifyBtn" onclick="enableNotifications()">
       Enable Daily Notifications
     </button>
@@ -176,6 +189,7 @@
     // 1. Parse URL parameters (e.g. ?token=abc123&join=2026-09-21)
     const urlParams = new URLSearchParams(window.location.search);
     const joinDateStr = urlParams.get('join') || new Date().toISOString().split('T')[0];
+    const userToken = urlParams.get('token') || 'default';
 
     // 2. Calculate Level (1 Month = 1 Level)
     function calculateLevel(joinDateString) {
@@ -192,25 +206,39 @@
 
     document.getElementById('levelBadge').innerText = `LEVEL ${calculateLevel(joinDateStr)}`;
 
-    // 3. Fetch Today's Advice Card from API or JSON file
+    // 3. Fetch Today's Advice Card from n8n Webhook Endpoint
     async function loadTodayAdvice() {
       try {
-        // Replace this URL with your endpoint or web app trigger
-        // For demonstration, it parses a static JSON payload
-        const response = await fetch('/api/todays-card');
+        // Replace with your live n8n webhook URL once deployed:
+        const webhookUrl = `https://your-n8n-instance.com/webhook/daily-card?token=${userToken}`;
+        const response = await fetch(webhookUrl);
         const data = await response.json();
         
-        document.getElementById('categoryTag').innerText = data.category || "DAILY GUIDANCE";
-        document.getElementById('adviceText').innerText = data.advice;
+        if (data.advice) {
+          document.getElementById('categoryTag').innerText = (data.category || "DAILY GUIDANCE").toUpperCase();
+          document.getElementById('adviceText').innerText = data.advice;
+        }
       } catch (err) {
-        // Fallback placeholder card if offline or initial load
-        document.getElementById('adviceText').innerText = 
-          "Drink 8 glasses of water today. Feel your refreshed body. You will feel lighter, making room for good luck.";
-        document.getElementById('categoryTag').innerText = "HEALTH & FORTUNE";
+        // Keeps the default fallback card rendered if there is no internet connection
       }
     }
 
-    // 4. Handle iOS Notice
+    // 4. Native Web Share API
+    function shareCard() {
+      const text = document.getElementById('adviceText').innerText;
+      if (navigator.share) {
+        navigator.share({
+          title: "Today's Guidance",
+          text: `"${text}" — Daily Fortune`,
+          url: window.location.href
+        }).catch(() => {});
+      } else {
+        navigator.clipboard.writeText(`"${text}" — Daily Fortune`);
+        alert("Advice copied to clipboard!");
+      }
+    }
+
+    // 5. Detect iOS and Display "Add to Home Screen" Banner
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
     
@@ -218,7 +246,7 @@
       document.getElementById('ios-banner').style.display = 'block';
     }
 
-    // 5. Request Push Notification Permission
+    // 6. Request Web Push Permission
     async function enableNotifications() {
       if (!('Notification' in window)) {
         alert("This browser does not support web push notifications.");
@@ -229,13 +257,12 @@
       if (permission === 'granted') {
         document.getElementById('notifyBtn').innerText = "Notifications Enabled ✓";
         document.getElementById('notifyBtn').disabled = true;
-        // Logic to send registration token to your n8n workflow goes here
       } else {
         alert("Notification permissions were denied.");
       }
     }
 
-    // Initialize
+    // Initialize Card Load
     loadTodayAdvice();
   </script>
 </body>
