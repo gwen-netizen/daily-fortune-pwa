@@ -54,7 +54,7 @@
     .screen {
       background-color: var(--card-bg);
       border-radius: 24px;
-      padding: 40px 28px;
+      padding: 35px 24px;
       text-align: center;
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.06);
       width: 100%;
@@ -79,10 +79,9 @@
     }
 
     .screen.no-cursor {
-      cursor: default; /* For screens with buttons */
+      cursor: default;
     }
 
-    /* Content Wrapper to Ensure Middle Vertical Centering */
     .content-body {
       margin-top: auto;
       margin-bottom: auto;
@@ -94,16 +93,16 @@
     }
 
     .main-text {
-      font-size: 19px;
+      font-size: 18px;
       line-height: 1.6;
       font-weight: 500;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
       text-align: center;
     }
 
     .bold-title {
       font-weight: 800;
-      font-size: 25px;
+      font-size: 24px;
       line-height: 1.3;
       margin-bottom: 20px;
       color: var(--accent-color);
@@ -116,14 +115,13 @@
       font-style: italic;
       text-align: center;
       width: 100%;
-      padding-top: 15px;
+      padding-top: 10px;
     }
 
-    /* Perfectly Centered Point Form Lists */
     .bullet-list {
       list-style: none;
       text-align: center;
-      margin: 15px auto;
+      margin: 12px auto;
       font-size: 18px;
       line-height: 1.8;
       font-weight: 600;
@@ -139,12 +137,11 @@
       margin-bottom: 6px;
     }
 
-    /* Instruction List for OS Selection */
     .instruction-list {
       list-style: none;
       text-align: center;
       margin: 15px auto;
-      font-size: 16px;
+      font-size: 15px;
       line-height: 1.6;
       font-weight: 500;
       padding: 0;
@@ -152,16 +149,18 @@
     }
 
     .instruction-list li {
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       text-align: center;
+      background: #FAF7F2;
+      padding: 10px 12px;
+      border-radius: 12px;
     }
 
-    /* Buttons */
     .btn-group {
       display: flex;
       flex-direction: column;
       gap: 12px;
-      margin-top: 20px;
+      margin-top: 15px;
       width: 100%;
     }
 
@@ -192,11 +191,10 @@
       cursor: not-allowed;
     }
 
-    /* Status Message */
     #status-message-ios, #status-message-android {
-      margin-top: 15px;
+      margin-top: 12px;
       font-weight: bold;
-      font-size: 15px;
+      font-size: 14px;
       min-height: 24px;
       text-align: center;
     }
@@ -249,7 +247,7 @@
           <li>• Wealth</li>
           <li>• Social skills</li>
         </ul>
-        <div class="main-text" style="font-size:16px; margin-bottom:0;">Doing it daily builds powerful muscle memory.</div>
+        <div class="main-text" style="font-size:15px; margin-bottom:0;">Doing it daily builds powerful muscle memory.</div>
       </div>
       <div class="tap-hint">Tap to continue reading...</div>
     </div>
@@ -303,7 +301,7 @@
           <li>• Wife</li>
           <li>• Child</li>
         </ul>
-        <div class="main-text" style="font-size:16px; margin-bottom:0;">Share this with loved ones—working together is always better than working alone.</div>
+        <div class="main-text" style="font-size:15px; margin-bottom:0;">Share this with loved ones—working together is always better than working alone.</div>
       </div>
       <div class="tap-hint">Tap to continue reading...</div>
     </div>
@@ -322,11 +320,11 @@
     <!-- Screen 12A (iOS) -->
     <div class="screen no-cursor" id="screen-12a">
       <div class="content-body">
-        <div class="bold-title" style="font-size: 22px;">📱 For iPhone / iOS Users</div>
+        <div class="bold-title" style="font-size: 20px;">📱 For iPhone / iOS Users</div>
         <ol class="instruction-list">
-          <li>1. Tap the <strong>Share</strong> icon (square with upward arrow) at Safari's bottom.</li>
-          <li>2. Scroll down and tap <strong>"Add to Home Screen"</strong>.</li>
-          <li>3. Open your new app and tap Enable Notifications.</li>
+          <li>1. Tap <strong>Share</strong> (square with arrow) at Safari's bottom.</li>
+          <li>2. Scroll down & tap <strong>"Add to Home Screen"</strong>.</li>
+          <li>3. Open app from Home Screen & tap below.</li>
         </ol>
         <button class="btn btn-alt" id="btn-ios" onclick="startWorkout('ios')">Begin your Fortune Workout Now</button>
         <div id="status-message-ios"></div>
@@ -336,10 +334,11 @@
     <!-- Screen 12B (Android) -->
     <div class="screen no-cursor" id="screen-12b">
       <div class="content-body">
-        <div class="bold-title" style="font-size: 22px;">🤖 For Android Users</div>
+        <div class="bold-title" style="font-size: 20px;">🤖 For Android Users</div>
         <ol class="instruction-list">
-          <li>1. Tap <strong>"Add to Home Screen"</strong> banner at browser bottom.</li>
-          <li>2. Open your new app and tap Enable Notifications.</li>
+          <li>1. Tap the <strong>three dots (⋮)</strong> in Chrome top right.</li>
+          <li>2. Tap <strong>"Install and create shortcut"</strong>.</li>
+          <li>3. Open app from Home Screen & tap below.</li>
         </ol>
         <button class="btn btn-alt" id="btn-android" onclick="startWorkout('android')">Begin your Fortune Workout Now</button>
         <div id="status-message-android"></div>
@@ -349,7 +348,6 @@
   </div>
 
   <script>
-    // Register Service Worker for PWA Push Support
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js')
@@ -357,13 +355,11 @@
       });
     }
 
-    // Smooth Transition Between Cards
     function nextScreen(currentId) {
       document.getElementById('screen-' + currentId).classList.remove('active');
       document.getElementById('screen-' + (currentId + 1)).classList.add('active');
     }
 
-    // Branching Logic for OS
     function chooseOS(os) {
       document.getElementById('screen-11').classList.remove('active');
       if (os === 'ios') {
@@ -373,33 +369,26 @@
       }
     }
 
-    // Timezone Cutoff & Push Notification Logic
     async function startWorkout(os) {
       const statusElementId = os === 'ios' ? 'status-message-ios' : 'status-message-android';
       const btnElementId = os === 'ios' ? 'btn-ios' : 'btn-android';
       const statusMessage = document.getElementById(statusElementId);
       const btn = document.getElementById(btnElementId);
       
-      // Get the local time of the user's current device
       const now = new Date();
       const currentHour = now.getHours();
       const currentMinute = now.getMinutes();
 
-      // Logic: Cut off strictly AFTER 9:29 PM (21:29) local time
       const isAfterCutoff = (currentHour >= 22) || (currentHour === 21 && currentMinute >= 30);
-      
-      // Logic: Cannot start BEFORE 8:00 AM (08:00) local time
       const isBeforeStart = (currentHour < 8);
 
       if (isAfterCutoff || isBeforeStart) {
-        // Enforce the Cutoff
         statusMessage.textContent = "Task has ended for today. Anticipate your next task at 8am tomorrow!";
         statusMessage.className = "error";
         btn.disabled = true;
       } else {
-        // Enforce Push Notification Request
         if (!('Notification' in window) || !('serviceWorker' in navigator)) {
-          statusMessage.textContent = "Your browser does not support web push notifications. Please install the app to your home screen first.";
+          statusMessage.textContent = "Please make sure you have added this app to your Home Screen and opened it from there.";
           statusMessage.className = "error";
           return;
         }
@@ -411,13 +400,9 @@
             statusMessage.textContent = "Activating your workout subscription...";
             statusMessage.className = "success";
 
-            // Automatically detect user's exact IANA local timezone
             const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-            // Wait for Service Worker registration and retrieve push subscription
             const registration = await navigator.serviceWorker.ready;
             
-            // Generate or retrieve the push subscription payload
             let subscription = await registration.pushManager.getSubscription();
             if (!subscription) {
               subscription = await registration.pushManager.subscribe({
@@ -426,11 +411,9 @@
               });
             }
 
-            // Extract email parameter from URL if redirected from Stripe Checkout
             const urlParams = new URLSearchParams(window.location.search);
             const userEmail = urlParams.get('email') || '';
 
-            // Send payload to n8n subscription webhook
             await fetch('/webhook/stripe-subscription', {
               method: 'POST',
               headers: {
