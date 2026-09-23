@@ -69,6 +69,7 @@
       flex-direction: column;
       justify-content: space-between;
       align-items: center;
+      overflow-y: auto;
     }
 
     .screen.active {
@@ -140,7 +141,7 @@
     .instruction-list {
       list-style: none;
       text-align: center;
-      margin: 15px auto;
+      margin: 12px auto;
       font-size: 15px;
       line-height: 1.6;
       font-weight: 500;
@@ -149,10 +150,10 @@
     }
 
     .instruction-list li {
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       text-align: center;
       background: #FAF7F2;
-      padding: 10px 12px;
+      padding: 8px 10px;
       border-radius: 12px;
     }
 
@@ -192,14 +193,29 @@
     }
 
     #status-message-ios, #status-message-android {
-      margin-top: 12px;
+      margin-top: 10px;
       font-weight: bold;
       font-size: 14px;
-      min-height: 24px;
+      min-height: 20px;
       text-align: center;
     }
     .error { color: #d9534f; }
     .success { color: var(--accent-color); }
+
+    /* Dynamic Unblock Help Box */
+    .unblock-box {
+      display: none;
+      background-color: #FFF3CD;
+      border: 1px solid #FFEEBA;
+      color: #856404;
+      padding: 12px;
+      border-radius: 12px;
+      margin-top: 12px;
+      font-size: 13px;
+      line-height: 1.5;
+      text-align: center;
+      width: 100%;
+    }
 
   </style>
 </head>
@@ -208,7 +224,7 @@
   <div class="card-container">
     
     <!-- Screen 1 -->
-    <div class="screen active" id="screen-1" onclick="nextScreen(1)">
+    <div class="screen" id="screen-1" onclick="nextScreen(1)">
       <div class="content-body">
         <div class="bold-title">Welcome to the Community of Building Your Fortune Workout</div>
         <div class="main-text">Before you start, please read every single word. It can feel heavy, but it is totally worth your time.</div>
@@ -328,6 +344,10 @@
         </ol>
         <button class="btn btn-alt" id="btn-ios" onclick="startWorkout('ios')">Begin your Fortune Workout Now</button>
         <div id="status-message-ios"></div>
+        <div id="unblock-box-ios" class="unblock-box">
+          <strong>How to allow notifications:</strong><br>
+          Open iPhone <strong>Settings</strong> ➡️ <strong>Safari</strong> (or App Name) ➡️ <strong>Notifications</strong> ➡️ Select <strong>Allow Notifications</strong>.
+        </div>
       </div>
     </div>
 
@@ -343,12 +363,19 @@
         </ol>
         <button class="btn btn-alt" id="btn-android" onclick="startWorkout('android')">Begin your Fortune Workout Now</button>
         <div id="status-message-android"></div>
+        <div id="unblock-box-android" class="unblock-box">
+          <strong>How to enable notifications:</strong><br>
+          1. Tap <strong>three dots (⋮)</strong> top right ➡️ <strong>Settings</strong>.<br>
+          2. Tap <strong>Notifications</strong> ➡️ <strong>Additional settings in the app</strong>.<br>
+          3. Ensure the top setting is set to <strong>"Sites can ask to send notifications"</strong>.
+        </div>
       </div>
     </div>
 
   </div>
 
   <script>
+    // Register Service Worker for PWA Push Support
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js')
@@ -356,12 +383,25 @@
       });
     }
 
+    // Auto-Skip Onboarding if previously saved on device
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedOS = localStorage.getItem('userOS');
+      if (savedOS === 'ios') {
+        document.getElementById('screen-12a').classList.add('active');
+      } else if (savedOS === 'android') {
+        document.getElementById('screen-12b').classList.add('active');
+      } else {
+        document.getElementById('screen-1').classList.add('active');
+      }
+    });
+
     function nextScreen(currentId) {
       document.getElementById('screen-' + currentId).classList.remove('active');
       document.getElementById('screen-' + (currentId + 1)).classList.add('active');
     }
 
     function chooseOS(os) {
+      localStorage.setItem('userOS', os);
       document.getElementById('screen-11').classList.remove('active');
       if (os === 'ios') {
         document.getElementById('screen-12a').classList.add('active');
@@ -372,14 +412,18 @@
 
     async function startWorkout(os) {
       const statusElementId = os === 'ios' ? 'status-message-ios' : 'status-message-android';
+      const unblockBoxId = os === 'ios' ? 'unblock-box-ios' : 'unblock-box-android';
       const btnElementId = os === 'ios' ? 'btn-ios' : 'btn-android';
+      
       const statusMessage = document.getElementById(statusElementId);
+      const unblockBox = document.getElementById(unblockBoxId);
       const btn = document.getElementById(btnElementId);
       
       const now = new Date();
       const currentHour = now.getHours();
       const currentMinute = now.getMinutes();
 
+      // Timezone Cutoff Logic (8:00 AM - 9:29 PM local time window)
       const isAfterCutoff = (currentHour >= 22) || (currentHour === 21 && currentMinute >= 30);
       const isBeforeStart = (currentHour < 8);
 
@@ -400,7 +444,9 @@
           if (permission === 'granted') {
             statusMessage.textContent = "Activating your workout subscription...";
             statusMessage.className = "success";
+            unblockBox.style.display = 'none';
 
+            // Detect device local timezone
             const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
             const registration = await navigator.serviceWorker.ready;
             
@@ -415,7 +461,8 @@
             const urlParams = new URLSearchParams(window.location.search);
             const userEmail = urlParams.get('email') || '';
 
-            await fetch('/webhook/stripe-subscription', {
+            // Post directly to full webhook URL on Netlify domain
+            await fetch('https://moonlit-hamster-546d8b.netlify.app/webhook/stripe-subscription', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json'
@@ -433,8 +480,9 @@
             btn.disabled = true;
 
           } else {
-            statusMessage.textContent = "Notifications are required to receive your daily tasks. Please allow them in your settings.";
+            statusMessage.textContent = "Notifications are required. Please allow them in your settings below:";
             statusMessage.className = "error";
+            unblockBox.style.display = 'block';
           }
         } catch (err) {
           console.error(err);
