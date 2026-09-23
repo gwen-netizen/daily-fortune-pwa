@@ -44,20 +44,21 @@
       max-width: 400px;
       padding: 20px;
       position: relative;
-      height: 70vh;
+      height: 75vh;
       display: flex;
       justify-content: center;
       align-items: center;
     }
 
-    /* Screen Defaults - Strictly Center Aligned */
+    /* Screen Defaults - Vertical & Horizontal Middle Alignment */
     .screen {
       background-color: var(--card-bg);
       border-radius: 24px;
-      padding: 40px 32px;
+      padding: 40px 28px;
       text-align: center;
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.06);
       width: 100%;
+      height: 100%;
       position: absolute;
       opacity: 0;
       visibility: hidden;
@@ -66,9 +67,8 @@
       cursor: pointer;
       display: flex;
       flex-direction: column;
-      justify-content: center;
+      justify-content: space-between;
       align-items: center;
-      min-height: 380px;
     }
 
     .screen.active {
@@ -82,6 +82,17 @@
       cursor: default; /* For screens with buttons */
     }
 
+    /* Content Wrapper to Ensure Middle Vertical Centering */
+    .content-body {
+      margin-top: auto;
+      margin-bottom: auto;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
     .main-text {
       font-size: 19px;
       line-height: 1.6;
@@ -92,9 +103,9 @@
 
     .bold-title {
       font-weight: 800;
-      font-size: 26px;
+      font-size: 25px;
       line-height: 1.3;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
       color: var(--accent-color);
       text-align: center;
     }
@@ -103,24 +114,45 @@
       font-size: 14px;
       color: #9C8E80;
       font-style: italic;
-      margin-top: auto;
       text-align: center;
+      width: 100%;
+      padding-top: 15px;
     }
 
-    /* Center Aligned Lists */
-    .bullet-list, .instruction-list {
-      list-style-position: inside;
+    /* Perfectly Centered Point Form Lists */
+    .bullet-list {
+      list-style: none;
       text-align: center;
-      margin: 10px auto 25px auto;
+      margin: 15px auto;
       font-size: 18px;
+      line-height: 1.8;
+      font-weight: 600;
+      padding: 0;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .bullet-list li {
+      text-align: center;
+      margin-bottom: 6px;
+    }
+
+    /* Instruction List for OS Selection */
+    .instruction-list {
+      list-style: none;
+      text-align: center;
+      margin: 15px auto;
+      font-size: 16px;
       line-height: 1.6;
       font-weight: 500;
-      padding-left: 0;
+      padding: 0;
       width: 100%;
     }
 
-    .bullet-list li, .instruction-list li {
-      margin-bottom: 10px;
+    .instruction-list li {
+      margin-bottom: 12px;
       text-align: center;
     }
 
@@ -162,7 +194,7 @@
 
     /* Status Message */
     #status-message-ios, #status-message-android {
-      margin-top: 20px;
+      margin-top: 15px;
       font-weight: bold;
       font-size: 15px;
       min-height: 24px;
@@ -179,113 +211,139 @@
     
     <!-- Screen 1 -->
     <div class="screen active" id="screen-1" onclick="nextScreen(1)">
-      <div class="bold-title">Welcome to the Community of Building Your Fortune Workout</div>
-      <div class="main-text">Before you start, please read every single word. It can feel heavy, but it is totally worth your time.</div>
+      <div class="content-body">
+        <div class="bold-title">Welcome to the Community of Building Your Fortune Workout</div>
+        <div class="main-text">Before you start, please read every single word. It can feel heavy, but it is totally worth your time.</div>
+      </div>
       <div class="tap-hint">Tap to continue reading...</div>
     </div>
 
     <!-- Screen 2 -->
     <div class="screen" id="screen-2" onclick="nextScreen(2)">
-      <div class="main-text">This is not intended to upgrade your cars, lifestyle, or accessories. Your $1.50 monthly investment is strictly here to help you become a better version of yourself than yesterday.</div>
+      <div class="content-body">
+        <div class="main-text">This is not intended to upgrade your cars, lifestyle, or accessories. Your $1.50 monthly investment is strictly here to help you become a better version of yourself than yesterday.</div>
+      </div>
       <div class="tap-hint">Tap to continue reading...</div>
     </div>
 
     <!-- Screen 3 -->
     <div class="screen" id="screen-3" onclick="nextScreen(3)">
-      <div class="main-text">Our vision is clear. Through just 1 tasked action every day, build your:</div>
-      <ul class="bullet-list">
-        <li>Aura</li>
-        <li>Charisma</li>
-        <li>Body</li>
-        <li>Personality</li>
-      </ul>
+      <div class="content-body">
+        <div class="main-text">Our vision is clear. Through just 1 tasked action every day, build your:</div>
+        <ul class="bullet-list">
+          <li>• Aura</li>
+          <li>• Charisma</li>
+          <li>• Body</li>
+          <li>• Personality</li>
+        </ul>
+      </div>
       <div class="tap-hint">Tap to continue reading...</div>
     </div>
 
     <!-- Screen 4 -->
     <div class="screen" id="screen-4" onclick="nextScreen(4)">
-      <div class="main-text">Every weekday at 8:00 AM, a task is pushed to your phone to improve your:</div>
-      <ul class="bullet-list">
-        <li>Health</li>
-        <li>Wealth</li>
-        <li>Social skills</li>
-      </ul>
-      <div class="main-text" style="font-size:16px; margin-bottom:0;">Doing it daily builds powerful muscle memory.</div>
+      <div class="content-body">
+        <div class="main-text">Every weekday at 8:00 AM, a task is pushed to your phone to improve your:</div>
+        <ul class="bullet-list">
+          <li>• Health</li>
+          <li>• Wealth</li>
+          <li>• Social skills</li>
+        </ul>
+        <div class="main-text" style="font-size:16px; margin-bottom:0;">Doing it daily builds powerful muscle memory.</div>
+      </div>
       <div class="tap-hint">Tap to continue reading...</div>
     </div>
 
     <!-- Screen 5 -->
     <div class="screen" id="screen-5" onclick="nextScreen(5)">
-      <div class="main-text">At 9:30 PM, we check in. Feel that dopamine rush when you get it right! You deserve a good long rest for the night. And if you see a task repeat the next day? Maybe heaven is telling you to do even more.</div>
+      <div class="content-body">
+        <div class="main-text">At 9:30 PM, we check in. Feel that dopamine rush when you get it right! You deserve a good long rest for the night. And if you see a task repeat the next day? Maybe heaven is telling you to do even more.</div>
+      </div>
       <div class="tap-hint">Tap to continue reading...</div>
     </div>
 
     <!-- Screen 6 -->
     <div class="screen" id="screen-6" onclick="nextScreen(6)">
-      <div class="main-text">We don't do history scrolling. Let bygones be bygones. If you missed today, let it pass. Live in the moment, do what is needed today, and enjoy every second living on earth.</div>
+      <div class="content-body">
+        <div class="main-text">We don't do history scrolling. Let bygones be bygones. If you missed today, let it pass. Live in the moment, do what is needed today, and enjoy every second living on earth.</div>
+      </div>
       <div class="tap-hint">Tap to continue reading...</div>
     </div>
 
     <!-- Screen 7 -->
     <div class="screen" id="screen-7" onclick="nextScreen(7)">
-      <div class="main-text">This workout is no-ads, no-selling, no-punishment. $1 is your investment to upgrade yourself, and $0.50 covers the admin costs to keep our community alive (unfortunately!).</div>
+      <div class="content-body">
+        <div class="main-text">This workout is no-ads, no-selling, no-punishment. $1 is your investment to upgrade yourself, and $0.50 covers the admin costs to keep our community alive (unfortunately!).</div>
+      </div>
       <div class="tap-hint">Tap to continue reading...</div>
     </div>
 
     <!-- Screen 8 -->
     <div class="screen" id="screen-8" onclick="nextScreen(8)">
-      <div class="main-text">If you have 3 phones, please do not buy 3 subscriptions (although we wouldn't mind the extra money!). Stick to one. Research has shown that keeping your life simple generates many more benefits.</div>
+      <div class="content-body">
+        <div class="main-text">If you have 3 phones, please do not buy 3 subscriptions (although we wouldn't mind the extra money!). Stick to one. Research has shown that keeping your life simple generates many more benefits.</div>
+      </div>
       <div class="tap-hint">Tap to continue reading...</div>
     </div>
 
     <!-- Screen 9 -->
     <div class="screen" id="screen-9" onclick="nextScreen(9)">
-      <div class="main-text">Oh, did I forget to mention? Tasks only arrive on weekdays, because we need rest too! Just be yourself over the weekend. You deserve it after a long week.</div>
+      <div class="content-body">
+        <div class="main-text">Oh, did I forget to mention? Tasks only arrive on weekdays, because we need rest too! Just be yourself over the weekend. You deserve it after a long week.</div>
+      </div>
       <div class="tap-hint">Tap to continue reading...</div>
     </div>
 
     <!-- Screen 10 -->
     <div class="screen" id="screen-10" onclick="nextScreen(10)">
-      <div class="main-text">Start today! Build a stronger career and family, and become a better:</div>
-      <ul class="bullet-list">
-        <li>Husband</li>
-        <li>Wife</li>
-        <li>Child</li>
-      </ul>
-      <div class="main-text" style="font-size:16px; margin-bottom:0;">Share this with loved ones—working together is always better than working alone.</div>
+      <div class="content-body">
+        <div class="main-text">Start today! Build a stronger career and family, and become a better:</div>
+        <ul class="bullet-list">
+          <li>• Husband</li>
+          <li>• Wife</li>
+          <li>• Child</li>
+        </ul>
+        <div class="main-text" style="font-size:16px; margin-bottom:0;">Share this with loved ones—working together is always better than working alone.</div>
+      </div>
       <div class="tap-hint">Tap to continue reading...</div>
     </div>
 
     <!-- Screen 11 (OS Selection) -->
     <div class="screen no-cursor" id="screen-11">
-      <div class="main-text">To activate your daily guidance and begin tracking your aura streak, choose your phone's operating system below.</div>
-      <div class="btn-group">
-        <button class="btn" onclick="chooseOS('ios')">iOS / Apple</button>
-        <button class="btn btn-alt" onclick="chooseOS('android')">Android</button>
+      <div class="content-body">
+        <div class="main-text">To activate your daily guidance and begin tracking your aura streak, choose your phone's operating system below.</div>
+        <div class="btn-group">
+          <button class="btn" onclick="chooseOS('ios')">iOS / Apple</button>
+          <button class="btn btn-alt" onclick="chooseOS('android')">Android</button>
+        </div>
       </div>
     </div>
 
     <!-- Screen 12A (iOS) -->
     <div class="screen no-cursor" id="screen-12a">
-      <div class="bold-title" style="font-size: 22px;">📱 For iPhone / iOS Users</div>
-      <ol class="instruction-list">
-        <li>Tap the <strong>Share</strong> icon (square with upward arrow) at the bottom of Safari.</li>
-        <li>Scroll down and tap <strong>"Add to Home Screen"</strong>.</li>
-        <li>Open your new app and tap Enable Notifications.</li>
-      </ol>
-      <button class="btn btn-alt" id="btn-ios" onclick="startWorkout('ios')">Begin your Fortune Workout Now</button>
-      <div id="status-message-ios"></div>
+      <div class="content-body">
+        <div class="bold-title" style="font-size: 22px;">📱 For iPhone / iOS Users</div>
+        <ol class="instruction-list">
+          <li>1. Tap the <strong>Share</strong> icon (square with upward arrow) at Safari's bottom.</li>
+          <li>2. Scroll down and tap <strong>"Add to Home Screen"</strong>.</li>
+          <li>3. Open your new app and tap Enable Notifications.</li>
+        </ol>
+        <button class="btn btn-alt" id="btn-ios" onclick="startWorkout('ios')">Begin your Fortune Workout Now</button>
+        <div id="status-message-ios"></div>
+      </div>
     </div>
 
     <!-- Screen 12B (Android) -->
     <div class="screen no-cursor" id="screen-12b">
-      <div class="bold-title" style="font-size: 22px;">🤖 For Android Users</div>
-      <ol class="instruction-list">
-        <li>Tap the <strong>"Add to Home Screen"</strong> banner at the bottom of your browser.</li>
-        <li>Open your new app and tap Enable Notifications.</li>
-      </ol>
-      <button class="btn btn-alt" id="btn-android" onclick="startWorkout('android')">Begin your Fortune Workout Now</button>
-      <div id="status-message-android"></div>
+      <div class="content-body">
+        <div class="bold-title" style="font-size: 22px;">🤖 For Android Users</div>
+        <ol class="instruction-list">
+          <li>1. Tap <strong>"Add to Home Screen"</strong> banner at browser bottom.</li>
+          <li>2. Open your new app and tap Enable Notifications.</li>
+        </ol>
+        <button class="btn btn-alt" id="btn-android" onclick="startWorkout('android')">Begin your Fortune Workout Now</button>
+        <div id="status-message-android"></div>
+      </div>
     </div>
 
   </div>
