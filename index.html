@@ -50,7 +50,7 @@
       align-items: center;
     }
 
-    /* Screen Defaults */
+    /* Screen Defaults - Strictly Center Aligned */
     .screen {
       background-color: var(--card-bg);
       border-radius: 24px;
@@ -67,6 +67,7 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
+      align-items: center;
       min-height: 380px;
     }
 
@@ -86,6 +87,7 @@
       line-height: 1.6;
       font-weight: 500;
       margin-bottom: 20px;
+      text-align: center;
     }
 
     .bold-title {
@@ -94,6 +96,7 @@
       line-height: 1.3;
       margin-bottom: 24px;
       color: var(--accent-color);
+      text-align: center;
     }
 
     .tap-hint {
@@ -101,21 +104,24 @@
       color: #9C8E80;
       font-style: italic;
       margin-top: auto;
+      text-align: center;
     }
 
-    /* Formatted Bullet Point Lists */
-    .bullet-list {
-      text-align: left;
+    /* Center Aligned Lists */
+    .bullet-list, .instruction-list {
+      list-style-position: inside;
+      text-align: center;
       margin: 10px auto 25px auto;
       font-size: 18px;
       line-height: 1.6;
       font-weight: 500;
-      max-width: 90%;
-      padding-left: 20px;
+      padding-left: 0;
+      width: 100%;
     }
 
-    .bullet-list li {
-      margin-bottom: 8px;
+    .bullet-list li, .instruction-list li {
+      margin-bottom: 10px;
+      text-align: center;
     }
 
     /* Buttons */
@@ -138,6 +144,7 @@
       background-color: var(--text-color);
       color: #FFFFFF;
       transition: opacity 0.2s;
+      text-align: center;
     }
 
     .btn:active {
@@ -153,25 +160,13 @@
       cursor: not-allowed;
     }
 
-    /* Instructions List for OS Screens */
-    .instruction-list {
-      text-align: left;
-      margin: 20px 0;
-      font-size: 16px;
-      line-height: 1.5;
-      padding-left: 20px;
-    }
-    
-    .instruction-list li {
-      margin-bottom: 12px;
-    }
-
     /* Status Message */
     #status-message-ios, #status-message-android {
       margin-top: 20px;
       font-weight: bold;
       font-size: 15px;
       min-height: 24px;
+      text-align: center;
     }
     .error { color: #d9534f; }
     .success { color: var(--accent-color); }
@@ -274,7 +269,7 @@
     <div class="screen no-cursor" id="screen-12a">
       <div class="bold-title" style="font-size: 22px;">📱 For iPhone / iOS Users</div>
       <ol class="instruction-list">
-        <li>Tap the <strong>Share</strong> icon (square with an upward arrow) at the bottom of Safari.</li>
+        <li>Tap the <strong>Share</strong> icon (square with upward arrow) at the bottom of Safari.</li>
         <li>Scroll down and tap <strong>"Add to Home Screen"</strong>.</li>
         <li>Open your new app and tap Enable Notifications.</li>
       </ol>
