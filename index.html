@@ -1,115 +1,335 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fortune Workout</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f4f4f9;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .card {
-            background: white;
-            padding: 40px 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-        }
-        h1 {
-            font-size: 1.5rem;
-            color: #333;
-            margin-bottom: 10px;
-        }
-        p {
-            color: #666;
-            margin-bottom: 30px;
-            line-height: 1.5;
-        }
-        button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 14px 24px;
-            font-size: 1rem;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            width: 100%;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        /* Styling for the cutoff message */
-        #status-message {
-            margin-top: 20px;
-            font-weight: bold;
-            font-size: 0.95rem;
-            min-height: 24px;
-        }
-        .error {
-            color: #d9534f;
-        }
-        .success {
-            color: #28a745;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Daily Fortune Workout</title>
+  
+  <!-- PWA Settings -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#FAF7F2">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Daily Fortune">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <style>
+    :root {
+      --bg-color: #FAF7F2;
+      --text-color: #2D2B2A;
+      --card-bg: #FFFFFF;
+      --accent-color: #D4A373;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+      touch-action: manipulation;
+    }
+
+    .card-container {
+      width: 100%;
+      max-width: 400px;
+      padding: 20px;
+      position: relative;
+      height: 70vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Screen Defaults */
+    .screen {
+      background-color: var(--card-bg);
+      border-radius: 24px;
+      padding: 40px 32px;
+      text-align: center;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.06);
+      width: 100%;
+      position: absolute;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(15px);
+      transition: opacity 0.5s ease, transform 0.5s ease, visibility 0.5s;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 380px;
+    }
+
+    .screen.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+      z-index: 10;
+    }
+
+    .screen.no-cursor {
+      cursor: default; /* For screens with buttons */
+    }
+
+    .main-text {
+      font-size: 20px;
+      line-height: 1.6;
+      font-weight: 500;
+      margin-bottom: 30px;
+    }
+
+    .bold-title {
+      font-weight: 700;
+      font-size: 22px;
+      margin-bottom: 20px;
+      color: var(--accent-color);
+    }
+
+    .tap-hint {
+      font-size: 14px;
+      color: #9C8E80;
+      font-style: italic;
+      margin-top: auto;
+    }
+
+    /* Buttons */
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 20px;
+      width: 100%;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      background-color: var(--text-color);
+      color: #FFFFFF;
+      transition: opacity 0.2s;
+    }
+
+    .btn:active {
+      opacity: 0.85;
+    }
+
+    .btn-alt {
+      background-color: var(--accent-color);
+    }
+    
+    .btn:disabled {
+      background-color: #CCC6BD;
+      cursor: not-allowed;
+    }
+
+    /* Instructions List */
+    .instruction-list {
+      text-align: left;
+      margin: 20px 0;
+      font-size: 16px;
+      line-height: 1.5;
+      padding-left: 10px;
+    }
+    
+    .instruction-list li {
+      margin-bottom: 12px;
+    }
+
+    /* Status Message */
+    #status-message-ios, #status-message-android {
+      margin-top: 20px;
+      font-weight: bold;
+      font-size: 15px;
+      min-height: 24px;
+    }
+    .error { color: #d9534f; }
+    .success { color: var(--accent-color); }
+
+  </style>
 </head>
 <body>
 
-    <div class="card">
-        <h1>Welcome to Your Task</h1>
-        <p>You are one step away from unlocking today's sequence. Are you ready?</p>
-        
-        <!-- The Final Button -->
-        <button id="startWorkoutBtn" onclick="checkCutoffTime()">Begin your fortune workout now</button>
-        
-        <!-- Area to display the cutoff message or success message -->
-        <div id="status-message"></div>
+  <div class="card-container">
+    
+    <!-- Screen 1 -->
+    <div class="screen active" id="screen-1" onclick="nextScreen(1)">
+      <div class="bold-title">Welcome to the Building Your Daily Fortune Workout</div>
+      <div class="main-text">Before you start, please read every single word. It can feel heavy, but it is totally worth your time.</div>
+      <div class="tap-hint">Tap to continue reading...</div>
     </div>
 
-    <script>
-        function checkCutoffTime() {
-            const statusMessage = document.getElementById('status-message');
-            const now = new Date();
-            
-            const currentHour = now.getHours();
-            const currentMinute = now.getMinutes();
+    <!-- Screen 2 -->
+    <div class="screen" id="screen-2" onclick="nextScreen(2)">
+      <div class="main-text">This is not intended to upgrade your cars, lifestyle, or accessories. Your $1.50 monthly investment is strictly here to help you become a better version of yourself than yesterday.</div>
+      <div class="tap-hint">Tap to continue reading...</div>
+    </div>
 
-            // Logic: Cut off is strictly AFTER 9:29 PM (21:29)
-            // This means if the hour is 22 (10 PM) or later, OR if it's 21 (9 PM) and minutes are 30 or greater.
-            const isAfterCutoff = (currentHour >= 22) || (currentHour === 21 && currentMinute >= 30);
+    <!-- Screen 3 -->
+    <div class="screen" id="screen-3" onclick="nextScreen(3)">
+      <div class="main-text">Our vision is clear: build your aura, build your charisma, build a better body, and improve your personality through just one tasked action every day.</div>
+      <div class="tap-hint">Tap to continue reading...</div>
+    </div>
 
-            // Optional: You might also want to block access BEFORE 8:00 AM based on your message
-            const isBeforeStart = (currentHour < 8);
+    <!-- Screen 4 -->
+    <div class="screen" id="screen-4" onclick="nextScreen(4)">
+      <div class="main-text">Every weekday at 8:00 AM, a task to improve your health, wealth, or social skills is pushed to your phone. Doing it builds powerful muscle memory.</div>
+      <div class="tap-hint">Tap to continue reading...</div>
+    </div>
 
-            if (isAfterCutoff || isBeforeStart) {
-                // Show the cutoff message
-                statusMessage.textContent = "Task has ended for today. Anticipate your next task at 8am tomorrow!";
-                statusMessage.className = "error";
-                
-                // Optional: Disable the button so they can't keep clicking it
-                document.getElementById('startWorkoutBtn').disabled = true;
-                document.getElementById('startWorkoutBtn').style.backgroundColor = "#cccccc";
-                document.getElementById('startWorkoutBtn').style.cursor = "not-allowed";
-            } else {
-                // Proceed with the actual task trigger (e.g., call your n8n webhook here)
-                statusMessage.textContent = "Initializing your workout...";
-                statusMessage.className = "success";
-                
-                // Add your webhook call or redirect code here
-                // window.location.href = "YOUR_NEXT_PAGE_OR_WEBHOOK_URL";
-            }
+    <!-- Screen 5 -->
+    <div class="screen" id="screen-5" onclick="nextScreen(5)">
+      <div class="main-text">At 9:30 PM, we check in. Feel that dopamine rush when you get it right! You deserve a good long rest for the night. And if you see a task repeat the next day? Maybe heaven is telling you to do even more.</div>
+      <div class="tap-hint">Tap to continue reading...</div>
+    </div>
+
+    <!-- Screen 6 -->
+    <div class="screen" id="screen-6" onclick="nextScreen(6)">
+      <div class="main-text">We don't do history scrolling. Let bygones be bygones. If you missed today, let it pass. Live in the moment, do what is needed today, and enjoy every second living on earth.</div>
+      <div class="tap-hint">Tap to continue reading...</div>
+    </div>
+
+    <!-- Screen 7 -->
+    <div class="screen" id="screen-7" onclick="nextScreen(7)">
+      <div class="main-text">This workout is no-ads, no-selling, no-punishment. $1 is your investment to upgrade yourself, and $0.50 covers the admin costs to keep our community alive (unfortunately!).</div>
+      <div class="tap-hint">Tap to continue reading...</div>
+    </div>
+
+    <!-- Screen 8 -->
+    <div class="screen" id="screen-8" onclick="nextScreen(8)">
+      <div class="main-text">If you have 3 phones, please do not buy 3 subscriptions (although we wouldn't mind the extra money!). Stick to one. Research has shown that keeping your life simple generates many more benefits.</div>
+      <div class="tap-hint">Tap to continue reading...</div>
+    </div>
+
+    <!-- Screen 9 -->
+    <div class="screen" id="screen-9" onclick="nextScreen(9)">
+      <div class="main-text">Oh, did I forget to mention? Tasks only arrive on weekdays, because we need rest too! Just be yourself over the weekend. You deserve it after a long week.</div>
+      <div class="tap-hint">Tap to continue reading...</div>
+    </div>
+
+    <!-- Screen 10 -->
+    <div class="screen" id="screen-10" onclick="nextScreen(10)">
+      <div class="main-text">Start today. Be a better husband, wife, or child. Build a stronger career and family. Share this with loved ones—working together is always better than working alone.</div>
+      <div class="tap-hint">Tap to continue reading...</div>
+    </div>
+
+    <!-- Screen 11 (OS Selection) -->
+    <div class="screen no-cursor" id="screen-11">
+      <div class="main-text">To activate your daily guidance and begin tracking your aura streak, choose your phone's operating system below.</div>
+      <div class="btn-group">
+        <button class="btn" onclick="chooseOS('ios')">iOS / Apple</button>
+        <button class="btn btn-alt" onclick="chooseOS('android')">Android</button>
+      </div>
+    </div>
+
+    <!-- Screen 12A (iOS) -->
+    <div class="screen no-cursor" id="screen-12a">
+      <div class="bold-title">📱 For iPhone / iOS Users</div>
+      <ul class="instruction-list">
+        <li>Tap the <strong>Share</strong> icon (square with an upward arrow) at the bottom of Safari.</li>
+        <li>Scroll down and tap <strong>"Add to Home Screen"</strong>.</li>
+        <li>Open your new app and tap Enable Notifications.</li>
+      </ul>
+      <button class="btn btn-alt" id="btn-ios" onclick="startWorkout('ios')">Begin your Fortune Workout Now</button>
+      <div id="status-message-ios"></div>
+    </div>
+
+    <!-- Screen 12B (Android) -->
+    <div class="screen no-cursor" id="screen-12b">
+      <div class="bold-title">🤖 For Android Users</div>
+      <ul class="instruction-list">
+        <li>Tap the <strong>"Add to Home Screen"</strong> banner at the bottom of your browser.</li>
+        <li>Open your new app and tap Enable Notifications.</li>
+      </ul>
+      <button class="btn btn-alt" id="btn-android" onclick="startWorkout('android')">Begin your Fortune Workout Now</button>
+      <div id="status-message-android"></div>
+    </div>
+
+  </div>
+
+  <script>
+    // Smooth Transition Between Cards
+    function nextScreen(currentId) {
+      document.getElementById('screen-' + currentId).classList.remove('active');
+      document.getElementById('screen-' + (currentId + 1)).classList.add('active');
+    }
+
+    // Branching Logic for OS
+    function chooseOS(os) {
+      document.getElementById('screen-11').classList.remove('active');
+      if (os === 'ios') {
+        document.getElementById('screen-12a').classList.add('active');
+      } else {
+        document.getElementById('screen-12b').classList.add('active');
+      }
+    }
+
+    // Timezone Cutoff & Push Notification Logic
+    async function startWorkout(os) {
+      const statusElementId = os === 'ios' ? 'status-message-ios' : 'status-message-android';
+      const btnElementId = os === 'ios' ? 'btn-ios' : 'btn-android';
+      const statusMessage = document.getElementById(statusElementId);
+      const btn = document.getElementById(btnElementId);
+      
+      // Get the local time of the user's current device
+      const now = new Date();
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+      const currentDay = now.getDay(); // 0 = Sunday, 6 = Saturday
+
+      // Logic: Cut off strictly AFTER 9:29 PM (21:29) local time
+      const isAfterCutoff = (currentHour >= 22) || (currentHour === 21 && currentMinute >= 30);
+      
+      // Logic: Cannot start BEFORE 8:00 AM (08:00) local time
+      const isBeforeStart = (currentHour < 8);
+
+      // Optional Weekend Check (if you want to block weekend signups entirely)
+      // const isWeekend = (currentDay === 0 || currentDay === 6);
+
+      if (isAfterCutoff || isBeforeStart) {
+        // Enforce the Cutoff
+        statusMessage.textContent = "Task has ended for today. Anticipate your next task at 8am tomorrow!";
+        statusMessage.className = "error";
+        btn.disabled = true;
+      } else {
+        // Enforce Push Notification Request
+        if (!('Notification' in window)) {
+          statusMessage.textContent = "Your browser does not support notifications. Please install the app to your home screen first.";
+          statusMessage.className = "error";
+          return;
         }
-    </script>
 
+        const permission = await Notification.requestPermission();
+        
+        if (permission === 'granted') {
+          statusMessage.textContent = "Welcome to the community! Your workout is active. ✨";
+          statusMessage.className = "success";
+          btn.innerText = "Notifications Enabled ✓";
+          btn.disabled = true;
+          
+          // ADD YOUR n8n PUSH TOKEN WEBHOOK FETCH CODE HERE
+          // ...
+          
+        } else {
+          statusMessage.textContent = "Notifications are required to receive your daily tasks. Please allow them in your settings.";
+          statusMessage.className = "error";
+        }
+      }
+    }
+  </script>
 </body>
 </html>
