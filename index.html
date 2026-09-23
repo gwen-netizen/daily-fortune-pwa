@@ -461,17 +461,18 @@
             const urlParams = new URLSearchParams(window.location.search);
             const userEmail = urlParams.get('email') || '';
 
-            // Post directly to full webhook URL on Netlify domain
+            // Post using urlencoded payload to eliminate CORS preflight rejection
+            const formData = new URLSearchParams();
+            formData.append('email', userEmail);
+            formData.append('timezone', userTimezone);
+            formData.append('subscription', JSON.stringify(subscription));
+
             await fetch('https://n8n-latest-x9ac.onrender.com/webhook/stripe-subscription', {
               method: 'POST',
               headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/x-www-form-urlencoded'
               },
-              body: JSON.stringify({
-                email: userEmail,
-                timezone: userTimezone,
-                subscription: subscription
-              })
+              body: formData.toString()
             });
 
             statusMessage.textContent = "Welcome to the community! Your workout is active. ✨";
