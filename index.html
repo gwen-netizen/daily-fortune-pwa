@@ -82,10 +82,10 @@
     }
 
     .main-text {
-      font-size: 20px;
+      font-size: 19px;
       line-height: 1.6;
       font-weight: 500;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
     }
 
     .bold-title {
@@ -100,6 +100,21 @@
       color: #9C8E80;
       font-style: italic;
       margin-top: auto;
+    }
+
+    /* Formatted Bullet Point Lists */
+    .bullet-list {
+      text-align: left;
+      margin: 10px auto 25px auto;
+      font-size: 18px;
+      line-height: 1.6;
+      font-weight: 500;
+      max-width: 90%;
+      padding-left: 20px;
+    }
+
+    .bullet-list li {
+      margin-bottom: 8px;
     }
 
     /* Buttons */
@@ -137,13 +152,13 @@
       cursor: not-allowed;
     }
 
-    /* Instructions List */
+    /* Instructions List for OS Screens */
     .instruction-list {
       text-align: left;
       margin: 20px 0;
       font-size: 16px;
       line-height: 1.5;
-      padding-left: 10px;
+      padding-left: 20px;
     }
     
     .instruction-list li {
@@ -168,7 +183,7 @@
     
     <!-- Screen 1 -->
     <div class="screen active" id="screen-1" onclick="nextScreen(1)">
-      <div class="bold-title">Welcome to Building Your Daily Fortune Workout</div>
+      <div class="bold-title">Welcome to the Building Your Daily Fortune Workout</div>
       <div class="main-text">Before you start, please read every single word. It can feel heavy, but it is totally worth your time.</div>
       <div class="tap-hint">Tap to continue reading...</div>
     </div>
@@ -179,15 +194,27 @@
       <div class="tap-hint">Tap to continue reading...</div>
     </div>
 
-    <!-- Screen 3 -->
+    <!-- Screen 3 (Formatted in Point Form) -->
     <div class="screen" id="screen-3" onclick="nextScreen(3)">
-      <div class="main-text">Our vision is clear: build your aura, build your charisma, build a better body, and improve your personality through just one tasked action every day.</div>
+      <div class="main-text">Our vision is clear. Through just 1 tasked action every day, build your:</div>
+      <ul class="bullet-list">
+        <li>Aura</li>
+        <li>Charisma</li>
+        <li>Body</li>
+        <li>Personality</li>
+      </ul>
       <div class="tap-hint">Tap to continue reading...</div>
     </div>
 
-    <!-- Screen 4 -->
+    <!-- Screen 4 (Formatted in Point Form) -->
     <div class="screen" id="screen-4" onclick="nextScreen(4)">
-      <div class="main-text">Every weekday at 8:00 AM, a task to improve your health, wealth, or social skills is pushed to your phone. Doing it builds powerful muscle memory.</div>
+      <div class="main-text">Every weekday at 8:00 AM, a task is pushed to your phone to improve your:</div>
+      <ul class="bullet-list">
+        <li>Health</li>
+        <li>Wealth</li>
+        <li>Social skills</li>
+      </ul>
+      <div class="main-text" style="font-size:16px; margin-bottom:0;">Doing it daily builds powerful muscle memory.</div>
       <div class="tap-hint">Tap to continue reading...</div>
     </div>
 
@@ -221,9 +248,15 @@
       <div class="tap-hint">Tap to continue reading...</div>
     </div>
 
-    <!-- Screen 10 -->
+    <!-- Screen 10 (Formatted in Point Form) -->
     <div class="screen" id="screen-10" onclick="nextScreen(10)">
-      <div class="main-text">Start today. Be a better husband, wife, or child. Build a stronger career and family. Share this with loved ones—working together is always better than working alone.</div>
+      <div class="main-text">Start today! Build a stronger career and family, and become a better:</div>
+      <ul class="bullet-list">
+        <li>Husband</li>
+        <li>Wife</li>
+        <li>Child</li>
+      </ul>
+      <div class="main-text" style="font-size:16px; margin-bottom:0;">Share this with loved ones—working together is always better than working alone.</div>
       <div class="tap-hint">Tap to continue reading...</div>
     </div>
 
@@ -239,11 +272,11 @@
     <!-- Screen 12A (iOS) -->
     <div class="screen no-cursor" id="screen-12a">
       <div class="bold-title">📱 For iPhone / iOS Users</div>
-      <ul class="instruction-list">
+      <ol class="instruction-list">
         <li>Tap the <strong>Share</strong> icon (square with an upward arrow) at the bottom of Safari.</li>
         <li>Scroll down and tap <strong>"Add to Home Screen"</strong>.</li>
         <li>Open your new app and tap Enable Notifications.</li>
-      </ul>
+      </ol>
       <button class="btn btn-alt" id="btn-ios" onclick="startWorkout('ios')">Begin your Fortune Workout Now</button>
       <div id="status-message-ios"></div>
     </div>
@@ -251,10 +284,10 @@
     <!-- Screen 12B (Android) -->
     <div class="screen no-cursor" id="screen-12b">
       <div class="bold-title">🤖 For Android Users</div>
-      <ul class="instruction-list">
+      <ol class="instruction-list">
         <li>Tap the <strong>"Add to Home Screen"</strong> banner at the bottom of your browser.</li>
         <li>Open your new app and tap Enable Notifications.</li>
-      </ul>
+      </ol>
       <button class="btn btn-alt" id="btn-android" onclick="startWorkout('android')">Begin your Fortune Workout Now</button>
       <div id="status-message-android"></div>
     </div>
@@ -324,7 +357,7 @@
             statusMessage.textContent = "Activating your workout subscription...";
             statusMessage.className = "success";
 
-            // Automatically detect user's exact IANA local timezone (e.g., America/New_York)
+            // Automatically detect user's exact IANA local timezone
             const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
             // Wait for Service Worker registration and retrieve push subscription
@@ -335,7 +368,6 @@
             if (!subscription) {
               subscription = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
-                // Optional: Replace string below with your n8n VAPID public key if using web-push node
                 applicationServerKey: null 
               });
             }
