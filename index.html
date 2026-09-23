@@ -262,6 +262,14 @@
   </div>
 
   <script>
+    // Register Service Worker for PWA Push Support
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .catch(err => console.log('Service Worker registration failed:', err));
+      });
+    }
+
     // Smooth Transition Between Cards
     function nextScreen(currentId) {
       document.getElementById('screen-' + currentId).classList.remove('active');
@@ -289,16 +297,12 @@
       const now = new Date();
       const currentHour = now.getHours();
       const currentMinute = now.getMinutes();
-      const currentDay = now.getDay(); // 0 = Sunday, 6 = Saturday
 
       // Logic: Cut off strictly AFTER 9:29 PM (21:29) local time
       const isAfterCutoff = (currentHour >= 22) || (currentHour === 21 && currentMinute >= 30);
       
       // Logic: Cannot start BEFORE 8:00 AM (08:00) local time
       const isBeforeStart = (currentHour < 8);
-
-      // Optional Weekend Check (if you want to block weekend signups entirely)
-      // const isWeekend = (currentDay === 0 || currentDay === 6);
 
       if (isAfterCutoff || isBeforeStart) {
         // Enforce the Cutoff
@@ -307,25 +311,64 @@
         btn.disabled = true;
       } else {
         // Enforce Push Notification Request
-        if (!('Notification' in window)) {
-          statusMessage.textContent = "Your browser does not support notifications. Please install the app to your home screen first.";
+        if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+          statusMessage.textContent = "Your browser does not support web push notifications. Please install the app to your home screen first.";
           statusMessage.className = "error";
           return;
         }
 
-        const permission = await Notification.requestPermission();
-        
-        if (permission === 'granted') {
-          statusMessage.textContent = "Welcome to the community! Your workout is active. ✨";
-          statusMessage.className = "success";
-          btn.innerText = "Notifications Enabled ✓";
-          btn.disabled = true;
+        try {
+          const permission = await Notification.requestPermission();
           
-          // ADD YOUR n8n PUSH TOKEN WEBHOOK FETCH CODE HERE
-          // ...
-          
-        } else {
-          statusMessage.textContent = "Notifications are required to receive your daily tasks. Please allow them in your settings.";
+          if (permission === 'granted') {
+            statusMessage.textContent = "Activating your workout subscription...";
+            statusMessage.className = "success";
+
+            // Automatically detect user's exact IANA local timezone (e.g., America/New_York)
+            const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+            // Wait for Service Worker registration and retrieve push subscription
+            const registration = await navigator.serviceWorker.ready;
+            
+            // Generate or retrieve the push subscription payload
+            let subscription = await registration.pushManager.getSubscription();
+            if (!subscription) {
+              subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                // Optional: Replace string below with your n8n VAPID public key if using web-push node
+                applicationServerKey: null 
+              });
+            }
+
+            // Extract email parameter from URL if redirected from Stripe Checkout
+            const urlParams = new URLSearchParams(window.location.search);
+            const userEmail = urlParams.get('email') || '';
+
+            // Send payload to n8n subscription webhook
+            await fetch('/webhook/stripe-subscription', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                email: userEmail,
+                timezone: userTimezone,
+                subscription: subscription
+              })
+            });
+
+            statusMessage.textContent = "Welcome to the community! Your workout is active. ✨";
+            statusMessage.className = "success";
+            btn.innerText = "Notifications Enabled ✓";
+            btn.disabled = true;
+
+          } else {
+            statusMessage.textContent = "Notifications are required to receive your daily tasks. Please allow them in your settings.";
+            statusMessage.className = "error";
+          }
+        } catch (err) {
+          console.error(err);
+          statusMessage.textContent = "Subscription setup failed. Please refresh and try again.";
           statusMessage.className = "error";
         }
       }
