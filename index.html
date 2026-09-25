@@ -697,25 +697,22 @@
       helpTimeout = setTimeout(() => { toast.classList.remove('show'); }, 5000);
     }
 
-    // Seamless Sandbox State Transitions Without Page Reload
+    // Seamless Sandbox State Transitions Without Page Reload or Unnecessary Toasts
     function devForceState(state) {
       localStorage.setItem('workoutSubscribed', 'true');
       forceState = state;
 
+      // Only show push notification simulations for 8:00 AM and 9:30 PM triggers
       if (state === 'morning') {
         showAppNotification("🔔 [8:00 AM Notification] Your daily Fortune Workout task has arrived! Tap to view.");
       } else if (state === 'checkin') {
         showAppNotification("🌙 [9:30 PM Notification] Time for your daily mirror check-in! Tap to reflect.");
-      } else if (state === 'night') {
-        showAppNotification("🌙 [Night View] Rest well! Your next workout arrives tomorrow at 8:00 AM.");
-      } else if (state === 'weekend') {
-        showAppNotification("🏖 [Weekend View] Weekend rest active! Enjoy your break.");
       }
 
       routeActiveSubscriber();
     }
     
-    // Sandbox Trigger: Queues Level Up silently without showing any billing/queuing toast
+    // Sandbox Trigger: Queues Level Up silently without showing any toast banner
     function devSimulateRenewal() {
       localStorage.setItem('workoutSubscribed', 'true');
       localStorage.setItem('pendingLevelUp', 'true');
@@ -723,11 +720,8 @@
 
     function devSimulateDecline() {
       localStorage.setItem('workoutSubscribed', 'failed');
-      showAppNotification(`⚠️ Simulated payment failure! Access revoked.`);
-      setTimeout(() => {
-        hideAllScreens();
-        document.getElementById('screen-17').classList.add('active');
-      }, 1000);
+      hideAllScreens();
+      document.getElementById('screen-17').classList.add('active');
     }
 
     function devReset() {
