@@ -39,7 +39,7 @@
       touch-action: manipulation;
     }
 
-    /* Custom In-App Notification Toast (5 Seconds Duration) */
+    /* Custom In-App Notification Toast (Guaranteed 5 Seconds Duration) */
     #notification-toast {
       position: fixed;
       top: 20px;
@@ -605,7 +605,7 @@
   <script>
     const urlParams = new URLSearchParams(window.location.search);
     let isDev = urlParams.get('dev') === 'true';
-    const forceState = urlParams.get('force');
+    let forceState = urlParams.get('force');
     const WEBHOOK_BASE = 'https://n8n-latest-x9ac.onrender.com/webhook';
 
     // 5 Backup Fallback Tasks
@@ -679,7 +679,7 @@
       `;
     }
 
-    // Displays Toasts for At Least 5 Seconds
+    // Displays Toasts for Guaranteed 5 Seconds
     let toastTimeout;
     function showAppNotification(message) {
       const toast = document.getElementById('notification-toast');
@@ -697,34 +697,46 @@
       helpTimeout = setTimeout(() => { toast.classList.remove('show'); }, 5000);
     }
 
+    // Seamless Sandbox State Transitions Without Page Reload
     function devForceState(state) {
       localStorage.setItem('workoutSubscribed', 'true');
+      forceState = state;
 
-      // Interactive Push Banner Simulation (Visible for 5 Seconds)
       if (state === 'morning') {
         showAppNotification("🔔 [8:00 AM Notification] Your daily Fortune Workout task has arrived! Tap to view.");
       } else if (state === 'checkin') {
         showAppNotification("🌙 [9:30 PM Notification] Time for your daily mirror check-in! Tap to reflect.");
+      } else if (state === 'night') {
+        showAppNotification("🌙 [Night View] Rest well! Your next workout arrives tomorrow at 8:00 AM.");
+      } else if (state === 'weekend') {
+        showAppNotification("🏖 [Weekend View] Weekend rest active! Enjoy your break.");
       }
 
-      setTimeout(() => {
-        window.location.href = `?dev=true&force=${state}`;
-      }, 800);
+      routeActiveSubscriber();
     }
     
+    // Smooth Level-Up Simulation Without Screen Reload or Spinner
     function devSimulateRenewal() {
       let currentLevel = parseInt(localStorage.getItem('userLevel') || '1');
       currentLevel++;
       localStorage.setItem('userLevel', currentLevel);
       localStorage.setItem('workoutSubscribed', 'true');
+      
+      const headerElem = document.getElementById('dashboard-header');
+      if (headerElem) {
+        headerElem.textContent = `✨ Active Member • Lv ${currentLevel}`;
+      }
+
       showAppNotification(`🎉 Simulated successful monthly renewal! You are now Level ${currentLevel}.`);
-      routeActiveSubscriber();
     }
 
     function devSimulateDecline() {
       localStorage.setItem('workoutSubscribed', 'failed');
       showAppNotification(`⚠️ Simulated payment failure! Access revoked.`);
-      setTimeout(() => { window.location.href = '?dev=true'; }, 1500);
+      setTimeout(() => {
+        hideAllScreens();
+        document.getElementById('screen-17').classList.add('active');
+      }, 1000);
     }
 
     function devReset() {
@@ -825,14 +837,12 @@
         cardFooterNote.style.display = 'none';
         taskContentText.innerHTML = `Today's task check-in has passed (9:30 PM).<br><br>Rest well and anticipate your next task tomorrow at 8:00 AM!`;
       } else {
-        // Unhide task card & hide footer note during loading state
         taskBoxA.style.display = 'block';
         cardHeaderTitle.textContent = "TODAY'S DAILY TASK";
         cardFooterNote.style.display = 'none';
 
         const todayDateKey = `task_${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}`;
 
-        // Cleanup old daily tasks without touching userLevel or workoutSubscribed
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
           if (key && key.startsWith('task_') && key !== todayDateKey) {
@@ -842,7 +852,6 @@
 
         const savedTaskToday = localStorage.getItem(todayDateKey);
 
-        // INSTANT LOAD: Load cached task in 0ms if available for live users; Sandbox fetches live from Google Sheets
         if (savedTaskToday && !isDev) {
           renderFormattedTask(taskContentText, savedTaskToday);
           cardFooterNote.style.display = 'block';
@@ -854,8 +863,13 @@
 
           try {
             const userEmail = localStorage.getItem('userEmail') || urlParams.get('email') || '';
-            const cacheBuster = isDev ? `&ts=${Date.now()}` : '';
-            const response = await fetch(`${WEBHOOK_BASE}/today-task?email=${encodeURIComponent(userEmail)}${cacheBuster}`, { signal: controller.signal });
+            const isSandboxMorning = isDev && forceState === 'morning';
+            const queryParams = new URLSearchParams({
+              email: userEmail,
+              ...(isSandboxMorning ? { mode: 'random', ts: Date.now() } : {})
+            });
+
+            const response = await fetch(`${WEBHOOK_BASE}/today-task?${queryParams.toString()}`, { signal: controller.signal });
             clearTimeout(timeoutId);
 
             if (response.ok) {
@@ -886,8 +900,12 @@
     }
 
     function closeReflection() {
-      if (isDev && forceState === 'checkin') window.location.href = '?dev=true&force=night';
-      else routeActiveSubscriber();
+      if (isDev && forceState === 'checkin') {
+        forceState = 'night';
+        routeActiveSubscriber();
+      } else {
+        routeActiveSubscriber();
+      }
     }
 
     async function startWorkout(os) {
