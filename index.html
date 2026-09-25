@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Daily Fortune Workout</title>
+  <title>Fortune Workout</title>
   
   <!-- PWA Settings -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#FAF7F2">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Daily Fortune">
+  <meta name="apple-mobile-web-app-title" content="Fortune Workout">
   <link rel="apple-touch-icon" href="icon-192.png">
 
   <style>
@@ -37,6 +37,85 @@
       min-height: 100vh;
       overflow: hidden;
       touch-action: manipulation;
+    }
+
+    /* Custom In-App Notification Toast */
+    #notification-toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background-color: rgba(45, 43, 42, 0.95);
+      color: #FFFFFF;
+      padding: 14px 24px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      z-index: 10000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.4s ease, transform 0.4s ease, visibility 0.4s;
+      width: 90%;
+      max-width: 350px;
+    }
+
+    #notification-toast.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Streamlined Compact Help Toast */
+    #help-icon {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 32px;
+      height: 32px;
+      background-color: var(--card-bg);
+      color: var(--accent-color);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: 800;
+      font-size: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      cursor: pointer;
+      z-index: 9999;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    #help-toast {
+      position: fixed;
+      top: 60px;
+      right: 20px;
+      background-color: rgba(45, 43, 42, 0.95);
+      color: #FFFFFF;
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.3;
+      width: fit-content;
+      max-width: 210px;
+      text-align: center;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+      z-index: 9998;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-8px);
+      transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+      white-space: normal;
+    }
+
+    #help-toast.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
     }
 
     .card-container {
@@ -107,6 +186,7 @@
       margin-bottom: 18px;
       color: var(--accent-color);
       text-align: center;
+      user-select: none;
     }
 
     .tap-hint {
@@ -185,37 +265,8 @@
     .btn-alt {
       background-color: var(--accent-color);
     }
-    
-    .btn:disabled {
-      background-color: #CCC6BD;
-      cursor: not-allowed;
-    }
 
-    #status-message-ios, #status-message-android {
-      margin-top: 10px;
-      font-weight: bold;
-      font-size: 14px;
-      min-height: 20px;
-      text-align: center;
-    }
-    .error { color: #d9534f; }
-    .success { color: var(--accent-color); }
-
-    .unblock-box {
-      display: none;
-      background-color: #FFF3CD;
-      border: 1px solid #FFEEBA;
-      color: #856404;
-      padding: 12px;
-      border-radius: 12px;
-      margin-top: 12px;
-      font-size: 13px;
-      line-height: 1.5;
-      text-align: center;
-      width: 100%;
-    }
-
-    /* Task Cards */
+    /* Task Cards & Typography */
     .task-card {
       background: #FAF7F2;
       border: 2px dashed var(--accent-color);
@@ -234,10 +285,60 @@
     }
 
     .task-content {
-      font-size: 17px;
-      font-weight: 700;
+      font-size: 16px;
       color: var(--text-color);
       line-height: 1.5;
+      text-align: center;
+      word-wrap: break-word;
+      margin: 0 auto;
+    }
+
+    .task-bold {
+      font-weight: 800;
+      font-size: 17px;
+      display: block;
+      margin-bottom: 8px;
+      color: #2D2B2A;
+    }
+
+    .task-explanation {
+      font-weight: 400;
+      font-size: 15px;
+      display: block;
+      color: #555250;
+      line-height: 1.5;
+    }
+
+    /* Loading Spinner Animation */
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 0;
+    }
+
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 4px solid #EAE3D9;
+      border-top: 4px solid var(--accent-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 12px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      font-size: 13px;
+      color: #8E7D6B;
+      font-weight: 500;
+      line-height: 1.4;
+      text-align: center;
     }
 
     .reflection-box {
@@ -249,118 +350,152 @@
       border: 1px solid #EAE3D9;
     }
 
+    /* Secret Blank Sandbox Tap Target */
+    #sandbox-secret-tap {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      width: 45px;
+      height: 45px;
+      z-index: 99;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* DEV SANDBOX MENU (Lifted Above Netlify Banner) */
+    #dev-panel {
+      display: none;
+      position: fixed;
+      bottom: 60px;
+      left: 10px;
+      right: 10px;
+      background: rgba(45, 43, 42, 0.98);
+      color: white;
+      padding: 12px;
+      border-radius: 16px;
+      z-index: 9999;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+    .dev-btn {
+      background: #555; color: #fff; border: none; padding: 8px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: bold; flex-grow: 1; text-align: center;
+    }
+    .dev-btn:active { background: #777; }
+    .dev-danger { background: #d9534f; }
+    .dev-success { background: #28a745; }
+    .dev-warning { background: #f0ad4e; color: #fff; }
   </style>
 </head>
 <body>
 
+  <!-- Custom Notification Toast -->
+  <div id="notification-toast"></div>
+
+  <!-- FAQ Icon & Streamlined Toast -->
+  <div id="help-icon" onclick="showHelpToast()">?</div>
+  <div id="help-toast">Have questions? Ask our Community on Facebook</div>
+
+  <!-- Floating Developer Sandbox Menu -->
+  <div id="dev-panel">
+    <div style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; padding:0 4px;">
+      <span style="font-size:12px; font-weight:800; color:#D4A373;">🛠 Sandbox Mode</span>
+      <span onclick="handleSecretTap()" style="font-size:12px; font-weight:bold; color:#CCC; cursor:pointer; padding:2px 8px; background:#444; border-radius:6px;">✕ Close</span>
+    </div>
+    <button class="dev-btn" onclick="devForceState('morning')">☀ 8:00AM</button>
+    <button class="dev-btn" onclick="devForceState('night')">🌙 Night</button>
+    <button class="dev-btn" onclick="devForceState('weekend')">🏖 Weekend</button>
+    <button class="dev-btn" onclick="devForceState('checkin')">🔔 9:30PM</button>
+    <button class="dev-btn dev-success" onclick="devSimulateRenewal()">💳 Sim Renewal</button>
+    <button class="dev-btn dev-warning" onclick="devSimulateDecline()">💳 Sim Decline</button>
+    <button class="dev-btn dev-danger" onclick="devReset()">🗑 Reset All</button>
+  </div>
+
   <div class="card-container">
     
-    <!-- Screen 1 -->
     <div class="screen" id="screen-1" onclick="nextScreen(1)">
       <div class="content-body">
         <div class="bold-title">Welcome to the Community of Building Your Fortune Workout</div>
-        <div class="main-text">Before you start, please read every single word. It can feel heavy, but it is totally worth your time.</div>
+        <div class="main-text">Before you start, please read every single word.<br><br>It can feel heavy, but it is totally worth your time.</div>
       </div>
       <div class="tap-hint">Tap to continue reading...</div>
     </div>
 
-    <!-- Screen 2 -->
     <div class="screen" id="screen-2" onclick="nextScreen(2)">
       <div class="content-body">
         <div class="bold-title" style="font-size: 20px;">The Purpose</div>
-        <div class="main-text">This is not intended to upgrade your cars, lifestyle, or accessories. Your $1.50 monthly investment is strictly here to help you become a better version of yourself than yesterday.</div>
+        <div class="main-text">This is not intended to upgrade your cars, lifestyle, or accessories.<br><br>Your $1.50 monthly investment is strictly here to help you become a better version of yourself than yesterday.</div>
       </div>
       <div class="tap-hint">Tap to continue reading...</div>
     </div>
 
-    <!-- Screen 3 -->
     <div class="screen" id="screen-3" onclick="nextScreen(3)">
       <div class="content-body">
         <div class="bold-title" style="font-size: 20px;">Our Vision</div>
         <div class="main-text">Our vision is clear. Through just 1 tasked action every day, build your:</div>
-        <ul class="bullet-list">
-          <li>• Aura</li>
-          <li>• Charisma</li>
-          <li>• Body</li>
-          <li>• Personality</li>
-        </ul>
+        <ul class="bullet-list"><li>• Aura</li><li>• Charisma</li><li>• Body</li><li>• Personality</li></ul>
       </div>
       <div class="tap-hint">Tap to continue reading...</div>
     </div>
 
-    <!-- Screen 4 -->
     <div class="screen" id="screen-4" onclick="nextScreen(4)">
       <div class="content-body">
         <div class="main-text">Every weekday at 8:00 AM, a task is pushed to your phone to improve your:</div>
-        <ul class="bullet-list">
-          <li>• Health</li>
-          <li>• Wealth</li>
-          <li>• Social skills</li>
-        </ul>
-        <div class="main-text" style="font-size:15px; margin-bottom:0;">Doing it daily builds powerful muscle memory.</div>
+        <ul class="bullet-list"><li>• Health</li><li>• Wealth</li><li>• Social skills</li></ul>
+        <div class="main-text" style="font-size:15px; margin-bottom:0; margin-top:16px;">Doing it daily builds powerful muscle memory.</div>
       </div>
       <div class="tap-hint">Tap to continue reading...</div>
     </div>
 
-    <!-- Screen 5 -->
     <div class="screen" id="screen-5" onclick="nextScreen(5)">
       <div class="content-body">
-        <div class="main-text">At 9:30 PM, we check in. Feel that dopamine rush when you get it right! You deserve a good long rest for the night. And if you see a task repeat the next day? Maybe heaven is telling you to do even more.</div>
+        <div class="main-text">At 9:30 PM, we check in. Feel that dopamine rush when you get it right!<br><br>You deserve a good long rest for the night.<br><br>And if you see a task repeat the next day? Maybe heaven is telling you to do even more.</div>
       </div>
       <div class="tap-hint">Tap to continue reading...</div>
     </div>
 
-    <!-- Screen 6 -->
     <div class="screen" id="screen-6" onclick="nextScreen(6)">
       <div class="content-body">
-        <div class="main-text">We don't do history scrolling. Let bygones be bygones. If you missed today, let it pass. Live in the moment, do what is needed today, and enjoy every second living on earth.</div>
+        <div class="main-text">We don't do history scrolling. Let bygones be bygones. If you missed today, let it pass.<br><br>Live in the moment, do what is needed today, and enjoy every second living on earth.</div>
       </div>
       <div class="tap-hint">Tap to continue reading...</div>
     </div>
 
-    <!-- Screen 7 -->
     <div class="screen" id="screen-7" onclick="nextScreen(7)">
       <div class="content-body">
-        <div class="main-text">This workout is no-ads, no-selling, no-punishment. $1 is your investment to upgrade yourself, and $0.50 covers the admin costs to keep our community alive (unfortunately!).</div>
+        <div class="main-text">This workout is no-ads, no-selling, no-punishment.<br><br>$1 is your investment to upgrade yourself, and $0.50 covers the admin costs to keep our community alive (unfortunately!).</div>
       </div>
       <div class="tap-hint">Tap to continue reading...</div>
     </div>
 
-    <!-- Screen 8 -->
     <div class="screen" id="screen-8" onclick="nextScreen(8)">
       <div class="content-body">
-        <div class="main-text">If you have 3 phones, please do not buy 3 subscriptions (although we wouldn't mind the extra money!). Stick to one. Research has shown that keeping your life simple generates many more benefits.</div>
+        <div class="main-text">If you have 3 phones, please do not buy 3 subscriptions (although we wouldn't mind the extra money!). Stick to one.<br><br>Research has shown that keeping your life simple generates many more benefits.</div>
       </div>
       <div class="tap-hint">Tap to continue reading...</div>
     </div>
 
-    <!-- Screen 9 -->
     <div class="screen" id="screen-9" onclick="nextScreen(9)">
       <div class="content-body">
-        <div class="main-text">Oh, did I forget to mention? Tasks only arrive on weekdays, because we need rest too! Just be yourself over the weekend. You deserve it after a long week.</div>
+        <div class="main-text">Oh, did I forget to mention?<br><br>Tasks only arrive on weekdays, because we need rest too!<br><br>Just be yourself over the weekend. You deserve it after a long week.</div>
       </div>
       <div class="tap-hint">Tap to continue reading...</div>
     </div>
 
-    <!-- Screen 10 -->
     <div class="screen" id="screen-10" onclick="nextScreen(10)">
       <div class="content-body">
         <div class="bold-title" style="font-size: 20px;">Community Call</div>
-        <div class="main-text">Your tasks are not created by bots. They are contributed by like-minded people like you who are motivated to improve themselves every day to touch the lives of more people.</div>
+        <div class="main-text">Your tasks are not created by bots.<br><br>They are contributed by like-minded people like you who are motivated to improve themselves every day to touch the lives of more people.</div>
       </div>
       <div class="tap-hint">Tap to continue reading...</div>
     </div>
 
-    <!-- Screen 11 -->
     <div class="screen" id="screen-11" onclick="nextScreen(11)">
       <div class="content-body">
         <div class="main-text">When you have made your investment today, see yourself building a stronger career and family tomorrow, and becoming a better:</div>
-        <ul class="bullet-list">
-          <li>• Husband</li>
-          <li>• Wife</li>
-          <li>• Child</li>
-        </ul>
-        <div class="main-text" style="font-size:14px; margin-bottom:0;">Recommend this to your loved ones—working out together is always better than working alone, giving reminders to each other.</div>
+        <ul class="bullet-list"><li>• Husband</li><li>• Wife</li><li>• Child</li></ul>
+        <div class="main-text" style="font-size:14px; margin-bottom:0; margin-top:16px;">Recommend this to your loved ones—working out together is always better than working alone, giving reminders to each other.</div>
       </div>
       <div class="tap-hint">Tap to continue reading...</div>
     </div>
@@ -387,10 +522,6 @@
         </ol>
         <button class="btn btn-alt" id="btn-ios" onclick="startWorkout('ios')">Begin your Fortune Workout Now</button>
         <div id="status-message-ios"></div>
-        <div id="unblock-box-ios" class="unblock-box">
-          <strong>How to allow notifications:</strong><br>
-          Open iPhone <strong>Settings</strong> ➡️ <strong>Safari</strong> ➡️ <strong>Notifications</strong> ➡️ Select <strong>Allow Notifications</strong>.
-        </div>
       </div>
     </div>
 
@@ -401,41 +532,40 @@
         <ol class="instruction-list">
           <li>1. Tap the <strong>three dots (⋮)</strong> in Chrome top right.</li>
           <li>2. Tap <strong>"Install and create shortcut"</strong>.</li>
-          <li>3. Select <strong>"Create shortcut"</strong>.</li>
+          <li>3. Tap <strong>"Install"</strong> (or <em>"Create shortcut"</em> if install is unavailable).</li>
           <li>4. Open app from Home Screen & tap below.</li>
         </ol>
         <button class="btn btn-alt" id="btn-android" onclick="startWorkout('android')">Begin your Fortune Workout Now</button>
         <div id="status-message-android"></div>
-        <div id="unblock-box-android" class="unblock-box">
-          <strong>How to grant permission on Android:</strong><br>
-          1. Long-press <strong>Chrome icon</strong> on phone ➡️ Tap <strong>App info (i)</strong>.<br>
-          2. Tap <strong>Permissions</strong> ➡️ <strong>Notifications</strong> ➡️ Select <strong>Allow</strong>.<br>
-          3. Return here and tap button above!
-        </div>
       </div>
     </div>
 
     <!-- Screen 14 (Dashboard Views) -->
     <div class="screen no-cursor" id="screen-14">
       <div class="content-body">
-        <div id="dashboard-header" class="bold-title">✨ Community Member Active</div>
+        <div id="dashboard-header" class="bold-title">✨ Active Member</div>
         <div id="dashboard-status-text" class="main-text"></div>
         
         <div id="task-box-variant-a" class="task-card" style="display:none;">
           <div class="task-title">Today's Daily Task</div>
-          <div class="task-content" id="task-content-text">Drink 1 full glass of water first thing in the morning and state 1 positive intention.</div>
+          <div class="task-content" id="task-content-text"></div>
           <div style="font-size: 13px; color: #9C8E80; margin-top: 12px; font-weight: normal;">
             Complete this task today! Check your phone for your next push notification at 9:30 PM to mirror check if you have successfully accumulated your fortune for tomorrow!
           </div>
         </div>
       </div>
+      <!-- Completely Invisible Secret Tap Area (Bottom Right Blank Corner) -->
+      <div id="sandbox-secret-tap" onclick="handleSecretTap()"></div>
     </div>
 
     <!-- Screen 15 (9:30 PM Reflection Prompt) -->
     <div class="screen no-cursor" id="screen-15">
       <div class="content-body">
-        <div class="bold-title">🌙 9:30 PM Daily Check-In</div>
-        <div class="main-text">How did you do with today's Fortune Workout task? Be real and honest with yourself.</div>
+        <div class="bold-title">🌙 9:30 PM Daily Self-Check</div>
+        <div class="main-text">
+          How did you do with today's Fortune Workout task?<br><br>
+          Be real and honest with yourself.
+        </div>
         <div class="btn-group">
           <button class="btn" onclick="submitReflection(1)">Yes, I've completed</button>
           <button class="btn btn-alt" onclick="submitReflection(2)">No, I did not</button>
@@ -455,9 +585,149 @@
       <div class="tap-hint">Tap to continue...</div>
     </div>
 
+    <!-- Screen 17 (Subscription Suspended / Lockout) -->
+    <div class="screen no-cursor" id="screen-17">
+      <div class="content-body">
+        <div class="bold-title" style="color: #d9534f;">Subscription Paused</div>
+        <div class="main-text">
+          Your monthly investment could not be processed. Your access has been temporarily suspended.<br><br>
+          <span style="font-size: 14px;">Please update your billing details via your receipt to resume your Fortune Workout and keep your streak alive.</span>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-alt" onclick="localStorage.clear(); window.location.reload();">I have updated my billing</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    let isDev = urlParams.get('dev') === 'true';
+    const forceState = urlParams.get('force');
+    const WEBHOOK_BASE = 'https://n8n-latest-x9ac.onrender.com/webhook';
+
+    // 5 Updated Backup Tasks
+    const FALLBACK_TASKS = [
+      "Mindset & Growth: Read one page of a book that feeds your mind today. One good idea can stay with you all day and slowly change the way you think.",
+      "Helping Others & Social: Give someone a genuine compliment. Watch their eyes light up. Become the kind of person whose presence makes people feel better about themselves.",
+      "Health & Vitality: Drink 8 glasses of water today. Feel your body fully hydrated and refreshed. A healthy, radiant body carries a different kind of presence—and that presence attracts people and opportunities.",
+      "Presence & Aura: Before you leave home, take one extra look in the mirror. Fix one small thing and walk out feeling more put together. Looking good starts with taking care of the details.",
+      "Wisdom & Curiosity: Ask someone, \"What do you think?\" today. Be genuinely curious, even if you disagree. You don't have to know everything to be someone people respect."
+    ];
+
+    if (isDev) {
+      document.getElementById('dev-panel').style.display = 'flex';
+    }
+
+    // Secret Tap Trigger: Tap bottom-right blank corner 5 times
+    let secretTapCount = 0;
+    let secretTapTimer;
+    function handleSecretTap() {
+      secretTapCount++;
+      clearTimeout(secretTapTimer);
+      secretTapTimer = setTimeout(() => { secretTapCount = 0; }, 2000);
+      if (secretTapCount >= 5) {
+        secretTapCount = 0;
+        const panel = document.getElementById('dev-panel');
+        isDev = !isDev;
+        panel.style.display = isDev ? 'flex' : 'none';
+        showAppNotification(isDev ? "🛠 Sandbox Mode Enabled" : "🔒 Sandbox Mode Hidden");
+      }
+    }
+
+    // Smart Task Renderer: Bolds headline/first sentence, unbolds explanation text
+    function renderFormattedTask(container, rawText) {
+      let boldTitle = "";
+      let regularExplanation = "";
+
+      if (rawText.includes(" — ")) {
+        const parts = rawText.split(" — ");
+        boldTitle = parts[0].trim();
+        regularExplanation = parts.slice(1).join(" — ").trim();
+      } else if (rawText.includes(": ")) {
+        const parts = rawText.split(": ");
+        boldTitle = parts[0].trim();
+        regularExplanation = parts.slice(1).join(": ").trim();
+      } else if (rawText.includes(" - ")) {
+        const parts = rawText.split(" - ");
+        boldTitle = parts[0].trim();
+        regularExplanation = parts.slice(1).join(" - ").trim();
+      } else if (rawText.includes(". ")) {
+        const firstDotIndex = rawText.indexOf(". ");
+        boldTitle = rawText.substring(0, firstDotIndex + 1).trim();
+        regularExplanation = rawText.substring(firstDotIndex + 2).trim();
+      } else {
+        boldTitle = rawText;
+      }
+
+      if (regularExplanation) {
+        container.innerHTML = `<span class="task-bold">${boldTitle}</span><span class="task-explanation">${regularExplanation}</span>`;
+      } else {
+        container.innerHTML = `<span class="task-bold">${boldTitle}</span>`;
+      }
+    }
+
+    // Animated Loading State
+    function renderLoadingState(container) {
+      container.innerHTML = `
+        <div class="loading-container">
+          <div class="spinner"></div>
+          <div class="loading-text">Waking up your personal guidance...<br>Please wait up to 30 seconds for today's task to load.</div>
+        </div>
+      `;
+    }
+
+    function showAppNotification(message) {
+      const toast = document.getElementById('notification-toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => { toast.classList.remove('show'); }, 4000);
+    }
+
+    let helpTimeout;
+    function showHelpToast() {
+      const toast = document.getElementById('help-toast');
+      toast.classList.add('show');
+      clearTimeout(helpTimeout);
+      helpTimeout = setTimeout(() => { toast.classList.remove('show'); }, 4000);
+    }
+
+    function devForceState(state) {
+      localStorage.setItem('workoutSubscribed', 'true');
+
+      // Trigger Interactive Push Banner Simulation on Button Tap
+      if (state === 'morning') {
+        showAppNotification("🔔 [8:00 AM Notification] Your daily Fortune Workout task has arrived! Tap to view.");
+      } else if (state === 'checkin') {
+        showAppNotification("🌙 [9:30 PM Notification] Time for your daily mirror check-in! Tap to reflect.");
+      }
+
+      setTimeout(() => {
+        window.location.href = `?dev=true&force=${state}`;
+      }, 800);
+    }
+    
+    function devSimulateRenewal() {
+      let currentLevel = parseInt(localStorage.getItem('userLevel') || '1');
+      currentLevel++;
+      localStorage.setItem('userLevel', currentLevel);
+      localStorage.setItem('workoutSubscribed', 'true');
+      showAppNotification(`🎉 Simulated successful monthly renewal! You are now Level ${currentLevel}.`);
+      routeActiveSubscriber();
+    }
+
+    function devSimulateDecline() {
+      localStorage.setItem('workoutSubscribed', 'failed');
+      showAppNotification(`⚠️ Simulated payment failure! Access revoked.`);
+      setTimeout(() => { window.location.href = '?dev=true'; }, 1500);
+    }
+
+    function devReset() {
+      localStorage.clear();
+      window.location.href = '?dev=true';
+    }
+
     const RANDOM_REFLECTIONS = [
       "Give yourself a pat for the effort you put in today.",
       "If you enjoyed your day today, you earned it. If you did not, don't waste the time given to you tomorrow.",
@@ -466,69 +736,64 @@
       "Believe that our tasks are here to build you a fortune."
     ];
 
-    // Register Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-          .catch(err => console.log('Service Worker registration skipped:', err));
+        navigator.serviceWorker.register('sw.js').catch(() => {});
       });
     }
 
-    // Auto-Skip Onboarding & State Router
     document.addEventListener('DOMContentLoaded', () => {
-      const isSubscribed = localStorage.getItem('workoutSubscribed');
-      if (isSubscribed === 'true') {
+      const subStatus = localStorage.getItem('workoutSubscribed');
+      if (subStatus === 'failed') {
+        hideAllScreens();
+        document.getElementById('screen-17').classList.add('active');
+      } else if (subStatus === 'true') {
         routeActiveSubscriber();
       } else {
         const savedOS = localStorage.getItem('userOS');
-        if (savedOS === 'ios') {
-          document.getElementById('screen-13a').classList.add('active');
-        } else if (savedOS === 'android') {
-          document.getElementById('screen-13b').classList.add('active');
-        } else {
-          document.getElementById('screen-1').classList.add('active');
-        }
+        if (savedOS === 'ios') document.getElementById('screen-13a').classList.add('active');
+        else if (savedOS === 'android') document.getElementById('screen-13b').classList.add('active');
+        else document.getElementById('screen-1').classList.add('active');
       }
     });
 
     function nextScreen(currentId) {
       document.getElementById('screen-' + currentId).classList.remove('active');
-      const nextTargetId = currentId + 1;
-      const targetElement = document.getElementById('screen-' + nextTargetId);
-      if (targetElement) {
-        targetElement.classList.add('active');
-      }
+      const targetElement = document.getElementById('screen-' + (currentId + 1));
+      if (targetElement) targetElement.classList.add('active');
     }
 
     function chooseOS(os) {
       localStorage.setItem('userOS', os);
       document.getElementById('screen-12').classList.remove('active');
-      if (os === 'ios') {
-        document.getElementById('screen-13a').classList.add('active');
-      } else {
-        document.getElementById('screen-13b').classList.add('active');
-      }
+      if (os === 'ios') document.getElementById('screen-13a').classList.add('active');
+      else document.getElementById('screen-13b').classList.add('active');
     }
 
     function hideAllScreens() {
-      const screens = document.querySelectorAll('.screen');
-      screens.forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     }
 
-    function routeActiveSubscriber() {
+    async function routeActiveSubscriber() {
       hideAllScreens();
 
+      const currentLevel = localStorage.getItem('userLevel') || '1';
+      document.getElementById('dashboard-header').textContent = `✨ Active Member • Lv ${currentLevel}`;
+
       const now = new Date();
-      const day = now.getDay(); // 0 = Sun, 1 = Mon, ..., 5 = Fri, 6 = Sat
+      const day = now.getDay(); 
       const hour = now.getHours();
       const minute = now.getMinutes();
 
-      // Weekend definition: Friday 9:30 PM to Monday 7:59 AM
-      const isWeekend = (day === 6) || (day === 0) || (day === 5 && (hour > 21 || (hour === 21 && minute >= 30))) || (day === 1 && hour < 8);
-      const isNightTime = (hour > 21 || (hour === 21 && minute >= 30)) || (hour < 8);
+      let isWeekend = (day === 6) || (day === 0) || (day === 5 && (hour > 21 || (hour === 21 && minute >= 30))) || (day === 1 && hour < 8);
+      let isNightTime = (hour > 21 || (hour === 21 && minute >= 30)) || (hour < 8);
+      let isReflectionTrigger = urlParams.get('checkin') === 'true';
 
-      const urlParams = new URLSearchParams(window.location.search);
-      const isReflectionTrigger = urlParams.get('checkin') === 'true';
+      if (isDev && forceState) {
+        isWeekend = (forceState === 'weekend');
+        isNightTime = (forceState === 'night');
+        isReflectionTrigger = (forceState === 'checkin');
+      }
 
       if (isReflectionTrigger && !isWeekend) {
         document.getElementById('screen-15').classList.add('active');
@@ -537,19 +802,58 @@
 
       const statusText = document.getElementById('dashboard-status-text');
       const taskBoxA = document.getElementById('task-box-variant-a');
+      const taskContentText = document.getElementById('task-content-text');
 
       if (isWeekend) {
-        // Variant C: Weekend Break View
         statusText.textContent = "Your fortune workout tasks have completed for the week. Check your phone next Monday at 8:00 AM to receive your next fortune building workout!\n\nBe yourself over the weekend. Have a blast!";
         taskBoxA.style.display = 'none';
       } else if (isNightTime) {
-        // Variant B: Overnight Rest View (Mon - Thu night)
         statusText.textContent = "Today's task check-in has passed (9:30 PM). Rest well and anticipate your next task tomorrow at 8:00 AM!";
         taskBoxA.style.display = 'none';
       } else {
-        // Variant A: Weekday Active Task View (8:00 AM - 9:29 PM)
         statusText.textContent = "";
         taskBoxA.style.display = 'block';
+
+        const todayDateKey = `task_${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}`;
+
+        // Cleanup old previous-day tasks without touching level or subscription state
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('task_') && key !== todayDateKey) {
+            localStorage.removeItem(key);
+          }
+        }
+
+        const savedTaskToday = localStorage.getItem(todayDateKey);
+
+        // INSTANT ZERO-WAIT LOAD: If task exists in local storage for today, load in 0ms with zero network requests
+        if (savedTaskToday && !isDev) {
+          renderFormattedTask(taskContentText, savedTaskToday);
+        } else {
+          renderLoadingState(taskContentText); 
+
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 30000); 
+
+          try {
+            const userEmail = localStorage.getItem('userEmail') || urlParams.get('email') || '';
+            const response = await fetch(`${WEBHOOK_BASE}/today-task?email=${encodeURIComponent(userEmail)}`, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            if (response.ok) {
+              const data = await response.json();
+              const fetchedTask = data.task || "No task found.";
+              renderFormattedTask(taskContentText, fetchedTask);
+              if (!isDev) localStorage.setItem(todayDateKey, fetchedTask);
+            } else {
+              throw new Error("Network issue");
+            }
+          } catch (err) {
+            clearTimeout(timeoutId);
+            const randomFallback = FALLBACK_TASKS[Math.floor(Math.random() * FALLBACK_TASKS.length)];
+            renderFormattedTask(taskContentText, randomFallback);
+            if (!isDev) localStorage.setItem(todayDateKey, randomFallback);
+          }
+        }
       }
 
       document.getElementById('screen-14').classList.add('active');
@@ -563,77 +867,48 @@
     }
 
     function closeReflection() {
-      routeActiveSubscriber();
+      if (isDev && forceState === 'checkin') window.location.href = '?dev=true&force=night';
+      else routeActiveSubscriber();
     }
 
     async function startWorkout(os) {
       const statusElementId = os === 'ios' ? 'status-message-ios' : 'status-message-android';
-      const unblockBoxId = os === 'ios' ? 'unblock-box-ios' : 'unblock-box-android';
-      const btnElementId = os === 'ios' ? 'btn-ios' : 'btn-android';
-      
       const statusMessage = document.getElementById(statusElementId);
-      const unblockBox = document.getElementById(unblockBoxId);
-      const btn = document.getElementById(btnElementId);
 
       const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-      const urlParams = new URLSearchParams(window.location.search);
-      const userEmail = urlParams.get('email') || '';
+      const userEmail = urlParams.get('email') || (isDev ? 'developer@test.com' : '');
+      if (userEmail) localStorage.setItem('userEmail', userEmail);
 
-      let pushPayload = {
-        type: "pwa_client",
-        status: "active",
-        device_os: os
-      };
+      let pushPayload = { type: "pwa_client", status: "active", device_os: os };
 
       if ('Notification' in window) {
         try {
           const permission = await Notification.requestPermission();
-          
-          if (permission === 'granted') {
-            if ('serviceWorker' in navigator) {
-              try {
-                const registration = await navigator.serviceWorker.ready;
-                let subscription = await registration.pushManager.getSubscription();
-                if (!subscription) {
-                  subscription = await registration.pushManager.subscribe({ userVisibleOnly: true });
-                }
-                if (subscription) pushPayload = subscription;
-              } catch (pushErr) {
-                console.warn("Push fallback used:", pushErr);
-              }
+          if (permission === 'granted' && 'serviceWorker' in navigator) {
+            const registration = await navigator.serviceWorker.ready;
+            let subscription = await registration.pushManager.getSubscription();
+            if (!subscription) {
+              subscription = await registration.pushManager.subscribe({ userVisibleOnly: true });
             }
-          } else {
-            statusMessage.textContent = "Notifications are required. Please allow them in your settings below:";
-            statusMessage.className = "error";
-            if (unblockBox) unblockBox.style.display = 'block';
-            return;
+            if (subscription) pushPayload = subscription;
           }
-        } catch (notifErr) {
-          console.warn("Overlay issue:", notifErr);
-        }
+        } catch (notifErr) {}
       }
 
       statusMessage.textContent = "Activating your workout subscription...";
       statusMessage.className = "success";
 
       try {
-        await fetch('https://n8n-latest-x9ac.onrender.com/webhook/stripe-subscription', {
+        await fetch(`${WEBHOOK_BASE}/stripe-subscription`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: userEmail,
-            timezone: userTimezone,
-            subscription: pushPayload
-          })
+          body: JSON.stringify({ email: userEmail, timezone: userTimezone, subscription: pushPayload })
         });
-      } catch (netErr) {
-        console.warn("Network response bypassed:", netErr);
-      }
+      } catch (netErr) {}
 
       localStorage.setItem('workoutSubscribed', 'true');
-      setTimeout(() => {
-        routeActiveSubscriber();
-      }, 1000);
+      localStorage.setItem('userLevel', '1');
+      setTimeout(() => { routeActiveSubscriber(); }, 1000);
     }
   </script>
 </body>
