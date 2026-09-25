@@ -362,7 +362,7 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* DEV SANDBOX MENU (Lifted Above Netlify Banner) */
+    /* DEV SANDBOX MENU */
     #dev-panel {
       display: none;
       position: fixed;
@@ -715,19 +715,11 @@
       routeActiveSubscriber();
     }
     
-    // Smooth Level-Up Simulation Without Screen Reload or Spinner
+    // Sandbox Trigger: Queues Level Up to trigger on 9:30 PM mirror check-in
     function devSimulateRenewal() {
-      let currentLevel = parseInt(localStorage.getItem('userLevel') || '1');
-      currentLevel++;
-      localStorage.setItem('userLevel', currentLevel);
       localStorage.setItem('workoutSubscribed', 'true');
-      
-      const headerElem = document.getElementById('dashboard-header');
-      if (headerElem) {
-        headerElem.textContent = `✨ Active Member • Lv ${currentLevel}`;
-      }
-
-      showAppNotification(`🎉 Simulated successful monthly renewal! You are now Level ${currentLevel}.`);
+      localStorage.setItem('pendingLevelUp', 'true');
+      showAppNotification("💳 Renewal payment processed! Level-up queued for 9:30 PM mirror check-in.");
     }
 
     function devSimulateDecline() {
@@ -892,11 +884,30 @@
       }
     }
 
+    // Reflection Submission: Evaluates mirror check-in and triggers level-up
     function submitReflection(option) {
       hideAllScreens();
       const randomIndex = Math.floor(Math.random() * RANDOM_REFLECTIONS.length);
       document.getElementById('reflection-response-text').textContent = RANDOM_REFLECTIONS[randomIndex];
       document.getElementById('screen-16').classList.add('active');
+
+      const hasPendingLevelUp = localStorage.getItem('pendingLevelUp') === 'true';
+      
+      if (hasPendingLevelUp && option === 1) {
+        let currentLevel = parseInt(localStorage.getItem('userLevel') || '1');
+        currentLevel++;
+        localStorage.setItem('userLevel', currentLevel);
+        localStorage.removeItem('pendingLevelUp');
+
+        const headerElem = document.getElementById('dashboard-header');
+        if (headerElem) {
+          headerElem.textContent = `✨ Active Member • Lv ${currentLevel}`;
+        }
+
+        setTimeout(() => {
+          showAppNotification(`🎉 Congratulations! Mirror check complete. You are now Level ${currentLevel}!`);
+        }, 400);
+      }
     }
 
     function closeReflection() {
