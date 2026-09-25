@@ -712,10 +712,11 @@
       routeActiveSubscriber();
     }
     
-    // Sandbox Trigger: Queues Level Up silently without showing any toast banner
+    // Sandbox Trigger: Queues Level Up and provides instant Sandbox confirmation toast
     function devSimulateRenewal() {
       localStorage.setItem('workoutSubscribed', 'true');
       localStorage.setItem('pendingLevelUp', 'true');
+      showAppNotification("💳 Level-up queued! Tap any reflection option on Screen 15 to trigger your Level Up.");
     }
 
     function devSimulateDecline() {
@@ -877,7 +878,7 @@
       }
     }
 
-    // Reflection Submission: Shows Reflection Complete screen & fires Level Up notification when subscriber performs self-check
+    // Reflection Submission: Guarantees Level Up celebration fires on Screen 16 (Reflection Complete)
     function submitReflection(option) {
       hideAllScreens();
       const randomIndex = Math.floor(Math.random() * RANDOM_REFLECTIONS.length);
@@ -888,21 +889,21 @@
 
       const hasPendingLevelUp = localStorage.getItem('pendingLevelUp') === 'true';
       
-      // Fires Level Up popup on Screen 16 (Reflection Complete) when subscriber performs self check
+      // Fires Level Up popup directly on Screen 16 when subscriber performs self check
       if (hasPendingLevelUp) {
         let currentLevel = parseInt(localStorage.getItem('userLevel') || '1');
         currentLevel++;
         localStorage.setItem('userLevel', currentLevel);
         localStorage.removeItem('pendingLevelUp');
 
+        // Update Header Element
         const headerElem = document.getElementById('dashboard-header');
         if (headerElem) {
           headerElem.textContent = `✨ Active Member • Lv ${currentLevel}`;
         }
 
-        setTimeout(() => {
-          showAppNotification(`🎉 Level Up! You completed your daily self-check and reached Level ${currentLevel}!`);
-        }, 300);
+        // Show Toast immediately on Screen 16
+        showAppNotification(`🎉 Level Up! You completed your daily self-check and reached Level ${currentLevel}!`);
       }
     }
 
