@@ -572,7 +572,7 @@
       </div>
     </div>
 
-    <!-- Screen 16 (Reflection Closing Message) -->
+    <!-- Screen 16 (Reflection Closing Message & Level-Up Celebration Page) -->
     <div class="screen" id="screen-16" onclick="closeReflection()">
       <div class="content-body">
         <div class="bold-title">✨ Reflection Complete</div>
@@ -715,7 +715,7 @@
       routeActiveSubscriber();
     }
     
-    // Sandbox Trigger: Queues Level Up to trigger on 9:30 PM mirror check-in
+    // Sandbox Trigger: Queues Level Up to trigger when subscriber performs self-check at night
     function devSimulateRenewal() {
       localStorage.setItem('workoutSubscribed', 'true');
       localStorage.setItem('pendingLevelUp', 'true');
@@ -884,16 +884,19 @@
       }
     }
 
-    // Reflection Submission: Evaluates mirror check-in and triggers level-up
+    // Reflection Submission: Shows Reflection Complete screen & fires Level Up notification when subscriber performs self-check
     function submitReflection(option) {
       hideAllScreens();
       const randomIndex = Math.floor(Math.random() * RANDOM_REFLECTIONS.length);
       document.getElementById('reflection-response-text').textContent = RANDOM_REFLECTIONS[randomIndex];
+      
+      // Transition to Screen 16 (Reflection Complete)
       document.getElementById('screen-16').classList.add('active');
 
       const hasPendingLevelUp = localStorage.getItem('pendingLevelUp') === 'true';
       
-      if (hasPendingLevelUp && option === 1) {
+      // Fires Level Up popup on Screen 16 (Reflection Complete) when subscriber performs self check
+      if (hasPendingLevelUp) {
         let currentLevel = parseInt(localStorage.getItem('userLevel') || '1');
         currentLevel++;
         localStorage.setItem('userLevel', currentLevel);
@@ -905,8 +908,8 @@
         }
 
         setTimeout(() => {
-          showAppNotification(`🎉 Congratulations! Mirror check complete. You are now Level ${currentLevel}!`);
-        }, 400);
+          showAppNotification(`🎉 Level Up! You completed your daily self-check and reached Level ${currentLevel}!`);
+        }, 300);
       }
     }
 
