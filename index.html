@@ -715,11 +715,10 @@
       routeActiveSubscriber();
     }
     
-    // Sandbox Trigger: Queues Level Up to trigger when subscriber performs self-check at night
+    // Sandbox Trigger: Queues Level Up silently without showing any billing/queuing toast
     function devSimulateRenewal() {
       localStorage.setItem('workoutSubscribed', 'true');
       localStorage.setItem('pendingLevelUp', 'true');
-      showAppNotification("💳 Renewal payment processed! Level-up queued for 9:30 PM mirror check-in.");
     }
 
     function devSimulateDecline() {
