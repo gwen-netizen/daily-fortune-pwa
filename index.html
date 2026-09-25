@@ -53,7 +53,7 @@
       font-weight: 600;
       text-align: center;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-      z-index: 10000;
+      z-index: 100000;
       opacity: 0;
       visibility: hidden;
       transition: opacity 0.5s ease, transform 0.5s ease, visibility 0.5s;
@@ -350,14 +350,14 @@
       border: 1px solid #EAE3D9;
     }
 
-    /* Secret Blank Sandbox Tap Target */
+    /* Secret Blank Sandbox Tap Target (Global Across All Screens) */
     #sandbox-secret-tap {
       position: absolute;
-      bottom: 10px;
-      right: 10px;
-      width: 45px;
-      height: 45px;
-      z-index: 99;
+      bottom: 0;
+      right: 0;
+      width: 60px;
+      height: 60px;
+      z-index: 99999;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
     }
@@ -373,7 +373,7 @@
       color: white;
       padding: 12px;
       border-radius: 16px;
-      z-index: 9999;
+      z-index: 99999;
       flex-wrap: wrap;
       gap: 6px;
       justify-content: center;
@@ -554,8 +554,6 @@
           </div>
         </div>
       </div>
-      <!-- Invisible Secret Tap Area (Bottom Right Blank Corner) -->
-      <div id="sandbox-secret-tap" onclick="handleSecretTap()"></div>
     </div>
 
     <!-- Screen 15 (9:30 PM Reflection Prompt) -->
@@ -598,6 +596,9 @@
         </div>
       </div>
     </div>
+
+    <!-- Invisible Secret Tap Area (Active across ALL screens) -->
+    <div id="sandbox-secret-tap" onclick="handleSecretTap()"></div>
 
   </div>
 
