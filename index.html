@@ -608,6 +608,21 @@
     let forceState = urlParams.get('force');
     const WEBHOOK_BASE = 'https://n8n-latest-x9ac.onrender.com/webhook';
 
+    // VAPID Public Key from n8n
+    const PUBLIC_VAPID_KEY = 'BHYSoAIBC__AWCL3BdD2lMez4Y1MTLtuRp6Ir3HaMJ7twkR50kQLQNcTZBfdj9bE9_SyOOnPyHETc_ANGLd0rMw';
+
+    // Browser utility to convert the VAPID string into a secure array
+    function urlB64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+      }
+      return outputArray;
+    }
+
     // 5 Backup Fallback Tasks
     const FALLBACK_TASKS = [
       "Mindset & Growth: Read one page of a book that feeds your mind today. One good idea can stay with you all day and slowly change the way you think.",
@@ -697,18 +712,10 @@
       helpTimeout = setTimeout(() => { toast.classList.remove('show'); }, 5000);
     }
 
-    // Seamless Sandbox State Transitions Without Page Reload or Unnecessary Toasts
+    // Seamless Sandbox State Transitions Without Page Reload
     function devForceState(state) {
       localStorage.setItem('workoutSubscribed', 'true');
       forceState = state;
-
-      // Only show push notification simulations for 8:00 AM and 9:30 PM triggers
-      if (state === 'morning') {
-        showAppNotification("🔔 [8:00 AM Notification] Your daily Fortune Workout task has arrived! Tap to view.");
-      } else if (state === 'checkin') {
-        showAppNotification("🌙 [9:30 PM Notification] Time for your daily mirror check-in! Tap to reflect.");
-      }
-
       routeActiveSubscriber();
     }
     
@@ -788,9 +795,25 @@
       const hour = now.getHours();
       const minute = now.getMinutes();
 
+      // Time Calculations & State Tracking
+      const todayDateKey = `task_${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}`;
+      const hasCheckedInToday = localStorage.getItem(`reflection_${todayDateKey}`) === 'true';
+
       let isWeekend = (day === 6) || (day === 0) || (day === 5 && (hour > 21 || (hour === 21 && minute >= 30))) || (day === 1 && hour < 8);
-      let isNightTime = (hour > 21 || (hour === 21 && minute >= 30)) || (hour < 8);
-      let isReflectionTrigger = urlParams.get('checkin') === 'true';
+      
+      // Check-in Window: Strictly 9:30 PM (21:30) to 11:59 PM (23:59)
+      let isCheckInWindow = (hour === 21 && minute >= 30) || (hour === 22) || (hour === 23);
+      
+      // Night Time: Midnight to 7:59 AM
+      let isNightTime = (hour >= 0 && hour < 8);
+
+      // If user completed check-in during the evening window, shift them to Night View immediately
+      if (isCheckInWindow && hasCheckedInToday) {
+        isCheckInWindow = false;
+        isNightTime = true;
+      }
+
+      let isReflectionTrigger = urlParams.get('checkin') === 'true' || isCheckInWindow;
 
       if (isDev && forceState) {
         isWeekend = (forceState === 'weekend');
@@ -798,7 +821,8 @@
         isReflectionTrigger = (forceState === 'checkin');
       }
 
-      if (isReflectionTrigger && !isWeekend) {
+      // If user enters during 9:30 PM - 11:59 PM window, it's not a weekend, and they HAVEN'T submitted yet
+      if (isReflectionTrigger && !isWeekend && !isNightTime) {
         hideAllScreens();
         document.getElementById('screen-15').classList.add('active');
         return;
@@ -816,27 +840,27 @@
         taskBoxA.style.display = 'block';
         cardHeaderTitle.textContent = "WEEKEND REST";
         cardFooterNote.style.display = 'none';
-        taskContentText.innerHTML = `Your fortune workout tasks have completed for the week. Check your phone next Monday at 8:00 AM to receive your next fortune building workout!<br><br><strong>Be yourself over the weekend. Have a blast!</strong>`;
+        taskContentText.innerHTML = `Your fortune workout tasks have completed for the week.<br><br>Check your phone next Monday at 8:00 AM to receive your next fortune building workout!<br><br><strong>Be yourself over the weekend. Have a blast!</strong>`;
       } else if (isNightTime) {
         taskBoxA.style.display = 'block';
         cardHeaderTitle.textContent = "DAILY CHECK-IN PASSED";
         cardFooterNote.style.display = 'none';
-        taskContentText.innerHTML = `Today's task check-in has passed (9:30 PM).<br><br>Rest well and anticipate your next task tomorrow at 8:00 AM!`;
+        taskContentText.innerHTML = `Today's task check-in has passed.<br><br>Rest well and anticipate your next task tomorrow at 8:00 AM!`;
       } else {
         taskBoxA.style.display = 'block';
         cardHeaderTitle.textContent = "TODAY'S DAILY TASK";
         cardFooterNote.style.display = 'none';
 
-        const todayDateKey = `task_${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}`;
+        const todayDateKeyForTask = `task_${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}`;
 
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
-          if (key && key.startsWith('task_') && key !== todayDateKey) {
+          if (key && key.startsWith('task_') && key !== todayDateKeyForTask) {
             localStorage.removeItem(key);
           }
         }
 
-        const savedTaskToday = localStorage.getItem(todayDateKey);
+        const savedTaskToday = localStorage.getItem(todayDateKeyForTask);
 
         if (savedTaskToday && !isDev) {
           renderFormattedTask(taskContentText, savedTaskToday);
@@ -863,7 +887,7 @@
               const fetchedTask = data.task || "No task found.";
               renderFormattedTask(taskContentText, fetchedTask);
               cardFooterNote.style.display = 'block';
-              if (!isDev) localStorage.setItem(todayDateKey, fetchedTask);
+              if (!isDev) localStorage.setItem(todayDateKeyForTask, fetchedTask);
             } else {
               throw new Error("Network issue");
             }
@@ -872,7 +896,7 @@
             const randomFallback = FALLBACK_TASKS[Math.floor(Math.random() * FALLBACK_TASKS.length)];
             renderFormattedTask(taskContentText, randomFallback);
             cardFooterNote.style.display = 'block';
-            if (!isDev) localStorage.setItem(todayDateKey, randomFallback);
+            if (!isDev) localStorage.setItem(todayDateKeyForTask, randomFallback);
           }
         }
       }
@@ -880,16 +904,22 @@
 
     // Reflection Submission: Guarantees Level Up celebration fires on Screen 16 (Reflection Complete)
     function submitReflection(option) {
+      // 1. Save memory flag: Remember they did this today
+      const now = new Date();
+      const todayDateKey = `task_${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}`;
+      localStorage.setItem(`reflection_${todayDateKey}`, 'true');
+
+      // 2. Hide everything and prepare Screen 16
       hideAllScreens();
       const randomIndex = Math.floor(Math.random() * RANDOM_REFLECTIONS.length);
       document.getElementById('reflection-response-text').textContent = RANDOM_REFLECTIONS[randomIndex];
       
-      // Transition to Screen 16 (Reflection Complete)
+      // 3. Show Screen 16
       document.getElementById('screen-16').classList.add('active');
 
       const hasPendingLevelUp = localStorage.getItem('pendingLevelUp') === 'true';
       
-      // Fires Level Up popup directly on Screen 16 when subscriber performs self check
+      // 4. Fire Level Up popup directly on Screen 16 if applicable
       if (hasPendingLevelUp) {
         let currentLevel = parseInt(localStorage.getItem('userLevel') || '1');
         currentLevel++;
@@ -933,7 +963,10 @@
             const registration = await navigator.serviceWorker.ready;
             let subscription = await registration.pushManager.getSubscription();
             if (!subscription) {
-              subscription = await registration.pushManager.subscribe({ userVisibleOnly: true });
+              subscription = await registration.pushManager.subscribe({ 
+                userVisibleOnly: true,
+                applicationServerKey: urlB64ToUint8Array(PUBLIC_VAPID_KEY)
+              });
             }
             if (subscription) pushPayload = subscription;
           }
