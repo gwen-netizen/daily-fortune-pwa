@@ -173,7 +173,6 @@
     <button class="dev-btn" onclick="devForceState('checkin')">🔔 9:30PM</button>
     <button class="dev-btn" onclick="devForceState('night')">🌙 Night</button>
     <button class="dev-btn" onclick="devForceState('weekend')">🏖 Weekend</button>
-    <button class="dev-btn" onclick="devForceState('sunday')">🌆 Sunday 6PM</button>
     <button class="dev-btn" style="background:#28a745;" onclick="devSimulateRenewal()">💳 Level Up</button>
     <button class="dev-btn" style="background:#d9534f;" onclick="devReset()">🗑 Reset All</button>
   </div>
@@ -227,7 +226,7 @@
       <div class="content-body">
         <div id="welcome-note" style="font-size: 15px; font-weight: 700; color: #9C8E80; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;"></div>
         <div class="bold-title">You just took the first step toward a higher aura. Let’s set your foundation.</div>
-        <div class="main-text">Your $1.50 monthly investment is strictly here to help you become a better version of yourself than yesterday.</div>
+        <div class="main-text">Experience your transformation through tiny, intentional daily steps.</div>
       </div>
       <div class="tap-hint">Tap to continue...</div>
     </div>
@@ -373,8 +372,8 @@
       <div class="content-body">
         <div class="bold-title">✨ Reflection Complete</div>
         <div class="reflection-box">
-          <div class="main-text" style="font-weight: 700; margin-bottom: 0;">
-            Give yourself a pat for the effort you put in today.
+          <div class="main-text" id="reflection-final-text" style="font-weight: 700; margin-bottom: 0;">
+            <!-- Text injected via JS -->
           </div>
         </div>
       </div>
@@ -518,6 +517,18 @@
     function nextScreen(currentId, variant) {
       if (currentId === 9 && variant === 'a') {
         document.getElementById('screen-9a').classList.remove('active');
+        
+        // Pick a random encouraging statement for the final screen
+        const reflectionQuotes = [
+          "Give yourself a pat for the effort you put in today.",
+          "Small steps compound into massive results. Great work today.",
+          "You are building a better version of yourself, day by day.",
+          "Rest easy tonight knowing you showed up for yourself.",
+          "Consistency is your superpower. See you tomorrow."
+        ];
+        const randomQuote = reflectionQuotes[Math.floor(Math.random() * reflectionQuotes.length)];
+        document.getElementById('reflection-final-text').textContent = randomQuote;
+        
         document.getElementById('screen-9b').classList.add('active');
         return;
       }
@@ -600,8 +611,8 @@
       const todayDateKey = `task_${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}`;
       const hasCheckedInToday = localStorage.getItem(`reflection_${todayDateKey}`) === 'true';
 
+      // Weekend logic covers Saturday, Sunday, and Friday night
       let isWeekend = (day === 6) || (day === 0) || (day === 5 && (hour > 21 || (hour === 21 && minute >= 30))) || (day === 1 && hour < 8);
-      let isSundayEvening = (day === 0 && hour >= 18);
       let isCheckInWindow = (hour === 21 && minute >= 30) || (hour === 22) || (hour === 23);
       let isNightTime = (hour >= 0 && hour < 8);
 
@@ -609,8 +620,7 @@
       let isReflectionTrigger = urlParams.get('checkin') === 'true' || isCheckInWindow;
 
       if (isDev && forceState) {
-        isWeekend = (forceState === 'weekend' || forceState === 'sunday');
-        isSundayEvening = (forceState === 'sunday');
+        isWeekend = (forceState === 'weekend');
         isNightTime = (forceState === 'night');
         isReflectionTrigger = (forceState === 'checkin');
       }
@@ -632,7 +642,7 @@
       document.getElementById('dot-task').classList.add('active');
       document.getElementById('dot-track').classList.remove('active');
 
-      if (isSundayEvening || isWeekend || isNightTime) {
+      if (isWeekend || isNightTime) {
         // Disable swiping/tracker for rest periods
         swipeControls.style.display = 'none';
         taskInstruction.style.display = 'none';
@@ -641,12 +651,9 @@
         let completedThisWeek = localStorage.getItem('weeklyCompleted') || '5';
         let focus = localStorage.getItem('userFocus') || 'Aura';
 
-        if (isSundayEvening) {
-          cardHeaderTitle.textContent = "SUNDAY EVENING TEASER";
-          taskContentText.innerHTML = `<strong>Weekly Summary: ${completedThisWeek}/5 Tasks Completed</strong><br><br>Your next Fortune Workout arrives tomorrow at 8:00 AM.`;
-        } else if (isWeekend) {
+        if (isWeekend) {
           cardHeaderTitle.textContent = "WEEKEND REST";
-          taskContentText.innerHTML = `<strong>Tasks Completed This Week: ${completedThisWeek}</strong><br><br>Rest is an active part of growth. Recharge your ${focus.toLowerCase()}.`;
+          taskContentText.innerHTML = `<strong>Tasks Completed This Week: ${completedThisWeek}</strong><br><br>Rest is an active part of growth. Recharge your ${focus.toLowerCase()}.<br><br><strong>Be sure to check your next task on Monday at 8:00 AM.</strong>`;
         } else {
           cardHeaderTitle.textContent = "NIGHT REST";
           taskContentText.innerHTML = `Rest well and anticipate your next task tomorrow at 8:00 AM!`;
