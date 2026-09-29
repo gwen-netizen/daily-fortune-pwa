@@ -133,6 +133,7 @@
   <div id="help-icon" onclick="showHelpToast()">?</div>
   <div id="help-toast">Have questions? Ask our Community on Facebook</div>
 
+  <!-- Extended Sandbox Menu with Sunday Teaser Button -->
   <div id="dev-panel">
     <div style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; padding:0 4px;">
       <span style="font-size:12px; font-weight:800; color:#D4A373;">🛠 Sandbox Mode</span>
@@ -142,6 +143,7 @@
     <button class="dev-btn" onclick="devForceState('checkin')">🔔 9:30PM</button>
     <button class="dev-btn" onclick="devForceState('night')">🌙 Night</button>
     <button class="dev-btn" onclick="devForceState('weekend')">🏖 Weekend</button>
+    <button class="dev-btn" onclick="devForceState('sunday')">🌆 Sunday 6PM</button>
     <button class="dev-btn" style="background:#28a745;" onclick="devSimulateRenewal()">💳 Level Up</button>
     <button class="dev-btn" style="background:#d9534f;" onclick="devReset()">🗑 Reset All</button>
   </div>
@@ -191,6 +193,7 @@
     <!-- SCREEN 1: Welcome & Foundation -->
     <div class="screen" id="screen-1" onclick="nextScreen(1)">
       <div class="content-body">
+        <div id="welcome-note" style="font-size: 15px; font-weight: 700; color: #9C8E80; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;"></div>
         <div class="bold-title">You just took the first step toward a higher aura. Let’s set your foundation.</div>
         <div class="main-text">Your $1.50 monthly investment is strictly here to help you become a better version of yourself than yesterday.</div>
       </div>
@@ -214,8 +217,9 @@
     <!-- SCREEN 3: The Daily Rhythm -->
     <div class="screen" id="screen-3" onclick="nextScreen(3)">
       <div class="content-body">
-        <div class="bold-title" style="font-size: 20px;">The Rhythm</div>
-        <div class="main-text" style="text-align: left; margin: 0 auto;">
+        <div id="focus-ack-note" style="font-size: 13px; font-weight: 700; color: #D4A373; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px;"></div>
+        <div class="bold-title" style="font-size: 22px; margin-bottom: 24px;">The Rhythm</div>
+        <div class="main-text" style="text-align: left; margin: 0 auto; line-height: 1.8;">
           ☀️ <strong>8:00 AM:</strong> Receive your task.<br><br>
           🌙 <strong>9:30 PM:</strong> Daily check-in.<br><br>
           🏖 <strong>Weekends:</strong> Rest & reflect.
@@ -274,7 +278,7 @@
       </div>
     </div>
 
-    <!-- SCREEN 7: Main Daily Dashboard & Weekend Rest Hub -->
+    <!-- SCREEN 7: Main Daily Dashboard, Weekend Rest Hub & Sunday Teaser -->
     <div class="screen no-cursor" id="screen-7">
       <div class="content-body">
         <div id="dashboard-header" class="bold-title" style="font-size: 18px;">✨ Active Member</div>
@@ -283,7 +287,6 @@
           <div class="task-title" id="card-header-title">Today's Daily Task</div>
           <div class="task-content" id="task-content-text"></div>
           
-          <!-- Habit Stacker Prompt (Reads from Google Sheets) -->
           <div id="habit-stacker" class="habit-stack" style="display:none;"></div>
           
           <div style="margin-top:15px; display:none;" id="lockscreen-btn-container">
@@ -337,7 +340,9 @@
     let isDev = urlParams.get('dev') === 'true';
     let forceState = urlParams.get('force');
     const WEBHOOK_BASE = 'https://n8n-latest-x9ac.onrender.com/webhook';
-    const PUBLIC_VAPID_KEY = 'BHySoAIBC_AWCL3BdD2IMez4Y1MTLtuRp6Ir3HaMJ7twkR50kQLQNcTZBfdJ9bE9_SyOOnPyHETc_ANGLd0rMw';
+    
+    // UPDATED CORRECT VAPID KEY
+    const PUBLIC_VAPID_KEY = 'BHYSoAIBC__AWCL3BdD2lMez4Y1MTLtuRp6Ir3HaMJ7twkR50kQLQNcTZBfdj9bE9_SyOOnPyHETc_ANGLd0rMw';
 
     let rawTaskText = ""; 
 
@@ -353,6 +358,19 @@
     function getUserPointName() {
       const focus = localStorage.getItem('userFocus') || 'Aura';
       return `${focus} Points`;
+    }
+
+    function updateWelcomeNote() {
+      const email = localStorage.getItem('userEmail') || urlParams.get('email') || '';
+      let name = '';
+      if (email) {
+        const rawName = email.split('@')[0].split('.')[0].replace(/[_-]/g, ' ');
+        name = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+      }
+      const welcomeElem = document.getElementById('welcome-note');
+      if (welcomeElem) {
+        welcomeElem.textContent = name ? `Welcome, ${name}! ✨` : `Welcome! ✨`;
+      }
     }
 
     const FALLBACK_TASKS = [
@@ -396,6 +414,8 @@
       const emailFromUrl = urlParams.get('email');
       const savedEmail = localStorage.getItem('userEmail');
       const targetEmail = emailFromUrl || savedEmail;
+
+      updateWelcomeNote();
 
       if (isDev) {
         const subStatus = localStorage.getItem('workoutSubscribed');
@@ -445,6 +465,19 @@
 
     function selectFocus(focusType, currentId) {
       localStorage.setItem('userFocus', focusType);
+
+      const ackBadges = {
+        'Charisma': '✨ Tailored to strengthen your Charisma',
+        'Aura': '✨ Tailored to elevate your Aura',
+        'Beauty': '✨ Tailored to enhance your Beauty',
+        'Personality': '✨ Tailored to refine your Personality'
+      };
+
+      const ackElem = document.getElementById('focus-ack-note');
+      if (ackElem) {
+        ackElem.textContent = ackBadges[focusType] || `✨ Tailored to improve your ${focusType}`;
+      }
+
       nextScreen(currentId);
     }
 
@@ -486,6 +519,7 @@
       const hasCheckedInToday = localStorage.getItem(`reflection_${todayDateKey}`) === 'true';
 
       let isWeekend = (day === 6) || (day === 0) || (day === 5 && (hour > 21 || (hour === 21 && minute >= 30))) || (day === 1 && hour < 8);
+      let isSundayEvening = (day === 0 && hour >= 18);
       let isCheckInWindow = (hour === 21 && minute >= 30) || (hour === 22) || (hour === 23);
       let isNightTime = (hour >= 0 && hour < 8);
 
@@ -493,7 +527,8 @@
       let isReflectionTrigger = urlParams.get('checkin') === 'true' || isCheckInWindow;
 
       if (isDev && forceState) {
-        isWeekend = (forceState === 'weekend');
+        isWeekend = (forceState === 'weekend' || forceState === 'sunday');
+        isSundayEvening = (forceState === 'sunday');
         isNightTime = (forceState === 'night');
         isReflectionTrigger = (forceState === 'checkin');
       }
@@ -510,7 +545,21 @@
       const habitStack = document.getElementById('habit-stacker');
       const lockBtn = document.getElementById('lockscreen-btn-container');
 
-      if (isWeekend) {
+      if (isSundayEvening) {
+        // SUNDAY EVENING TEASER VIEW
+        taskBoxA.style.display = 'block';
+        cardHeaderTitle.textContent = "SUNDAY EVENING TEASER";
+        habitStack.style.display = 'none'; lockBtn.style.display = 'none';
+        
+        let completedThisWeek = localStorage.getItem('weeklyCompleted') || '5';
+        let focus = localStorage.getItem('userFocus') || 'Aura';
+        
+        taskContentText.innerHTML = `<strong>Weekly Summary: ${completedThisWeek}/5 Tasks Completed</strong><br>Your Focus: ${focus}<br><br>Your next Fortune Workout arrives tomorrow at 8:00 AM.<br><br><strong>Get ready to build your ${focus.toLowerCase()}!</strong>`;
+        
+        if(navigator.clearAppBadge) navigator.clearAppBadge();
+
+      } else if (isWeekend) {
+        // GENERAL WEEKEND REST VIEW
         taskBoxA.style.display = 'block';
         cardHeaderTitle.textContent = "WEEKEND REST";
         habitStack.style.display = 'none'; lockBtn.style.display = 'none';
@@ -641,8 +690,20 @@
       const statusMessage = document.getElementById(statusElementId);
       const userEmail = urlParams.get('email') || localStorage.getItem('userEmail') || (isDev ? 'dev@test.com' : '');
       
-      statusMessage.textContent = "Requesting notification permission..."; statusMessage.className = "status-sub";
+      statusMessage.textContent = "Requesting notification permission..."; 
+      statusMessage.className = "status-sub";
       let pushPayload = null;
+
+      // DEV MODE BYPASS: Bypasses real push registration when testing in Sandbox mode
+      if (isDev) {
+        statusMessage.textContent = "🛠 Sandbox: Bypassing real push registration...";
+        statusMessage.className = "status-sub success";
+        localStorage.setItem('workoutSubscribed', 'true');
+        localStorage.setItem('userLevel', '1');
+        localStorage.setItem('auraPoints', '1');
+        setTimeout(() => routeActiveSubscriber(), 1000);
+        return;
+      }
 
       if ('Notification' in window && 'serviceWorker' in navigator) {
         try {
