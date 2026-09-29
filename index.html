@@ -20,13 +20,20 @@
       --accent-color: #D4A373;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+      -webkit-tap-highlight-color: transparent;
+    }
 
     body {
       background-color: var(--bg-color);
       color: var(--text-color);
       display: flex; justify-content: center; align-items: center;
       min-height: 100vh; overflow: hidden; touch-action: manipulation;
+      user-select: none; -webkit-user-select: none;
     }
 
     /* Permanent Global Header */
@@ -105,39 +112,51 @@
     .swipe-container { display: flex; width: 200%; transition: transform 0.3s ease-out; }
     .slide { width: 50%; padding: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     
-    /* Big Red Button - Therapeutic Redesign */
+    /* THERAPEUTIC WARM RUBY ORB BUTTON */
     .big-red-btn {
-      background-color: #d9534f; border: none; 
-      width: 180px; height: 180px; border-radius: 50%;
+      background: linear-gradient(135deg, #FF6B5B 0%, #D94E3D 100%);
+      border: none;
+      outline: none;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
       cursor: pointer;
-      box-shadow: 0 12px 30px rgba(217, 83, 79, 0.25), inset 0 8px 16px rgba(255, 255, 255, 0.15);
-      display: flex; justify-content: center; align-items: center;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 16px 35px rgba(217, 78, 61, 0.35), inset 0 6px 16px rgba(255, 255, 255, 0.4);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease;
       margin: 15px auto;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .big-red-btn:focus, .big-red-btn:active {
+      outline: none;
+      border: none;
     }
     .big-red-btn:active { 
-      transform: scale(0.96); 
-      box-shadow: 0 6px 15px rgba(217, 83, 79, 0.2), inset 0 4px 8px rgba(0, 0, 0, 0.1); 
+      transform: scale(0.95); 
+      box-shadow: 0 8px 20px rgba(217, 78, 61, 0.25), inset 0 2px 8px rgba(0, 0, 0, 0.15); 
     }
 
-    /* Therapeutic Inner Glow Animation */
+    /* Therapeutic Inner Breathing Glow */
     @keyframes therapeutic-glow {
       0% { 
-        box-shadow: 0 12px 30px rgba(217, 83, 79, 0.25), inset 0 8px 16px rgba(255, 255, 255, 0.15);
-        background-color: #d9534f;
+        box-shadow: 0 16px 35px rgba(217, 78, 61, 0.35), inset 0 6px 16px rgba(255, 255, 255, 0.4);
+        background: linear-gradient(135deg, #FF6B5B 0%, #D94E3D 100%);
+        transform: scale(0.95);
       }
       40% { 
-        box-shadow: 0 0 50px 15px rgba(212, 163, 115, 0.3), inset 0 0 80px 20px rgba(255, 235, 215, 0.9);
-        background-color: #e87b77;
-        transform: scale(1.02);
+        box-shadow: 0 0 60px 20px rgba(212, 163, 115, 0.5), inset 0 0 40px 10px rgba(255, 240, 220, 0.9);
+        background: linear-gradient(135deg, #FF8577 0%, #E25845 100%);
+        transform: scale(1.05);
       }
       100% { 
-        box-shadow: 0 12px 30px rgba(217, 83, 79, 0.25), inset 0 8px 16px rgba(255, 255, 255, 0.15);
-        background-color: #d9534f;
+        box-shadow: 0 16px 35px rgba(217, 78, 61, 0.35), inset 0 6px 16px rgba(255, 255, 255, 0.4);
+        background: linear-gradient(135deg, #FF6B5B 0%, #D94E3D 100%);
         transform: scale(1);
       }
     }
-    .glow-active { animation: therapeutic-glow 1.8s ease-in-out; }
+    .glow-active { animation: therapeutic-glow 1.4s ease-in-out; }
     
     .slide-dots { display: flex; justify-content: center; gap: 8px; margin-top: 15px; }
     .s-dot { width: 8px; height: 8px; border-radius: 50%; background: #EAE3D9; transition: 0.3s; }
@@ -274,7 +293,7 @@
           ✨ Tailored to enhance your Beauty
         </div>
         <div class="main-text" style="text-align: left; margin: 0 auto; line-height: 1.8;">
-          ☀️ <strong>8:00 AM:</strong> Receive your task.<br><br>
+          ☀️️ <strong>8:00 AM:</strong> Receive your task.<br><br>
           🌙 <strong>9:30 PM:</strong> Your daily summary.<br><br>
           🏖 <strong>Weekends:</strong> Rest & reflect.
         </div>
@@ -765,10 +784,10 @@
       clicks++;
       localStorage.setItem(`${todayDateKey}_clicks`, clicks);
 
-      // Trigger the therapeutic inner glow animation
+      // Trigger therapeutic inner glow animation
       const btn = document.getElementById('big-red-btn');
       btn.classList.remove('glow-active');
-      void btn.offsetWidth; // forces browser reflow to restart animation
+      void btn.offsetWidth; // force reflow
       btn.classList.add('glow-active');
 
       if(navigator.vibrate) navigator.vibrate([50]);
@@ -778,11 +797,11 @@
       localStorage.setItem(`reflection_${dateKey}`, 'true');
       let rawClicks = parseInt(localStorage.getItem(`${dateKey}_clicks`) || '0');
       
-      // CAP THE EARNED POINTS AT 8 PER DAY
+      // CAP EARNED POINTS AT 8 PER DAY
       let earnedToday = Math.min(rawClicks, 8); 
 
       let totalPoints = parseInt(localStorage.getItem('auraPoints') || '0');
-      totalPoints += earnedToday; // Add only the capped amount
+      totalPoints += earnedToday; 
       localStorage.setItem('auraPoints', totalPoints);
       
       let weekly = parseInt(localStorage.getItem('weeklyCompleted') || '0');
