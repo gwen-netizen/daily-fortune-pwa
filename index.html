@@ -105,25 +105,39 @@
     .swipe-container { display: flex; width: 200%; transition: transform 0.3s ease-out; }
     .slide { width: 50%; padding: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     
-    /* Big Red Button */
+    /* Big Red Button - Therapeutic Redesign */
     .big-red-btn {
       background-color: #d9534f; border: none; 
       width: 180px; height: 180px; border-radius: 50%;
       cursor: pointer;
-      box-shadow: 0 12px 24px rgba(217, 83, 79, 0.4);
+      box-shadow: 0 12px 30px rgba(217, 83, 79, 0.25), inset 0 8px 16px rgba(255, 255, 255, 0.15);
       display: flex; justify-content: center; align-items: center;
-      transition: transform 0.1s, box-shadow 0.1s;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
       margin: 15px auto;
     }
-    .big-red-btn:active { transform: scale(0.92); box-shadow: 0 4px 10px rgba(217, 83, 79, 0.4); }
-
-    /* Glow Animation for Button Press */
-    @keyframes button-glow {
-      0% { box-shadow: 0 0 0 0 rgba(217, 83, 79, 0.7); transform: scale(0.92); }
-      50% { box-shadow: 0 0 35px 15px rgba(255, 120, 120, 0.8), 0 0 60px 20px rgba(217, 83, 79, 0.5); transform: scale(1.03); background-color: #ff4d4d; }
-      100% { box-shadow: 0 12px 24px rgba(217, 83, 79, 0.4); transform: scale(1); background-color: #d9534f; }
+    .big-red-btn:active { 
+      transform: scale(0.96); 
+      box-shadow: 0 6px 15px rgba(217, 83, 79, 0.2), inset 0 4px 8px rgba(0, 0, 0, 0.1); 
     }
-    .glow-active { animation: button-glow 0.4s ease-out; }
+
+    /* Therapeutic Inner Glow Animation */
+    @keyframes therapeutic-glow {
+      0% { 
+        box-shadow: 0 12px 30px rgba(217, 83, 79, 0.25), inset 0 8px 16px rgba(255, 255, 255, 0.15);
+        background-color: #d9534f;
+      }
+      40% { 
+        box-shadow: 0 0 50px 15px rgba(212, 163, 115, 0.3), inset 0 0 80px 20px rgba(255, 235, 215, 0.9);
+        background-color: #e87b77;
+        transform: scale(1.02);
+      }
+      100% { 
+        box-shadow: 0 12px 30px rgba(217, 83, 79, 0.25), inset 0 8px 16px rgba(255, 255, 255, 0.15);
+        background-color: #d9534f;
+        transform: scale(1);
+      }
+    }
+    .glow-active { animation: therapeutic-glow 1.8s ease-in-out; }
     
     .slide-dots { display: flex; justify-content: center; gap: 8px; margin-top: 15px; }
     .s-dot { width: 8px; height: 8px; border-radius: 50%; background: #EAE3D9; transition: 0.3s; }
@@ -751,10 +765,10 @@
       clicks++;
       localStorage.setItem(`${todayDateKey}_clicks`, clicks);
 
-      // Trigger the glow animation
+      // Trigger the therapeutic inner glow animation
       const btn = document.getElementById('big-red-btn');
       btn.classList.remove('glow-active');
-      void btn.offsetWidth; // forces a browser reflow to restart animation
+      void btn.offsetWidth; // forces browser reflow to restart animation
       btn.classList.add('glow-active');
 
       if(navigator.vibrate) navigator.vibrate([50]);
