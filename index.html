@@ -3,119 +3,82 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Daily Advice PWA</title>
+  <title>Daily Advice App</title>
   <style>
-    :root {
-      --primary: #4f46e5;
-      --primary-hover: #4338ca;
-      --bg: #f8fafc;
-      --card-bg: #ffffff;
-      --text: #0f172a;
-      --text-muted: #64748b;
-    }
-
-    * {
-      box-sizing: border-box;
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       margin: 0;
       padding: 0;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
+      background-color: #f4f4f9;
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      padding: 16px;
     }
 
     .screen {
       display: none;
       width: 100%;
-      max-width: 400px;
-      padding: 32px 24px;
-      background: var(--card-bg);
-      border-radius: 20px;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+      max-width: 420px;
+      padding: 24px;
+      box-sizing: border-box;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
       text-align: center;
-      animation: fadeIn 0.2s ease-in-out;
     }
 
     .screen.active {
       display: block;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(4px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
     h2 {
+      margin-top: 0;
+      color: #111827;
       font-size: 1.5rem;
-      font-weight: 700;
-      margin-bottom: 12px;
     }
 
     p {
+      color: #4b5563;
       font-size: 0.95rem;
       line-height: 1.5;
-      color: var(--text-muted);
-      margin-bottom: 24px;
-    }
-
-    .user-badge {
-      display: inline-block;
-      background: #e0e7ff;
-      color: #3730a3;
-      font-weight: 600;
-      font-size: 0.85rem;
-      padding: 6px 14px;
-      border-radius: 9999px;
-      margin-bottom: 16px;
-      word-break: break-all;
     }
 
     button {
-      width: 100%;
-      background-color: var(--primary);
+      background-color: #4f46e5;
       color: #ffffff;
       border: none;
-      padding: 14px 20px;
-      font-size: 1rem;
+      padding: 12px 24px;
+      font-size: 16px;
       font-weight: 600;
-      border-radius: 12px;
+      border-radius: 8px;
       cursor: pointer;
-      transition: background-color 0.2s, transform 0.1s;
+      width: 100%;
+      margin-top: 16px;
+      transition: background-color 0.2s;
     }
 
     button:hover {
-      background-color: var(--primary-hover);
-    }
-
-    button:active {
-      transform: scale(0.98);
+      background-color: #4338ca;
     }
 
     button.secondary {
-      background-color: #f1f5f9;
-      color: var(--text);
-      margin-top: 10px;
+      background-color: #e5e7eb;
+      color: #1f2937;
     }
 
     button.secondary:hover {
-      background-color: #e2e8f0;
+      background-color: #d1d5db;
     }
 
     .spinner {
-      border: 3px solid #e2e8f0;
-      border-top: 3px solid var(--primary);
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #4f46e5;
       border-radius: 50%;
       width: 36px;
       height: 36px;
-      animation: spin 0.8s linear infinite;
-      margin: 16px auto;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
     }
 
     @keyframes spin {
@@ -128,29 +91,28 @@
 
   <!-- SCREEN 0: PAYWALL -->
   <div id="screen-paywall" class="screen">
-    <h2>Unlock Full Access</h2>
-    <p>Subscribe today to activate your daily personalized advice, fortune insights, and push alerts.</p>
+    <h2>Unlock Daily Advice</h2>
+    <p>Subscribe to get full access to your personalized daily fortunes and push notifications.</p>
     <button onclick="goToStripeCheckout()">Subscribe Now</button>
   </div>
 
   <!-- SCREEN LOADING -->
   <div id="screen-loading" class="screen">
     <div class="spinner"></div>
-    <p id="loading-text">Verifying membership credentials...</p>
+    <p>Verifying subscription status...</p>
   </div>
 
   <!-- SCREEN 1: ONBOARDING -->
   <div id="screen-onboarding" class="screen">
-    <h2>Welcome Aboard! ✨</h2>
-    <p>Enable push notifications so you never miss your daily fortune workout delivery.</p>
+    <h2>Welcome aboard! ✨</h2>
+    <p>Enable push notifications so you never miss your daily fortune delivery.</p>
     <button id="btn-enable-push" onclick="enableNotificationsAndSave()">Enable Notifications & Complete Setup</button>
   </div>
 
   <!-- SCREEN DASHBOARD -->
   <div id="screen-dashboard" class="screen">
     <h2>Your Daily Advice 🔮</h2>
-    <div id="user-display" class="user-badge">Subscriber</div>
-    <p>Today's Focus: Momentum builds through consistent action. Trust the process.</p>
+    <p id="user-display">Loading profile...</p>
     <button class="secondary" onclick="logout()">Log Out</button>
   </div>
 
@@ -159,37 +121,13 @@
       VERIFY_ENDPOINT: 'https://n8n-latest-x9ac.onrender.com/webhook/verify-subscriber',
       SAVE_PUSH_ENDPOINT: 'https://n8n-latest-x9ac.onrender.com/webhook/save-push-subscription',
       VAPID_PUBLIC_KEY: 'YOUR_PUBLIC_VAPID_KEY_HERE', // Replace with your VAPID Public Key
-      STRIPE_CHECKOUT_URL: 'https://buy.stripe.com/your_stripe_payment_link',
+      STRIPE_CHECKOUT_URL: 'https://buy.stripe.com/3cI8wPcjsbP29yWeQm0co01',
       INITIAL_AUDIT_DELAY_MS: 15000, 
       MAX_AUDIT_RETRIES: 3,          
       RETRY_INTERVAL_MS: 5000        
     };
 
-    // UI Router
-    function showScreen(screenId) {
-      document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
-      const target = document.getElementById(screenId);
-      if (target) {
-        target.classList.add('active');
-      }
-
-      if (screenId === 'screen-dashboard') {
-        const email = localStorage.getItem('userEmail') || 'Subscriber';
-        const badge = document.getElementById('user-display');
-        if (badge) badge.innerText = `Account: ${email}`;
-      }
-    }
-
-    function routeUserToApp() {
-      const onboardingDone = localStorage.getItem('onboardingComplete');
-      if (onboardingDone === 'true') {
-        showScreen('screen-dashboard');
-      } else {
-        showScreen('screen-onboarding'); // Screen 1
-      }
-    }
-
-    // Convert VAPID key string to Uint8Array required by pushManager
+    // Helper: Convert VAPID key string to Uint8Array for pushManager
     function urlBase64ToUint8Array(base64String) {
       const padding = '='.repeat((4 - base64String.length % 4) % 4);
       const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
@@ -201,10 +139,109 @@
       return outputArray;
     }
 
-    /**
-     * SCREEN 1: ONBOARDING & PUSH NOTIFICATION CAPTURE
-     * Captures browser VAPID keys + timezone and posts them to n8n to fill Google Sheets Column F & G.
-     */
+    // Switch visible screen
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+      const target = document.getElementById(screenId);
+      if (target) {
+        target.classList.add('active');
+      }
+
+      if (screenId === 'screen-dashboard') {
+        const email = localStorage.getItem('userEmail') || 'Subscriber';
+        document.getElementById('user-display').innerText = `Logged in as: ${email}`;
+      }
+    }
+
+    // Route user to Screen 1 or Dashboard
+    function routeUserToApp() {
+      const onboardingDone = localStorage.getItem('onboardingComplete');
+      if (onboardingDone === 'true') {
+        showScreen('screen-dashboard');
+      } else {
+        showScreen('screen-onboarding'); // Screen 1
+      }
+    }
+
+    // Asynchronous background audit (security + grace period)
+    async function runBackgroundAudit(email) {
+      for (let attempt = 1; attempt <= CONFIG.MAX_AUDIT_RETRIES; attempt++) {
+        try {
+          const res = await fetch(`${CONFIG.VERIFY_ENDPOINT}?email=${encodeURIComponent(email)}`);
+
+          // Fail-open on server error to protect valid users
+          if (!res.ok) return;
+
+          const data = await res.json();
+
+          if (data.isSubscribed || data.status === 'Active') {
+            localStorage.setItem('isVerified', 'true');
+            return;
+          }
+        } catch (err) {
+          // Fail-open on network drop
+          return;
+        }
+
+        if (attempt < CONFIG.MAX_AUDIT_RETRIES) {
+          await new Promise(r => setTimeout(r, CONFIG.RETRY_INTERVAL_MS));
+        }
+      }
+
+      // Check 24h grace period before eviction
+      const subscribedAt = parseInt(localStorage.getItem('subscribedAt') || '0', 10);
+      const hoursSinceSub = (Date.now() - subscribedAt) / (1000 * 60 * 60);
+
+      if (subscribedAt > 0 && hoursSinceSub <= 24) return;
+
+      // Evict backdoor intruder or canceled subscription
+      localStorage.clear();
+      showScreen('screen-paywall');
+    }
+
+    // App Startup Logic
+    async function verifyUserOnStartup() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const emailFromUrl = urlParams.get('email');
+      const storedEmail = localStorage.getItem('userEmail');
+      const isVerified = localStorage.getItem('isVerified');
+
+      // 1. STRIPE REDIRECT (?email= present): Force Screen 1 directly
+      if (emailFromUrl) {
+        localStorage.setItem('userEmail', emailFromUrl);
+        localStorage.setItem('isSubscribed', 'true');
+        localStorage.setItem('subscribedAt', Date.now().toString());
+        localStorage.removeItem('isVerified');
+
+        // Clean address bar without reload
+        window.history.replaceState({}, document.title, window.location.pathname);
+
+        // Load Screen 1 immediately
+        routeUserToApp();
+
+        // Schedule background audit
+        setTimeout(() => runBackgroundAudit(emailFromUrl), CONFIG.INITIAL_AUDIT_DELAY_MS);
+        return;
+      }
+
+      // 2. FULLY VERIFIED RETURNING USER
+      if (storedEmail && isVerified === 'true') {
+        routeUserToApp();
+        return;
+      }
+
+      // 3. RETURNING USER WITH LOCAL IDENTIFIER
+      if (storedEmail) {
+        routeUserToApp();
+        runBackgroundAudit(storedEmail);
+        return;
+      }
+
+      // 4. NO IDENTITY -> SHOW SCREEN 0 (PAYWALL)
+      showScreen('screen-paywall');
+    }
+
+    // Screen 1: Capture Web Push Keys and post to n8n for Column F & G
     async function enableNotificationsAndSave() {
       const email = localStorage.getItem('userEmail');
       const btn = document.getElementById('btn-enable-push');
@@ -212,19 +249,14 @@
 
       if (email && 'serviceWorker' in navigator && 'PushManager' in window) {
         try {
-          // 1. Request Browser Notification Permission
           const permission = await Notification.requestPermission();
-          
           if (permission === 'granted') {
             const reg = await navigator.serviceWorker.ready;
-            
-            // 2. Generate Device Web Push Credentials
             const sub = await reg.pushManager.subscribe({
               userVisibleOnly: true,
               applicationServerKey: urlBase64ToUint8Array(CONFIG.VAPID_PUBLIC_KEY)
             });
 
-            // 3. Post Push Keys & Timezone to n8n to update Google Sheets Column F & G
             await fetch(CONFIG.SAVE_PUSH_ENDPOINT, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -234,107 +266,16 @@
                 pushSubscription: JSON.stringify(sub)
               })
             });
-            console.log('[Push] Subscription successfully registered in database.');
-          } else {
-            console.warn('[Push] Permission denied by user.');
           }
         } catch (err) {
-          console.error('[Push] Failed to register push subscription:', err);
+          console.error('Push registration error:', err);
         }
       }
 
       completeOnboarding();
     }
 
-    /**
-     * SECURITY AUDIT ENGINE
-     */
-    async function runBackgroundAudit(email) {
-      for (let attempt = 1; attempt <= CONFIG.MAX_AUDIT_RETRIES; attempt++) {
-        try {
-          const res = await fetch(`${CONFIG.VERIFY_ENDPOINT}?email=${encodeURIComponent(email)}`);
-
-          if (!res.ok) {
-            console.warn(`[Audit] Server returned status ${res.status}. Preserving session.`);
-            return;
-          }
-
-          const data = await res.json();
-
-          if (data.isSubscribed || data.status === 'Active') {
-            localStorage.setItem('isVerified', 'true');
-            console.log('[Audit] Verified active subscriber in database.');
-            return;
-          }
-
-          console.warn(`[Audit] Check ${attempt}/${CONFIG.MAX_AUDIT_RETRIES} negative. Retrying in ${CONFIG.RETRY_INTERVAL_MS / 1000}s...`);
-
-        } catch (err) {
-          console.warn('[Audit] Network unreachable. Preserving offline session:', err);
-          return;
-        }
-
-        if (attempt < CONFIG.MAX_AUDIT_RETRIES) {
-          await new Promise(r => setTimeout(r, CONFIG.RETRY_INTERVAL_MS));
-        }
-      }
-
-      const subscribedAt = parseInt(localStorage.getItem('subscribedAt') || '0', 10);
-      const hoursSinceSub = (Date.now() - subscribedAt) / (1000 * 60 * 60);
-
-      if (subscribedAt > 0 && hoursSinceSub <= 24) {
-        console.warn('[Audit] Database sync pending, protected by 24h grace period.');
-        return;
-      }
-
-      console.error('[Audit] Unauthorized user detected. Booting to Paywall.');
-      localStorage.clear();
-      showScreen('screen-paywall');
-    }
-
-    /**
-     * STARTUP CONTROLLER
-     */
-    async function verifyUserOnStartup() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const emailFromUrl = urlParams.get('email');
-      const storedEmail = localStorage.getItem('userEmail');
-      const isVerified = localStorage.getItem('isVerified');
-
-      // 1. STRIPE REDIRECT (?email= present)
-      if (emailFromUrl) {
-        localStorage.setItem('userEmail', emailFromUrl);
-        localStorage.setItem('isSubscribed', 'true');
-        localStorage.setItem('subscribedAt', Date.now().toString());
-        localStorage.removeItem('isVerified');
-
-        // Sanitize URL bar
-        window.history.replaceState({}, document.title, window.location.pathname);
-
-        routeUserToApp();
-
-        setTimeout(() => runBackgroundAudit(emailFromUrl), CONFIG.INITIAL_AUDIT_DELAY_MS);
-        return;
-      }
-
-      // 2. FULLY VERIFIED USER
-      if (storedEmail && isVerified === 'true') {
-        routeUserToApp();
-        return;
-      }
-
-      // 3. RETURNING USER WITH LOCAL STORAGE
-      if (storedEmail) {
-        routeUserToApp();
-        runBackgroundAudit(storedEmail);
-        return;
-      }
-
-      // 4. NO IDENTITY
-      showScreen('screen-paywall');
-    }
-
-    // ACTIONS
+    // Navigation Actions
     function goToStripeCheckout() {
       window.location.href = CONFIG.STRIPE_CHECKOUT_URL;
     }
@@ -349,12 +290,10 @@
       showScreen('screen-paywall');
     }
 
-    // INIT & SERVICE WORKER REGISTRATION
+    // Initialization
     document.addEventListener('DOMContentLoaded', () => {
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js').catch(err => {
-          console.warn('Service Worker registration failed:', err);
-        });
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
       }
       verifyUserOnStartup();
     });
