@@ -237,7 +237,7 @@
         </div>
         <div class="btn-group">
           <a href="https://buy.stripe.com/3cI8wPcjsbP29yWeQm0co01" class="btn btn-alt" style="text-decoration: none; display: block;">
-            Building My Fortune with $1.50 only
+            Begin Fortune Workout with $1.50
           </a>
         </div>
       </div>
@@ -293,7 +293,7 @@
           ✨ Tailored to enhance your Beauty
         </div>
         <div class="main-text" style="text-align: left; margin: 0 auto; line-height: 1.8;">
-          ☀️️ <strong>8:00 AM:</strong> Receive your task.<br><br>
+          ☀️ <strong>8:00 AM:</strong> Receive your task.<br><br>
           🌙 <strong>9:30 PM:</strong> Your daily summary.<br><br>
           🏖 <strong>Weekends:</strong> Rest & reflect.
         </div>
@@ -511,6 +511,7 @@
     // Pre-check Logic (RESTORES POINTS & FOCUS FROM GOOGLE SHEETS)
     document.addEventListener('DOMContentLoaded', async () => {
       const emailFromUrl = urlParams.get('email');
+      const sessionIdFromUrl = urlParams.get('session_id');
       const savedEmail = localStorage.getItem('userEmail');
       const targetEmail = emailFromUrl || savedEmail;
 
@@ -524,14 +525,27 @@
         return;
       }
 
-      if (!targetEmail) { hideAllScreens(); document.getElementById('screen-paywall').classList.add('active'); return; }
+      // If no email exists but session_id is present, query verification webhook with session_id
+      if (!targetEmail && !sessionIdFromUrl) { 
+        hideAllScreens(); 
+        document.getElementById('screen-paywall').classList.add('active'); 
+        return; 
+      }
+
       if (emailFromUrl) localStorage.setItem('userEmail', emailFromUrl);
 
       try {
-        const response = await fetch(`${WEBHOOK_BASE}/verify-subscriber?email=${encodeURIComponent(targetEmail)}`);
+        const verifyQuery = targetEmail 
+          ? `email=${encodeURIComponent(targetEmail)}` 
+          : `session_id=${encodeURIComponent(sessionIdFromUrl)}`;
+
+        const response = await fetch(`${WEBHOOK_BASE}/verify-subscriber?${verifyQuery}`);
         const data = await response.json();
 
         if (!data.isSubscribed) { hideAllScreens(); document.getElementById('screen-paywall').classList.add('active'); return; }
+        
+        // Save the returned email if verified via session_id
+        if (data.email) localStorage.setItem('userEmail', data.email);
         
         // RESTORE POINTS AND FOCUS FROM N8N / GOOGLE SHEETS
         if (data.points !== undefined) localStorage.setItem('auraPoints', data.points);
