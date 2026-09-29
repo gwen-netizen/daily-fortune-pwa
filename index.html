@@ -227,7 +227,7 @@
 
   <div class="card-container">
     
-    <!-- Screen Paywall (Unpaid Visitors) -->
+    <!-- Screen Paywall (Unpaid Visitors - Shown after Screen 4 if not subscribed) -->
     <div class="screen no-cursor" id="screen-paywall">
       <div class="content-body">
         <div class="bold-title" style="font-size: 20px;">Invest in Yourself Today</div>
@@ -368,7 +368,6 @@
                   <button class="btn" style="padding:10px; font-size:13px;" onclick="openLockscreen()">📱 Format for Lockscreen</button>
                 </div>
 
-                <!-- Receives the payload straight from n8n's "habit" column without prefix -->
                 <div id="task-instruction" style="margin-top: 20px; font-weight: 700; color: var(--accent-color); font-size: 15px; display: none;"></div>
               </div>
             </div>
@@ -413,9 +412,7 @@
       <div class="content-body">
         <div class="bold-title">✨ Reflection Complete</div>
         <div class="reflection-box">
-          <div class="main-text" id="reflection-final-text" style="font-weight: 700; margin-bottom: 0;">
-            <!-- Text injected via JS -->
-          </div>
+          <div class="main-text" id="reflection-final-text" style="font-weight: 700; margin-bottom: 0;"></div>
         </div>
       </div>
       <div class="tap-hint">Tap to continue...</div>
@@ -460,7 +457,7 @@
     }
 
     function updateWelcomeNote() {
-      const email = localStorage.getItem('userEmail') || urlParams.get('email') || '';
+      const email = localStorage.getItem('userEmail') || '';
       let name = '';
       if (email) {
         const rawName = email.split('@')[0].split('.')[0].replace(/[_-]/g, ' ');
@@ -509,26 +506,27 @@
     if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
 
     // =========================================================================
-    // BACKGROUND AUDIT: Closes the backdoor, syncs data, and applies Grace Period
+    // BACKGROUND AUDIT: 24-HOUR GRACE PERIOD & FAIL-OPEN SERVER PROTECTION
     // =========================================================================
-    async function runBackgroundAudit(email, sessionId) {
+    async function runBackgroundAudit(email) {
+      if (!email) return;
       try {
-        const verifyQuery = email ? `email=${encodeURIComponent(email)}` : `session_id=${encodeURIComponent(sessionId)}`;
-        const res = await fetch(`${WEBHOOK_BASE}/verify-subscriber?${verifyQuery}`);
-
-        // Fail-open: Protect valid users if server drops
-        if (!res.ok) return;
+        const res = await fetch(`${WEBHOOK_BASE}/verify-subscriber?email=${encodeURIComponent(email)}`);
+        
+        // FAIL OPEN ON SERVER ERROR: If n8n drops or 500s, preserve session
+        if (!res.ok) {
+          console.warn('[Audit] Server returned error status. Preserving session (Fail Open).');
+          return;
+        }
 
         const data = await res.json();
 
-        // VALID USER DETECTED IN DB
+        // 1. CONFIRMED ACTIVE SUBSCRIBER IN DATABASE
         if (data.isSubscribed || data.status === 'Active') {
           localStorage.setItem('isVerified', 'true');
-          if (data.email) localStorage.setItem('userEmail', data.email);
           if (data.points !== undefined) localStorage.setItem('auraPoints', data.points);
           if (data.focus) localStorage.setItem('userFocus', data.focus);
 
-          // If they bought on a different device and already set up push notifications
           if (data.hasDeviceToken && localStorage.getItem('workoutSubscribed') !== 'true') {
             hideAllScreens();
             document.getElementById('screen-device-locked').classList.add('active');
@@ -536,31 +534,34 @@
           return;
         }
 
-        // DATABASE RETURNED "NOT SUBSCRIBED" -> Check 24hr Grace Period
+        // 2. UNVERIFIED / NOT IN SHEETS YET -> CHECK 24-HOUR GRACE PERIOD
         const subscribedAt = parseInt(localStorage.getItem('subscribedAt') || '0', 10);
         const hoursSinceSub = (Date.now() - subscribedAt) / (1000 * 60 * 60);
 
-        if (subscribedAt > 0 && hoursSinceSub <= 24) return; // Protected by grace period
+        if (subscribedAt > 0 && hoursSinceSub <= 24) {
+          console.warn('[Audit] Pending Sheets sync, but within 24h grace period. Preserving session.');
+          return; // Protected by 24h Grace Period
+        }
 
-        // EVICT: Clear storage and force paywall
+        // 3. EVICT: Past 24 hours without DB confirmation -> Wipe storage & boot to Paywall
+        console.warn('[Audit] Unauthorized access or expired sub past 24h. Evicting to Paywall.');
         localStorage.clear();
         hideAllScreens();
         document.getElementById('screen-paywall').classList.add('active');
 
       } catch (err) {
-        // Network offline -> fail open to protect user session
+        // FAIL OPEN ON NETWORK DROP: Offline users keep their access
+        console.warn('[Audit] Network offline or fetch failed. Preserving user session offline:', err);
       }
     }
 
     // =========================================================================
-    // OPTIMISTIC STARTUP ROUTING
+    // STARTUP ROUTING: OPTIMISTIC TRUST AT SCREEN 1
     // =========================================================================
     document.addEventListener('DOMContentLoaded', async () => {
       const emailFromUrl = urlParams.get('email');
-      const sessionIdFromUrl = urlParams.get('session_id');
       const savedEmail = localStorage.getItem('userEmail');
-      const targetEmail = emailFromUrl || savedEmail;
-      
+
       updateWelcomeNote();
 
       if (isDev) {
@@ -571,51 +572,44 @@
         return;
       }
 
-      // CASE A: Fresh Redirect from Stripe checkout
-      if (emailFromUrl || sessionIdFromUrl) {
-        if (emailFromUrl) localStorage.setItem('userEmail', emailFromUrl);
-        
-        // Lock in Optimistic Trust instantly
+      // CASE 1: Subscribed members who finished setup -> go straight to Dashboard
+      if (localStorage.getItem('workoutSubscribed') === 'true') {
+        routeActiveSubscriber();
+        if (emailFromUrl || savedEmail) {
+          runBackgroundAudit(emailFromUrl || savedEmail);
+        }
+        return;
+      }
+
+      // CASE 2: Fresh Stripe Redirect (?email= customer email present)
+      if (emailFromUrl) {
+        localStorage.setItem('userEmail', emailFromUrl);
         localStorage.setItem('isVerified', 'true');
         if (!localStorage.getItem('subscribedAt')) {
           localStorage.setItem('subscribedAt', Date.now().toString());
         }
 
-        // Clean the address bar gracefully
+        // Clean URL bar visually without page refresh
         window.history.replaceState({}, document.title, window.location.pathname);
 
-        // Instant UI Load: Let them straight into Screen 1 (or Dashboard if already onboarded)
-        if (localStorage.getItem('workoutSubscribed') === 'true') {
-          routeActiveSubscriber();
-        } else {
-          hideAllScreens();
-          document.getElementById('screen-1').classList.add('active');
-          updateProgress(1);
-        }
-
-        // Trigger silent background audit 15 seconds later (Gives DB time to sync)
-        setTimeout(() => runBackgroundAudit(emailFromUrl, sessionIdFromUrl), 15000);
-        return;
-      }
-
-      // CASE B: Unknown visitor
-      if (!targetEmail && !sessionIdFromUrl) {
-        hideAllScreens();
-        document.getElementById('screen-paywall').classList.add('active');
-        return;
-      }
-
-      // CASE C: Returning User with Local Identity
-      if (localStorage.getItem('workoutSubscribed') === 'true') {
-        routeActiveSubscriber();
-      } else {
+        updateWelcomeNote();
         hideAllScreens();
         document.getElementById('screen-1').classList.add('active');
         updateProgress(1);
+
+        // Run background audit while user goes through Screens 1-4 (gives Sheets 10-15s to sync)
+        runBackgroundAudit(emailFromUrl);
+        return;
       }
 
-      // Run background audit immediately to sync score/focus or evict cancelled subs
-      runBackgroundAudit(targetEmail, sessionIdFromUrl);
+      // CASE 3: All other visitors -> Start at Screen 1 (Welcome & Foundation)
+      hideAllScreens();
+      document.getElementById('screen-1').classList.add('active');
+      updateProgress(1);
+
+      if (savedEmail) {
+        runBackgroundAudit(savedEmail);
+      }
     });
 
     // ONBOARDING PROGRESS & NAVIGATION
@@ -628,10 +622,30 @@
     }
 
     function nextScreen(currentId, variant) {
+      // PAYWALL GATE AT SCREEN 4: Check verification before allowing access to Screen 5 (Setup)
+      if (currentId === 4) {
+        const isVerified = localStorage.getItem('isVerified') === 'true';
+        const subscribedAt = parseInt(localStorage.getItem('subscribedAt') || '0', 10);
+        const hoursSinceSub = (Date.now() - subscribedAt) / (1000 * 60 * 60);
+
+        // If verified OR within 24h grace period: proceed to Screen 5 (OS Choice)
+        if (isVerified || (subscribedAt > 0 && hoursSinceSub <= 24)) {
+          document.getElementById('screen-4').classList.remove('active');
+          document.getElementById('progress-container').style.display = 'none';
+          document.getElementById('screen-5').classList.add('active');
+          return;
+        } else {
+          // Unpaid visitor -> Route to Screen 0 (Paywall)
+          document.getElementById('screen-4').classList.remove('active');
+          document.getElementById('progress-container').style.display = 'none';
+          document.getElementById('screen-paywall').classList.add('active');
+          return;
+        }
+      }
+
       if (currentId === 9 && variant === 'a') {
         document.getElementById('screen-9a').classList.remove('active');
         
-        // Pick a random encouraging statement for the final screen
         const reflectionQuotes = [
           "Give yourself a pat for the effort you put in today.",
           "Small steps compound into massive results. Great work today.",
@@ -674,7 +688,6 @@
       nextScreen(currentId);
     }
 
-    // TRANSFER DEVICE LOGIC
     function transferDevice() {
       hideAllScreens();
       document.getElementById('screen-5').classList.add('active');
@@ -694,7 +707,6 @@
       if(globalHeader) globalHeader.style.display = 'none';
     }
 
-    // LOCKSCREEN OVERLAY LOGIC
     function openLockscreen() {
       const overlay = document.getElementById('lockscreen-overlay');
       document.getElementById('lockscreen-content').textContent = rawTaskText;
@@ -704,7 +716,6 @@
       document.getElementById('lockscreen-overlay').style.display = 'none';
     }
 
-    // --- GLOBAL HEADER ROUTING ---
     function updateGlobalHeader() {
       const currentLevel = localStorage.getItem('userLevel') || '1';
       const points = localStorage.getItem('auraPoints') || '0';
@@ -715,7 +726,7 @@
 
     async function routeActiveSubscriber() {
       hideAllScreens();
-      updateGlobalHeader(); // Activate permanent header
+      updateGlobalHeader(); 
       document.getElementById('screen-7').classList.add('active');
 
       const now = new Date();
@@ -724,7 +735,6 @@
       const todayDateKey = `task_${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}`;
       const hasCheckedInToday = localStorage.getItem(`reflection_${todayDateKey}`) === 'true';
 
-      // Weekend logic covers Saturday, Sunday, and Friday night
       let isWeekend = (day === 6) || (day === 0) || (day === 5 && (hour > 21 || (hour === 21 && minute >= 30))) || (day === 1 && hour < 8);
       let isCheckInWindow = (hour === 21 && minute >= 30) || (hour === 22) || (hour === 23);
       let isNightTime = (hour >= 0 && hour < 8);
@@ -738,7 +748,6 @@
         isReflectionTrigger = (forceState === 'checkin');
       }
 
-      // NIGHTLY TABULATION TRIGGER
       if (isReflectionTrigger && !isWeekend && !isNightTime) {
         tabulateAndSyncDailyScore(todayDateKey);
         return;
@@ -751,14 +760,12 @@
       const lockBtn = document.getElementById('lockscreen-btn-container');
       const swipeHint = document.getElementById('swipe-hint');
       
-      // Reset swipe to Slide 1
       document.getElementById('swipe-container').style.transform = 'translateX(0%)';
       document.getElementById('dot-task').classList.add('active');
       document.getElementById('dot-track').classList.remove('active');
       if(swipeHint) swipeHint.textContent = 'Swipe to track progress 👉';
 
       if (isWeekend || isNightTime) {
-        // Disable swiping/tracker for rest periods
         swipeControls.style.display = 'none';
         taskInstruction.style.display = 'none';
         lockBtn.style.display = 'none';
@@ -776,7 +783,6 @@
         if(navigator.clearAppBadge) navigator.clearAppBadge();
 
       } else {
-        // ACTIVE DAYTIME ROUTINE
         swipeControls.style.display = 'block';
         lockBtn.style.display = 'block';
         cardHeaderTitle.textContent = "TODAY'S DAILY TASK";
@@ -847,7 +853,6 @@
       container.innerHTML = e ? `<span class="task-bold">${b}</span><span class="task-explanation">${e}</span>` : `<span class="task-bold">${b}</span>`;
     }
 
-    // --- NEW DAYTIME TRACKER LOGIC ---
     function registerDailyAction() {
       const now = new Date();
       const todayDateKey = `task_${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}`;
@@ -856,10 +861,9 @@
       clicks++;
       localStorage.setItem(`${todayDateKey}_clicks`, clicks);
 
-      // Trigger therapeutic inner glow animation
       const btn = document.getElementById('big-red-btn');
       btn.classList.remove('glow-active');
-      void btn.offsetWidth; // force reflow
+      void btn.offsetWidth; 
       btn.classList.add('glow-active');
 
       if(navigator.vibrate) navigator.vibrate([50]);
@@ -869,7 +873,6 @@
       localStorage.setItem(`reflection_${dateKey}`, 'true');
       let rawClicks = parseInt(localStorage.getItem(`${dateKey}_clicks`) || '0');
       
-      // CAP EARNED POINTS AT 8 PER DAY
       let earnedToday = Math.min(rawClicks, 8); 
 
       let totalPoints = parseInt(localStorage.getItem('auraPoints') || '0');
@@ -918,7 +921,6 @@
       else { routeActiveSubscriber(); }
     }
 
-    // --- SWIPE GESTURE LOGIC ---
     let startX = 0;
     const swipeContainer = document.getElementById('swipe-container');
     const swipeViewport = document.getElementById('swipe-viewport');
@@ -927,12 +929,12 @@
       swipeViewport.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, {passive: true});
       swipeViewport.addEventListener('touchend', e => {
         let endX = e.changedTouches[0].clientX;
-        if (startX - endX > 50) { // Swiped Left (Go to Tracker)
+        if (startX - endX > 50) { 
           swipeContainer.style.transform = 'translateX(-50%)';
           document.getElementById('dot-task').classList.remove('active');
           document.getElementById('dot-track').classList.add('active');
           document.getElementById('swipe-hint').textContent = '👈 Swipe to view task';
-        } else if (endX - startX > 50) { // Swiped Right (Go to Task)
+        } else if (endX - startX > 50) { 
           swipeContainer.style.transform = 'translateX(0%)';
           document.getElementById('dot-task').classList.add('active');
           document.getElementById('dot-track').classList.remove('active');
@@ -941,11 +943,11 @@
       }, {passive: true});
     }
 
-    // --- SUBSCRIPTION SETUP & PUSH CAPTURE ---
+    // --- SUBSCRIPTION SETUP ---
     async function startWorkout(os) {
       const statusElementId = os === 'ios' ? 'status-message-ios' : 'status-message-android';
       const statusMessage = document.getElementById(statusElementId);
-      const userEmail = urlParams.get('email') || localStorage.getItem('userEmail') || (isDev ? 'dev@test.com' : '');
+      const userEmail = localStorage.getItem('userEmail') || (isDev ? 'dev@test.com' : '');
       
       statusMessage.textContent = "Requesting notification permission..."; 
       statusMessage.className = "status-sub";
@@ -979,7 +981,7 @@
         const res = await fetch(`${WEBHOOK_BASE}/stripe-subscription`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
-            email: userEmail, 
+            email: userEmail,
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC', 
             subscription: pushPayload,
             focus: localStorage.getItem('userFocus') || 'Aura' 
