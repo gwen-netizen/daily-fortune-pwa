@@ -36,14 +36,12 @@
       user-select: none; -webkit-user-select: none;
     }
 
-    /* Permanent Global Header */
     #global-header {
       position: fixed; top: 25px; left: 0; width: 100%; text-align: center;
       font-size: 15px; font-weight: 800; color: var(--accent-color);
       z-index: 9999; display: none;
     }
 
-    /* Progress Bar for Onboarding */
     #progress-container {
       position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
       display: none; gap: 8px; z-index: 100;
@@ -51,7 +49,6 @@
     .progress-dot { width: 30px; height: 4px; background: #EAE3D9; border-radius: 4px; transition: background 0.3s; }
     .progress-dot.active { background: var(--accent-color); }
 
-    /* Custom In-App Notification Toast */
     #notification-toast {
       position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-20px);
       background-color: rgba(45, 43, 42, 0.95); color: #FFFFFF; padding: 14px 24px; border-radius: 20px;
@@ -101,60 +98,36 @@
     .btn:active { opacity: 0.85; }
     .btn-alt { background-color: var(--accent-color); }
 
+    .input-field {
+      width: 100%; padding: 14px; border: 2px solid #EAE3D9; border-radius: 12px;
+      font-size: 15px; margin-bottom: 12px; text-align: center; outline: none;
+    }
+    .input-field:focus { border-color: var(--accent-color); }
+
     .task-card { background: #FAF7F2; border: 2px dashed var(--accent-color); padding: 20px; border-radius: 16px; margin: 15px 0; width: 100%; }
     .task-title { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #9C8E80; margin-bottom: 8px; }
     .task-content { font-size: 16px; color: var(--text-color); line-height: 1.5; text-align: center; word-wrap: break-word; }
     .task-bold { font-weight: 800; font-size: 17px; display: block; margin-bottom: 8px; color: #2D2B2A; }
     .task-explanation { font-weight: 400; font-size: 15px; display: block; color: #555250; line-height: 1.5; }
 
-    /* Swipe Carousel for Dashboard */
     .swipe-viewport { width: 100%; overflow: hidden; position: relative; }
     .swipe-container { display: flex; width: 200%; transition: transform 0.3s ease-out; }
     .slide { width: 50%; padding: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     
-    /* THERAPEUTIC WARM RUBY ORB BUTTON */
     .big-red-btn {
       background: linear-gradient(135deg, #FF6B5B 0%, #D94E3D 100%);
-      border: none;
-      outline: none;
-      width: 180px;
-      height: 180px;
-      border-radius: 50%;
-      cursor: pointer;
-      box-shadow: 0 16px 35px rgba(217, 78, 61, 0.35), inset 0 6px 16px rgba(255, 255, 255, 0.4);
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      border: none; outline: none; width: 180px; height: 180px; border-radius: 50%;
+      cursor: pointer; box-shadow: 0 16px 35px rgba(217, 78, 61, 0.35), inset 0 6px 16px rgba(255, 255, 255, 0.4);
+      display: flex; justify-content: center; align-items: center;
       transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease;
-      margin: 15px auto;
-      -webkit-tap-highlight-color: transparent;
+      margin: 15px auto; -webkit-tap-highlight-color: transparent;
     }
-    .big-red-btn:focus, .big-red-btn:active {
-      outline: none;
-      border: none;
-    }
-    .big-red-btn:active { 
-      transform: scale(0.95); 
-      box-shadow: 0 8px 20px rgba(217, 78, 61, 0.25), inset 0 2px 8px rgba(0, 0, 0, 0.15); 
-    }
+    .big-red-btn:active { transform: scale(0.95); }
 
-    /* Therapeutic Inner Breathing Glow */
     @keyframes therapeutic-glow {
-      0% { 
-        box-shadow: 0 16px 35px rgba(217, 78, 61, 0.35), inset 0 6px 16px rgba(255, 255, 255, 0.4);
-        background: linear-gradient(135deg, #FF6B5B 0%, #D94E3D 100%);
-        transform: scale(0.95);
-      }
-      40% { 
-        box-shadow: 0 0 60px 20px rgba(212, 163, 115, 0.5), inset 0 0 40px 10px rgba(255, 240, 220, 0.9);
-        background: linear-gradient(135deg, #FF8577 0%, #E25845 100%);
-        transform: scale(1.05);
-      }
-      100% { 
-        box-shadow: 0 16px 35px rgba(217, 78, 61, 0.35), inset 0 6px 16px rgba(255, 255, 255, 0.4);
-        background: linear-gradient(135deg, #FF6B5B 0%, #D94E3D 100%);
-        transform: scale(1);
-      }
+      0% { transform: scale(0.95); }
+      40% { transform: scale(1.05); }
+      100% { transform: scale(1); }
     }
     .glow-active { animation: therapeutic-glow 1.4s ease-in-out; }
     
@@ -162,7 +135,6 @@
     .s-dot { width: 8px; height: 8px; border-radius: 50%; background: #EAE3D9; transition: 0.3s; }
     .s-dot.active { background: var(--accent-color); }
 
-    /* Lockscreen Overlay Styling */
     #lockscreen-overlay {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-color);
       z-index: 999999; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 40px;
@@ -171,9 +143,7 @@
     .lock-hint { position: absolute; bottom: 50px; font-size: 14px; color: #9C8E80; font-weight: bold; }
     .lock-close { position: absolute; top: 40px; right: 20px; background: #EAE3D9; padding: 8px 16px; border-radius: 20px; font-weight: bold; cursor: pointer; }
 
-    /* Glow Effect for Screen 9 */
     .glow-effect { box-shadow: 0 0 30px rgba(212, 163, 115, 0.6) !important; border: 2px solid var(--accent-color); transition: all 0.5s ease; }
-
     .reflection-box { background: #FAF7F2; border-radius: 16px; padding: 20px; margin-top: 15px; width: 100%; border: 1px solid #EAE3D9; }
 
     .spinner { width: 36px; height: 36px; border: 4px solid #EAE3D9; border-top: 4px solid var(--accent-color); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 12px; }
@@ -189,10 +159,8 @@
 </head>
 <body>
 
-  <!-- Permanent Global Header -->
   <div id="global-header">✨ Active Member</div>
 
-  <!-- Lockscreen Overlay -->
   <div id="lockscreen-overlay">
     <div class="lock-close" onclick="closeLockscreen()">✕ Close</div>
     <div class="lock-text" id="lockscreen-content"></div>
@@ -217,7 +185,6 @@
     <button class="dev-btn" style="background:#d9534f;" onclick="devReset()">🗑 Reset All</button>
   </div>
 
-  <!-- Progress Bar for Onboarding -->
   <div id="progress-container">
     <div class="progress-dot active" id="dot-1"></div>
     <div class="progress-dot" id="dot-2"></div>
@@ -227,7 +194,7 @@
 
   <div class="card-container">
     
-    <!-- Screen Paywall (Unpaid Visitors - Shown after Screen 4 if not subscribed) -->
+    <!-- SCREEN 0: Paywall -->
     <div class="screen no-cursor" id="screen-paywall">
       <div class="content-body">
         <div class="bold-title" style="font-size: 20px;">Invest in Yourself Today</div>
@@ -239,11 +206,28 @@
           <a href="https://buy.stripe.com/3cI8wPcjsbP29yWeQm0co01" class="btn btn-alt" style="text-decoration: none; display: block;">
             Begin Fortune Workout with $1.50
           </a>
+          <button class="btn" style="background: transparent; color: #9C8E80; font-size: 13px; text-decoration: underline;" onclick="showRecoveryModal()">
+            Already subscribed? Restore Session
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- Screen Device Locked -->
+    <!-- SCREEN RECOVERY: Session Restore Fallback -->
+    <div class="screen no-cursor" id="screen-recovery">
+      <div class="content-body">
+        <div class="bold-title" style="font-size: 20px;">Restore Your Session</div>
+        <div class="main-text">Enter the email address you used during payment on Stripe:</div>
+        <input type="email" id="recovery-email-input" class="input-field" placeholder="your_email@gmail.com">
+        <div class="btn-group">
+          <button class="btn btn-alt" onclick="handleManualRecovery()">Verify & Continue</button>
+          <button class="btn" style="background:#EAE3D9; color:#2D2B2A;" onclick="hideAllScreens(); document.getElementById('screen-1').classList.add('active');">Back</button>
+        </div>
+        <div id="recovery-status" class="status-sub"></div>
+      </div>
+    </div>
+
+    <!-- SCREEN DEVICE LOCKED -->
     <div class="screen no-cursor" id="screen-device-locked">
       <div class="content-body">
         <div class="bold-title" style="color: #d9534f; font-size: 20px;">🔒 Subscription Active Elsewhere</div>
@@ -253,7 +237,6 @@
         </div>
         <div class="btn-group">
           <button class="btn" style="background-color: #2D2B2A; color: white;" onclick="transferDevice()">🔄 Transfer subscription to this phone</button>
-          
           <a href="https://buy.stripe.com/3cI8wPcjsbP29yWeQm0co01" class="btn btn-alt" style="text-decoration: none; display: block;">
             Get My Own Membership ($1.50)
           </a>
@@ -261,7 +244,7 @@
       </div>
     </div>
 
-    <!-- SCREEN 1: Welcome & Foundation -->
+    <!-- SCREEN 1: Welcome -->
     <div class="screen" id="screen-1" onclick="nextScreen(1)">
       <div class="content-body">
         <div id="welcome-note" style="font-size: 15px; font-weight: 700; color: #9C8E80; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;"></div>
@@ -301,7 +284,7 @@
       <div class="tap-hint">Tap to continue...</div>
     </div>
 
-    <!-- SCREEN 4: Community Rules -->
+    <!-- SCREEN 4: Rules -->
     <div class="screen" id="screen-4" onclick="nextScreen(4)">
       <div class="content-body">
         <div class="bold-title" style="font-size: 20px;">The Rules</div>
@@ -323,7 +306,7 @@
       </div>
     </div>
 
-    <!-- SCREEN 6A: iOS Setup Instructions -->
+    <!-- SCREEN 6A: iOS Instructions -->
     <div class="screen no-cursor" id="screen-6a">
       <div class="content-body">
         <div class="bold-title" style="font-size: 20px;">📱 For iPhone / iOS Users</div>
@@ -337,7 +320,7 @@
       </div>
     </div>
 
-    <!-- SCREEN 6B: Android Setup Instructions -->
+    <!-- SCREEN 6B: Android Instructions -->
     <div class="screen no-cursor" id="screen-6b">
       <div class="content-body">
         <div class="bold-title" style="font-size: 20px;">🤖 For Android Users</div>
@@ -351,28 +334,24 @@
       </div>
     </div>
 
-    <!-- SCREEN 7: Dashboard (Swipe Carousel) -->
+    <!-- SCREEN 7: Dashboard -->
     <div class="screen no-cursor" id="screen-7" style="padding-top: 60px;">
       <div class="content-body" style="justify-content: flex-start; height: 100%;">
         
         <div class="swipe-viewport" id="swipe-viewport">
           <div class="swipe-container" id="swipe-container">
             
-            <!-- Slide 1: Task -->
             <div class="slide" id="slide-1">
               <div class="task-card" style="margin: 0; min-height: 250px; display:flex; flex-direction:column; justify-content:center;">
                 <div class="task-title" id="card-header-title">TODAY'S DAILY TASK</div>
                 <div class="task-content" id="task-content-text"></div>
-                
                 <div style="margin-top:15px; display:none;" id="lockscreen-btn-container">
                   <button class="btn" style="padding:10px; font-size:13px;" onclick="openLockscreen()">📱 Format for Lockscreen</button>
                 </div>
-
                 <div id="task-instruction" style="margin-top: 20px; font-weight: 700; color: var(--accent-color); font-size: 15px; display: none;"></div>
               </div>
             </div>
 
-            <!-- Slide 2: Tracker Button -->
             <div class="slide" id="slide-2">
               <div style="font-size: 16px; font-weight: 800; color: var(--accent-color); margin-bottom: 25px; text-align: center;">
                 Press once each time a task is completed.
@@ -384,7 +363,6 @@
           </div>
         </div>
 
-        <!-- Swipe Indicator & Hint -->
         <div id="swipe-controls" style="margin-top: 20px;">
           <div class="slide-dots">
             <div class="s-dot active" id="dot-task"></div>
@@ -396,7 +374,7 @@
       </div>
     </div>
 
-    <!-- SCREEN 9A: Today's Summary -->
+    <!-- SCREEN 9A: Summary -->
     <div class="screen" id="screen-9a" onclick="nextScreen(9, 'a')" style="padding-top: 60px;">
       <div class="content-body">
         <div class="bold-title">🌙 Today's Summary</div>
@@ -407,7 +385,7 @@
       <div class="tap-hint">Tap to continue...</div>
     </div>
 
-    <!-- SCREEN 9B: Reflection Complete -->
+    <!-- SCREEN 9B: Final Reflection -->
     <div class="screen" id="screen-9b" onclick="closeReflection()" style="padding-top: 60px;">
       <div class="content-body">
         <div class="bold-title">✨ Reflection Complete</div>
@@ -418,7 +396,7 @@
       <div class="tap-hint">Tap to continue...</div>
     </div>
 
-    <!-- SCREEN 10: Subscription Paused / Billing -->
+    <!-- SCREEN 10: Billing Suspended -->
     <div class="screen no-cursor" id="screen-10">
       <div class="content-body">
         <div class="bold-title" style="color: #d9534f;">Subscription Paused</div>
@@ -435,7 +413,7 @@
 
   <script>
     const urlParams = new URLSearchParams(window.location.search);
-    let isDev = urlParams.get('dev') === 'true';
+    let isDev = urlParams.get('dev') === 'true' || localStorage.getItem('isDevMode') === 'true';
     let forceState = urlParams.get('force');
     const WEBHOOK_BASE = 'https://n8n-latest-x9ac.onrender.com/webhook';
     const PUBLIC_VAPID_KEY = 'BHYSoAIBC__AWCL3BdD2lMez4Y1MTLtuRp6Ir3HaMJ7twkR50kQLQNcTZBfdj9bE9_SyOOnPyHETc_ANGLd0rMw';
@@ -475,7 +453,10 @@
       { task: "Health & Vitality: Drink 8 glasses of water today. Feel your body fully hydrated.", habit: "🎯 Log each completion on tracker." }
     ];
 
-    if (isDev) document.getElementById('dev-panel').style.display = 'flex';
+    if (isDev) {
+      const devPanel = document.getElementById('dev-panel');
+      if (devPanel) devPanel.style.display = 'flex';
+    }
 
     let secretTapCount = 0;
     let secretTapTimer;
@@ -483,7 +464,10 @@
       secretTapCount++; clearTimeout(secretTapTimer);
       secretTapTimer = setTimeout(() => { secretTapCount = 0; }, 2000);
       if (secretTapCount >= 5) {
-        secretTapCount = 0; isDev = !isDev;
+        secretTapCount = 0; 
+        isDev = !isDev;
+        if (isDev) localStorage.setItem('isDevMode', 'true');
+        else localStorage.removeItem('isDevMode');
         document.getElementById('dev-panel').style.display = isDev ? 'flex' : 'none';
         showAppNotification(isDev ? "🛠 Sandbox Mode Enabled" : "🔒 Sandbox Mode Hidden");
       }
@@ -501,70 +485,76 @@
 
     function devForceState(state) { localStorage.setItem('workoutSubscribed', 'true'); forceState = state; routeActiveSubscriber(); }
     function devSimulateRenewal() { localStorage.setItem('workoutSubscribed', 'true'); localStorage.setItem('pendingLevelUp', 'true'); showAppNotification("💳 Level-up queued! Check-in to trigger."); }
-    function devReset() { localStorage.clear(); window.location.href = '?dev=true'; }
+    function devReset() { 
+      localStorage.clear(); 
+      localStorage.setItem('isDevMode', 'true'); 
+      window.location.href = '?dev=true'; 
+    }
 
-    if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
+    // FORCE SERVICE WORKER CACHE CLEARING
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').then(reg => {
+          reg.onupdatefound = () => {
+            const installingWorker = reg.installing;
+            installingWorker.onstatechange = () => {
+              if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                window.location.reload();
+              }
+            };
+          };
+        }).catch(()=>{});
+      });
+    }
 
-    // =========================================================================
-    // BACKGROUND AUDIT: 24-HOUR GRACE PERIOD & FAIL-OPEN SERVER PROTECTION
-    // =========================================================================
+    // SILENT BACKGROUND AUDIT (NO UI HIJACKING)
     async function runBackgroundAudit(email) {
-      if (!email) return;
+      const isDevActive = isDev || localStorage.getItem('isDevMode') === 'true';
+      if (!email || isDevActive) return;
+
       try {
         const res = await fetch(`${WEBHOOK_BASE}/verify-subscriber?email=${encodeURIComponent(email)}`);
-        
-        // FAIL OPEN ON SERVER ERROR: If n8n drops or 500s, preserve session
-        if (!res.ok) {
-          console.warn('[Audit] Server returned error status. Preserving session (Fail Open).');
-          return;
-        }
+        if (!res.ok) return;
 
-        const data = await res.json();
+        const rawData = await res.json();
+        const data = Array.isArray(rawData) ? rawData[0] : rawData;
+        if (!data) return;
 
-        // 1. CONFIRMED ACTIVE SUBSCRIBER IN DATABASE
-        if (data.isSubscribed || data.status === 'Active') {
+        const statusStr = (data.Status || data.status || '').toString().toLowerCase();
+        const isActive = data.isSubscribed === true || 
+                         data.isSubscribed === 'true' || 
+                         statusStr === 'active' || 
+                         data.subscribed === true;
+
+        if (isActive) {
           localStorage.setItem('isVerified', 'true');
+          if (data.Email || data.email) localStorage.setItem('userEmail', data.Email || data.email);
           if (data.points !== undefined) localStorage.setItem('auraPoints', data.points);
           if (data.focus) localStorage.setItem('userFocus', data.focus);
-
-          if (data.hasDeviceToken && localStorage.getItem('workoutSubscribed') !== 'true') {
-            hideAllScreens();
-            document.getElementById('screen-device-locked').classList.add('active');
-          }
           return;
         }
 
-        // 2. UNVERIFIED / NOT IN SHEETS YET -> CHECK 24-HOUR GRACE PERIOD
         const subscribedAt = parseInt(localStorage.getItem('subscribedAt') || '0', 10);
         const hoursSinceSub = (Date.now() - subscribedAt) / (1000 * 60 * 60);
 
         if (subscribedAt > 0 && hoursSinceSub <= 24) {
-          console.warn('[Audit] Pending Sheets sync, but within 24h grace period. Preserving session.');
-          return; // Protected by 24h Grace Period
+          localStorage.setItem('isVerified', 'true');
+          return;
         }
 
-        // 3. EVICT: Past 24 hours without DB confirmation -> Wipe storage & boot to Paywall
-        console.warn('[Audit] Unauthorized access or expired sub past 24h. Evicting to Paywall.');
-        localStorage.clear();
-        hideAllScreens();
-        document.getElementById('screen-paywall').classList.add('active');
-
-      } catch (err) {
-        // FAIL OPEN ON NETWORK DROP: Offline users keep their access
-        console.warn('[Audit] Network offline or fetch failed. Preserving user session offline:', err);
-      }
+        localStorage.removeItem('isVerified');
+      } catch (err) {}
     }
 
-    // =========================================================================
-    // STARTUP ROUTING: OPTIMISTIC TRUST AT SCREEN 1
-    // =========================================================================
+    // STARTUP ROUTER
     document.addEventListener('DOMContentLoaded', async () => {
       const emailFromUrl = urlParams.get('email');
       const savedEmail = localStorage.getItem('userEmail');
+      const isDevActive = isDev || localStorage.getItem('isDevMode') === 'true';
 
       updateWelcomeNote();
 
-      if (isDev) {
+      if (isDevActive) {
         const subStatus = localStorage.getItem('workoutSubscribed');
         if (subStatus === 'failed') { hideAllScreens(); document.getElementById('screen-10').classList.add('active'); }
         else if (subStatus === 'true') { routeActiveSubscriber(); }
@@ -572,47 +562,30 @@
         return;
       }
 
-      // CASE 1: Subscribed members who finished setup -> go straight to Dashboard
       if (localStorage.getItem('workoutSubscribed') === 'true') {
         routeActiveSubscriber();
-        if (emailFromUrl || savedEmail) {
-          runBackgroundAudit(emailFromUrl || savedEmail);
-        }
+        if (emailFromUrl || savedEmail) runBackgroundAudit(emailFromUrl || savedEmail);
         return;
       }
 
-      // CASE 2: Fresh Stripe Redirect (?email= customer email present)
       if (emailFromUrl) {
         localStorage.setItem('userEmail', emailFromUrl);
         localStorage.setItem('isVerified', 'true');
         if (!localStorage.getItem('subscribedAt')) {
           localStorage.setItem('subscribedAt', Date.now().toString());
         }
-
-        // Clean URL bar visually without page refresh
         window.history.replaceState({}, document.title, window.location.pathname);
-
         updateWelcomeNote();
-        hideAllScreens();
-        document.getElementById('screen-1').classList.add('active');
-        updateProgress(1);
-
-        // Run background audit while user goes through Screens 1-4 (gives Sheets 10-15s to sync)
-        runBackgroundAudit(emailFromUrl);
-        return;
       }
 
-      // CASE 3: All other visitors -> Start at Screen 1 (Welcome & Foundation)
       hideAllScreens();
       document.getElementById('screen-1').classList.add('active');
       updateProgress(1);
 
-      if (savedEmail) {
-        runBackgroundAudit(savedEmail);
-      }
+      const activeEmail = emailFromUrl || savedEmail;
+      if (activeEmail) runBackgroundAudit(activeEmail);
     });
 
-    // ONBOARDING PROGRESS & NAVIGATION
     function updateProgress(step) {
       document.getElementById('progress-container').style.display = 'flex';
       for(let i=1; i<=4; i++) {
@@ -621,31 +594,78 @@
       }
     }
 
+    function showRecoveryModal() {
+      hideAllScreens();
+      document.getElementById('screen-recovery').classList.add('active');
+    }
+
+    async function handleManualRecovery() {
+      const input = document.getElementById('recovery-email-input').value.trim();
+      const status = document.getElementById('recovery-status');
+      if (!input || !input.includes('@')) {
+        status.textContent = "Please enter a valid email address.";
+        status.className = "status-sub error";
+        return;
+      }
+      status.textContent = "Verifying subscription...";
+      status.className = "status-sub";
+
+      try {
+        const res = await fetch(`${WEBHOOK_BASE}/verify-subscriber?email=${encodeURIComponent(input)}`);
+        if (res.ok) {
+          const rawData = await res.json();
+          const data = Array.isArray(rawData) ? rawData[0] : rawData;
+          const statusStr = (data?.Status || data?.status || '').toString().toLowerCase();
+          const isActive = data?.isSubscribed === true || statusStr === 'active';
+
+          if (isActive) {
+            localStorage.setItem('userEmail', input);
+            localStorage.setItem('isVerified', 'true');
+            localStorage.setItem('subscribedAt', Date.now().toString());
+            updateWelcomeNote();
+            status.textContent = "Verified! Resuming onboarding...";
+            status.className = "status-sub success";
+            setTimeout(() => {
+              hideAllScreens();
+              document.getElementById('screen-5').classList.add('active');
+            }, 1000);
+            return;
+          }
+        }
+        status.textContent = "No active subscription found for this email.";
+        status.className = "status-sub error";
+      } catch(e) {
+        status.textContent = "Network error. Please try again.";
+        status.className = "status-sub error";
+      }
+    }
+
     function nextScreen(currentId, variant) {
-      // PAYWALL GATE AT SCREEN 4: Check verification before allowing access to Screen 5 (Setup)
+      // SCREEN 4 GATE: NO HARD EVICTION TO SCREEN 0 FOR MISSING EMAIL
       if (currentId === 4) {
+        const isDevActive = isDev || localStorage.getItem('isDevMode') === 'true';
         const isVerified = localStorage.getItem('isVerified') === 'true';
+        const hasEmail = !!(localStorage.getItem('userEmail') || urlParams.get('email'));
         const subscribedAt = parseInt(localStorage.getItem('subscribedAt') || '0', 10);
         const hoursSinceSub = (Date.now() - subscribedAt) / (1000 * 60 * 60);
+        const isWithinGrace = subscribedAt > 0 && hoursSinceSub <= 24;
 
-        // If verified OR within 24h grace period: proceed to Screen 5 (OS Choice)
-        if (isVerified || (subscribedAt > 0 && hoursSinceSub <= 24)) {
+        if (isDevActive || isVerified || hasEmail || isWithinGrace) {
           document.getElementById('screen-4').classList.remove('active');
           document.getElementById('progress-container').style.display = 'none';
           document.getElementById('screen-5').classList.add('active');
           return;
         } else {
-          // Unpaid visitor -> Route to Screen 0 (Paywall)
+          // ROUTE TO RECOVERY INSTEAD OF FORCEFUL PAYWALL
           document.getElementById('screen-4').classList.remove('active');
           document.getElementById('progress-container').style.display = 'none';
-          document.getElementById('screen-paywall').classList.add('active');
+          document.getElementById('screen-recovery').classList.add('active');
           return;
         }
       }
 
       if (currentId === 9 && variant === 'a') {
         document.getElementById('screen-9a').classList.remove('active');
-        
         const reflectionQuotes = [
           "Give yourself a pat for the effort you put in today.",
           "Small steps compound into massive results. Great work today.",
@@ -655,7 +675,6 @@
         ];
         const randomQuote = reflectionQuotes[Math.floor(Math.random() * reflectionQuotes.length)];
         document.getElementById('reflection-final-text').textContent = randomQuote;
-        
         document.getElementById('screen-9b').classList.add('active');
         return;
       }
@@ -672,19 +691,14 @@
 
     function selectFocus(focusType, currentId) {
       localStorage.setItem('userFocus', focusType);
-
       const ackBadges = {
         'Charisma': '✨ Tailored to strengthen your Charisma',
         'Aura': '✨ Tailored to elevate your Aura',
         'Beauty': '✨ Tailored to enhance your Beauty',
         'Personality': '✨ Tailored to refine your Personality'
       };
-
       const ackElem = document.getElementById('focus-ack-note');
-      if (ackElem) {
-        ackElem.textContent = ackBadges[focusType] || `✨ Tailored to improve your ${focusType}`;
-      }
-
+      if (ackElem) ackElem.textContent = ackBadges[focusType] || `✨ Tailored to improve your ${focusType}`;
       nextScreen(currentId);
     }
 
@@ -734,6 +748,7 @@
       const hour = now.getHours(); const minute = now.getMinutes();
       const todayDateKey = `task_${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}`;
       const hasCheckedInToday = localStorage.getItem(`reflection_${todayDateKey}`) === 'true';
+      const isDevActive = isDev || localStorage.getItem('isDevMode') === 'true';
 
       let isWeekend = (day === 6) || (day === 0) || (day === 5 && (hour > 21 || (hour === 21 && minute >= 30))) || (day === 1 && hour < 8);
       let isCheckInWindow = (hour === 21 && minute >= 30) || (hour === 22) || (hour === 23);
@@ -742,7 +757,7 @@
       if (isCheckInWindow && hasCheckedInToday) { isCheckInWindow = false; isNightTime = true; }
       let isReflectionTrigger = urlParams.get('checkin') === 'true' || isCheckInWindow;
 
-      if (isDev && forceState) {
+      if (isDevActive && forceState) {
         isWeekend = (forceState === 'weekend');
         isNightTime = (forceState === 'night');
         isReflectionTrigger = (forceState === 'checkin');
@@ -797,9 +812,8 @@
         const savedTaskToday = localStorage.getItem(todayDateKey);
         const savedHabitToday = localStorage.getItem(todayDateKey + "_habit");
         
-        if (savedTaskToday && !isDev) {
+        if (savedTaskToday && !isDevActive) {
           renderFormattedTask(taskContentText, savedTaskToday);
-          
           if(savedHabitToday) {
             taskInstruction.textContent = savedHabitToday;
             taskInstruction.style.display = 'block';
@@ -809,7 +823,7 @@
           taskInstruction.style.display = 'none';
           
           try {
-            const queryParams = new URLSearchParams({ email: localStorage.getItem('userEmail') || '', ...(isDev && forceState === 'morning' ? { mode: 'random', ts: Date.now() } : {}) });
+            const queryParams = new URLSearchParams({ email: localStorage.getItem('userEmail') || '', ...(isDevActive && forceState === 'morning' ? { mode: 'random', ts: Date.now() } : {}) });
             const response = await fetch(`${WEBHOOK_BASE}/today-task?${queryParams.toString()}`);
             if (response.ok) {
               const data = await response.json();
@@ -818,7 +832,7 @@
 
               renderFormattedTask(taskContentText, rawTaskText);
               
-              if (!isDev) {
+              if (!isDevActive) {
                 localStorage.setItem(todayDateKey, rawTaskText);
                 if(habitText) localStorage.setItem(todayDateKey + "_habit", habitText);
               }
@@ -831,10 +845,9 @@
           } catch (err) {
             rawTaskText = FALLBACK_TASKS[0].task;
             const habitText = FALLBACK_TASKS[0].habit;
-            
             renderFormattedTask(taskContentText, rawTaskText);
             
-            if (!isDev) {
+            if (!isDevActive) {
                localStorage.setItem(todayDateKey, rawTaskText);
                localStorage.setItem(todayDateKey + "_habit", habitText);
             }
@@ -872,6 +885,7 @@
     function tabulateAndSyncDailyScore(dateKey) {
       localStorage.setItem(`reflection_${dateKey}`, 'true');
       let rawClicks = parseInt(localStorage.getItem(`${dateKey}_clicks`) || '0');
+      let isDevActive = isDev || localStorage.getItem('isDevMode') === 'true';
       
       let earnedToday = Math.min(rawClicks, 8); 
 
@@ -882,7 +896,7 @@
       let weekly = parseInt(localStorage.getItem('weeklyCompleted') || '0');
       if(earnedToday > 0) localStorage.setItem('weeklyCompleted', (weekly + 1));
 
-      if (!isDev) {
+      if (!isDevActive) {
         const userEmail = localStorage.getItem('userEmail');
         const userFocus = localStorage.getItem('userFocus') || 'Aura';
         if (userEmail) {
@@ -916,8 +930,9 @@
     }
 
     function closeReflection() {
+      const isDevActive = isDev || localStorage.getItem('isDevMode') === 'true';
       document.getElementById('summary-card').classList.remove('glow-effect');
-      if (isDev && forceState === 'checkin') { forceState = 'night'; routeActiveSubscriber(); } 
+      if (isDevActive && forceState === 'checkin') { forceState = 'night'; routeActiveSubscriber(); } 
       else { routeActiveSubscriber(); }
     }
 
@@ -943,17 +958,17 @@
       }, {passive: true});
     }
 
-    // --- SUBSCRIPTION SETUP ---
     async function startWorkout(os) {
       const statusElementId = os === 'ios' ? 'status-message-ios' : 'status-message-android';
       const statusMessage = document.getElementById(statusElementId);
-      const userEmail = localStorage.getItem('userEmail') || (isDev ? 'dev@test.com' : '');
+      const isDevActive = isDev || localStorage.getItem('isDevMode') === 'true';
+      const userEmail = localStorage.getItem('userEmail') || (isDevActive ? 'dev@test.com' : '');
       
       statusMessage.textContent = "Requesting notification permission..."; 
       statusMessage.className = "status-sub";
       let pushPayload = null;
 
-      if (isDev) {
+      if (isDevActive) {
         statusMessage.textContent = "🛠 Sandbox: Bypassing real push registration...";
         statusMessage.className = "status-sub success";
         localStorage.setItem('workoutSubscribed', 'true');
@@ -989,11 +1004,7 @@
         });
         if (res.ok) {
           localStorage.setItem('workoutSubscribed', 'true'); localStorage.setItem('userLevel', '1');
-          
-          if (!localStorage.getItem('auraPoints')) {
-            localStorage.setItem('auraPoints', '1'); 
-          }
-          
+          if (!localStorage.getItem('auraPoints')) localStorage.setItem('auraPoints', '1'); 
           statusMessage.textContent = "Success!";
           setTimeout(() => routeActiveSubscriber(), 1000);
         } else { statusMessage.textContent = "Database update failed."; statusMessage.className = "status-sub error"; }
