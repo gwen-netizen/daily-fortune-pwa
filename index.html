@@ -109,14 +109,13 @@
     .big-red-btn {
       background-color: #d9534f; color: white; border: none; 
       width: 180px; height: 180px; border-radius: 50%;
-      font-size: 22px; font-weight: 800; cursor: pointer;
+      font-size: 32px; font-weight: 800; cursor: pointer;
       box-shadow: 0 12px 24px rgba(217, 83, 79, 0.4);
       display: flex; justify-content: center; align-items: center;
       transition: transform 0.1s, box-shadow 0.1s, background-color 0.3s;
-      margin: 30px auto;
+      margin: 15px auto;
     }
     .big-red-btn:active { transform: scale(0.92); box-shadow: 0 4px 10px rgba(217, 83, 79, 0.4); }
-    .big-red-btn:disabled { background-color: #9C8E80; box-shadow: none; transform: none; cursor: default; }
     
     .slide-dots { display: flex; justify-content: center; gap: 8px; margin-top: 15px; }
     .s-dot { width: 8px; height: 8px; border-radius: 50%; background: #EAE3D9; transition: 0.3s; }
@@ -335,10 +334,13 @@
 
             <!-- Slide 2: Tracker Button -->
             <div class="slide" id="slide-2">
+              <div style="font-size: 16px; font-weight: 800; color: var(--accent-color); margin-bottom: 25px; text-align: center;">
+                Tap once for each completion.
+              </div>
               <button id="big-red-btn" class="big-red-btn" onclick="registerDailyAction()">
-                🔥 I DID IT!
+                + 1
               </button>
-              <div style="font-size: 14px; color: #9C8E80; margin-top: 15px; font-style: italic; font-weight: 500;">Be truthful to yourself.</div>
+              <div style="font-size: 14px; color: #9C8E80; margin-top: 25px; font-style: italic; font-weight: 500;">Be truthful to yourself.</div>
             </div>
 
           </div>
@@ -350,7 +352,7 @@
             <div class="s-dot active" id="dot-task"></div>
             <div class="s-dot" id="dot-track"></div>
           </div>
-          <div class="tap-hint" id="swipe-hint">Swipe right to track progress 👉</div>
+          <div class="tap-hint" id="swipe-hint">Swipe to track progress 👉</div>
         </div>
 
       </div>
@@ -636,11 +638,13 @@
       const swipeControls = document.getElementById('swipe-controls');
       const taskInstruction = document.getElementById('task-instruction');
       const lockBtn = document.getElementById('lockscreen-btn-container');
+      const swipeHint = document.getElementById('swipe-hint');
       
       // Reset swipe to Slide 1
       document.getElementById('swipe-container').style.transform = 'translateX(0%)';
       document.getElementById('dot-task').classList.add('active');
       document.getElementById('dot-track').classList.remove('active');
+      if(swipeHint) swipeHint.textContent = 'Swipe to track progress 👉';
 
       if (isWeekend || isNightTime) {
         // Disable swiping/tracker for rest periods
@@ -665,7 +669,6 @@
         swipeControls.style.display = 'block';
         lockBtn.style.display = 'block';
         cardHeaderTitle.textContent = "TODAY'S DAILY TASK";
-        updateDailyButtonState(todayDateKey);
         
         if(navigator.setAppBadge && !hasCheckedInToday) navigator.setAppBadge(1);
 
@@ -734,37 +737,21 @@
     }
 
     // --- NEW DAYTIME TRACKER LOGIC ---
-    function updateDailyButtonState(dateKey) {
-      let clicks = parseInt(localStorage.getItem(`${dateKey}_clicks`) || '0');
-      const btn = document.getElementById('big-red-btn');
-      
-      if (clicks >= 8) {
-        btn.textContent = "MAXED OUT";
-        btn.disabled = true;
-      } else {
-        btn.textContent = "🔥 I DID IT!";
-        btn.disabled = false;
-      }
-    }
-
     function registerDailyAction() {
       const now = new Date();
       const todayDateKey = `task_${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}`;
       let clicks = parseInt(localStorage.getItem(`${todayDateKey}_clicks`) || '0');
 
-      if (clicks < 8) {
-        clicks++;
-        localStorage.setItem(`${todayDateKey}_clicks`, clicks);
+      clicks++;
+      localStorage.setItem(`${todayDateKey}_clicks`, clicks);
 
-        let totalPoints = parseInt(localStorage.getItem('auraPoints') || '0');
-        totalPoints++;
-        localStorage.setItem('auraPoints', totalPoints);
-        
-        updateGlobalHeader();
-        updateDailyButtonState(todayDateKey);
-        if(navigator.vibrate) navigator.vibrate([50]);
-        showAppNotification("+1 Point Added! 🔥");
-      }
+      let totalPoints = parseInt(localStorage.getItem('auraPoints') || '0');
+      totalPoints++;
+      localStorage.setItem('auraPoints', totalPoints);
+      
+      updateGlobalHeader();
+      
+      if(navigator.vibrate) navigator.vibrate([50]);
     }
 
     function tabulateAndSyncDailyScore(dateKey) {
@@ -825,12 +812,12 @@
           swipeContainer.style.transform = 'translateX(-50%)';
           document.getElementById('dot-task').classList.remove('active');
           document.getElementById('dot-track').classList.add('active');
-          document.getElementById('swipe-hint').textContent = '👈 Swipe left to view task';
+          document.getElementById('swipe-hint').textContent = '👈 Swipe to view task';
         } else if (endX - startX > 50) { // Swiped Right (Go to Task)
           swipeContainer.style.transform = 'translateX(0%)';
           document.getElementById('dot-task').classList.add('active');
           document.getElementById('dot-track').classList.remove('active');
-          document.getElementById('swipe-hint').textContent = 'Swipe right to track progress 👉';
+          document.getElementById('swipe-hint').textContent = 'Swipe to track progress 👉';
         }
       }, {passive: true});
     }
