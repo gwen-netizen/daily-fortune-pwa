@@ -107,15 +107,23 @@
     
     /* Big Red Button */
     .big-red-btn {
-      background-color: #d9534f; color: white; border: none; 
+      background-color: #d9534f; border: none; 
       width: 180px; height: 180px; border-radius: 50%;
-      font-size: 32px; font-weight: 800; cursor: pointer;
+      cursor: pointer;
       box-shadow: 0 12px 24px rgba(217, 83, 79, 0.4);
       display: flex; justify-content: center; align-items: center;
-      transition: transform 0.1s, box-shadow 0.1s, background-color 0.3s;
+      transition: transform 0.1s, box-shadow 0.1s;
       margin: 15px auto;
     }
     .big-red-btn:active { transform: scale(0.92); box-shadow: 0 4px 10px rgba(217, 83, 79, 0.4); }
+
+    /* Glow Animation for Button Press */
+    @keyframes button-glow {
+      0% { box-shadow: 0 0 0 0 rgba(217, 83, 79, 0.7); transform: scale(0.92); }
+      50% { box-shadow: 0 0 35px 15px rgba(255, 120, 120, 0.8), 0 0 60px 20px rgba(217, 83, 79, 0.5); transform: scale(1.03); background-color: #ff4d4d; }
+      100% { box-shadow: 0 12px 24px rgba(217, 83, 79, 0.4); transform: scale(1); background-color: #d9534f; }
+    }
+    .glow-active { animation: button-glow 0.4s ease-out; }
     
     .slide-dots { display: flex; justify-content: center; gap: 8px; margin-top: 15px; }
     .s-dot { width: 8px; height: 8px; border-radius: 50%; background: #EAE3D9; transition: 0.3s; }
@@ -335,11 +343,9 @@
             <!-- Slide 2: Tracker Button -->
             <div class="slide" id="slide-2">
               <div style="font-size: 16px; font-weight: 800; color: var(--accent-color); margin-bottom: 25px; text-align: center;">
-                Tap once for each completion.
+                Press once each time a task is completed.
               </div>
-              <button id="big-red-btn" class="big-red-btn" onclick="registerDailyAction()">
-                + 1
-              </button>
+              <button id="big-red-btn" class="big-red-btn" onclick="registerDailyAction()"></button>
               <div style="font-size: 14px; color: #9C8E80; margin-top: 25px; font-style: italic; font-weight: 500;">Be truthful to yourself.</div>
             </div>
 
@@ -745,21 +751,27 @@
       clicks++;
       localStorage.setItem(`${todayDateKey}_clicks`, clicks);
 
-      let totalPoints = parseInt(localStorage.getItem('auraPoints') || '0');
-      totalPoints++;
-      localStorage.setItem('auraPoints', totalPoints);
-      
-      updateGlobalHeader();
-      
+      // Trigger the glow animation
+      const btn = document.getElementById('big-red-btn');
+      btn.classList.remove('glow-active');
+      void btn.offsetWidth; // forces a browser reflow to restart animation
+      btn.classList.add('glow-active');
+
       if(navigator.vibrate) navigator.vibrate([50]);
     }
 
     function tabulateAndSyncDailyScore(dateKey) {
       localStorage.setItem(`reflection_${dateKey}`, 'true');
-      let earnedToday = parseInt(localStorage.getItem(`${dateKey}_clicks`) || '0');
-      let totalPoints = parseInt(localStorage.getItem('auraPoints') || '0');
-      let weekly = parseInt(localStorage.getItem('weeklyCompleted') || '0');
+      let rawClicks = parseInt(localStorage.getItem(`${dateKey}_clicks`) || '0');
       
+      // CAP THE EARNED POINTS AT 8 PER DAY
+      let earnedToday = Math.min(rawClicks, 8); 
+
+      let totalPoints = parseInt(localStorage.getItem('auraPoints') || '0');
+      totalPoints += earnedToday; // Add only the capped amount
+      localStorage.setItem('auraPoints', totalPoints);
+      
+      let weekly = parseInt(localStorage.getItem('weeklyCompleted') || '0');
       if(earnedToday > 0) localStorage.setItem('weeklyCompleted', (weekly + 1));
 
       if (!isDev) {
@@ -776,7 +788,9 @@
 
       hideAllScreens();
       updateGlobalHeader();
-      document.getElementById('summary-text').innerHTML = `You pressed the button ${earnedToday} times.<br><br>You earned <span style="color:var(--accent-color);">+${earnedToday} ${getUserPointName()}</span> today!`;
+      
+      let clickText = rawClicks === 1 ? "1 time" : `${rawClicks} times`;
+      document.getElementById('summary-text').innerHTML = `You pressed the tracker ${clickText}.<br><br>You earned <span style="color:var(--accent-color);">+${earnedToday} ${getUserPointName()}</span> today!`;
       
       document.getElementById('screen-9a').classList.add('active');
       document.getElementById('summary-card').classList.add('glow-effect');
