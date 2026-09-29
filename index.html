@@ -133,7 +133,7 @@
   <div id="help-icon" onclick="showHelpToast()">?</div>
   <div id="help-toast">Have questions? Ask our Community on Facebook</div>
 
-  <!-- Extended Sandbox Menu with Sunday Teaser Button -->
+  <!-- Sandbox Menu -->
   <div id="dev-panel">
     <div style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; padding:0 4px;">
       <span style="font-size:12px; font-weight:800; color:#D4A373;">🛠 Sandbox Mode</span>
@@ -183,6 +183,9 @@
           <span style="font-size: 14px; color: #555250;">Subscriptions are strictly 1 device per member.</span>
         </div>
         <div class="btn-group">
+          <!-- TRANSFER BUTTON ADDED HERE -->
+          <button class="btn" style="background-color: #2D2B2A; color: white;" onclick="transferDevice()">🔄 Transfer subscription to this phone</button>
+          
           <a href="https://buy.stripe.com/3cI8wPcjsbP29yWeQm0co01" class="btn btn-alt" style="text-decoration: none; display: block;">
             Get My Own Membership ($1.50)
           </a>
@@ -214,11 +217,13 @@
       </div>
     </div>
 
-    <!-- SCREEN 3: The Daily Rhythm -->
+    <!-- SCREEN 3: The Daily Rhythm (PROMINENT SUB-HEADLINE FORMATTING) -->
     <div class="screen" id="screen-3" onclick="nextScreen(3)">
       <div class="content-body">
-        <div id="focus-ack-note" style="font-size: 13px; font-weight: 700; color: #D4A373; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px;"></div>
-        <div class="bold-title" style="font-size: 22px; margin-bottom: 24px;">The Rhythm</div>
+        <div class="bold-title" style="font-size: 24px; margin-bottom: 6px;">The Rhythm</div>
+        <div id="focus-ack-note" style="font-size: 16px; font-weight: 700; color: #D4A373; margin-bottom: 24px; line-height: 1.4;">
+          ✨ Tailored to enhance your Beauty
+        </div>
         <div class="main-text" style="text-align: left; margin: 0 auto; line-height: 1.8;">
           ☀️ <strong>8:00 AM:</strong> Receive your task.<br><br>
           🌙 <strong>9:30 PM:</strong> Daily check-in.<br><br>
@@ -278,7 +283,7 @@
       </div>
     </div>
 
-    <!-- SCREEN 7: Main Daily Dashboard, Weekend Rest Hub & Sunday Teaser -->
+    <!-- SCREEN 7: Dashboard / Weekend Rest Hub -->
     <div class="screen no-cursor" id="screen-7">
       <div class="content-body">
         <div id="dashboard-header" class="bold-title" style="font-size: 18px;">✨ Active Member</div>
@@ -340,8 +345,6 @@
     let isDev = urlParams.get('dev') === 'true';
     let forceState = urlParams.get('force');
     const WEBHOOK_BASE = 'https://n8n-latest-x9ac.onrender.com/webhook';
-    
-    // UPDATED CORRECT VAPID KEY
     const PUBLIC_VAPID_KEY = 'BHYSoAIBC__AWCL3BdD2lMez4Y1MTLtuRp6Ir3HaMJ7twkR50kQLQNcTZBfdj9bE9_SyOOnPyHETc_ANGLd0rMw';
 
     let rawTaskText = ""; 
@@ -409,7 +412,7 @@
 
     if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
 
-    // Pre-check Logic
+    // Pre-check Logic (RESTORES POINTS & FOCUS FROM GOOGLE SHEETS)
     document.addEventListener('DOMContentLoaded', async () => {
       const emailFromUrl = urlParams.get('email');
       const savedEmail = localStorage.getItem('userEmail');
@@ -434,6 +437,10 @@
 
         if (!data.isSubscribed) { hideAllScreens(); document.getElementById('screen-paywall').classList.add('active'); return; }
         
+        // RESTORE POINTS AND FOCUS FROM N8N / GOOGLE SHEETS
+        if (data.points !== undefined) localStorage.setItem('auraPoints', data.points);
+        if (data.focus) localStorage.setItem('userFocus', data.focus);
+
         if (localStorage.getItem('workoutSubscribed') === 'true') { routeActiveSubscriber(); }
         else if (data.hasDeviceToken) { hideAllScreens(); document.getElementById('screen-device-locked').classList.add('active'); }
         else { hideAllScreens(); document.getElementById('screen-1').classList.add('active'); updateProgress(1); }
@@ -479,6 +486,12 @@
       }
 
       nextScreen(currentId);
+    }
+
+    // TRANSFER DEVICE LOGIC
+    function transferDevice() {
+      hideAllScreens();
+      document.getElementById('screen-5').classList.add('active');
     }
 
     function chooseOS(os) {
@@ -546,7 +559,6 @@
       const lockBtn = document.getElementById('lockscreen-btn-container');
 
       if (isSundayEvening) {
-        // SUNDAY EVENING TEASER VIEW
         taskBoxA.style.display = 'block';
         cardHeaderTitle.textContent = "SUNDAY EVENING TEASER";
         habitStack.style.display = 'none'; lockBtn.style.display = 'none';
@@ -559,7 +571,6 @@
         if(navigator.clearAppBadge) navigator.clearAppBadge();
 
       } else if (isWeekend) {
-        // GENERAL WEEKEND REST VIEW
         taskBoxA.style.display = 'block';
         cardHeaderTitle.textContent = "WEEKEND REST";
         habitStack.style.display = 'none'; lockBtn.style.display = 'none';
@@ -577,7 +588,6 @@
         taskContentText.innerHTML = `Today's task check-in has passed.<br><br>Rest well and anticipate your next task tomorrow at 8:00 AM!`;
         if(navigator.clearAppBadge) navigator.clearAppBadge();
       } else {
-        // Morning / Day View
         taskBoxA.style.display = 'block'; cardHeaderTitle.textContent = "TODAY'S DAILY TASK";
         lockBtn.style.display = 'block';
         
@@ -658,6 +668,18 @@
       let weekly = parseInt(localStorage.getItem('weeklyCompleted') || '0');
       localStorage.setItem('weeklyCompleted', (weekly + 1));
 
+      // NEW: PING N8N TO SAVE POINTS TO GOOGLE SHEETS
+      if (!isDev) {
+        const userEmail = localStorage.getItem('userEmail');
+        if (userEmail) {
+          fetch(`${WEBHOOK_BASE}/update-points`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: userEmail, points: points })
+          }).catch(() => { console.log('Background point sync failed'); });
+        }
+      }
+
       hideAllScreens();
       
       const pointName = getUserPointName();
@@ -694,7 +716,6 @@
       statusMessage.className = "status-sub";
       let pushPayload = null;
 
-      // DEV MODE BYPASS: Bypasses real push registration when testing in Sandbox mode
       if (isDev) {
         statusMessage.textContent = "🛠 Sandbox: Bypassing real push registration...";
         statusMessage.className = "status-sub success";
@@ -722,10 +743,21 @@
       try {
         const res = await fetch(`${WEBHOOK_BASE}/stripe-subscription`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: userEmail, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC', subscription: pushPayload })
+          body: JSON.stringify({ 
+            email: userEmail, 
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC', 
+            subscription: pushPayload,
+            focus: localStorage.getItem('userFocus') || 'Aura' // <--- SAVES FOCUS TO N8N
+          })
         });
         if (res.ok) {
-          localStorage.setItem('workoutSubscribed', 'true'); localStorage.setItem('userLevel', '1'); localStorage.setItem('auraPoints', '1');
+          localStorage.setItem('workoutSubscribed', 'true'); localStorage.setItem('userLevel', '1');
+          
+          // Only reset points to 1 if it's not already restored from Google Sheets
+          if (!localStorage.getItem('auraPoints')) {
+            localStorage.setItem('auraPoints', '1'); 
+          }
+          
           statusMessage.textContent = "Success!";
           setTimeout(() => routeActiveSubscriber(), 1000);
         } else { statusMessage.textContent = "Database update failed."; statusMessage.className = "status-sub error"; }
