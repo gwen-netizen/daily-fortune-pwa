@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Fortune Workout</title>
   
-  <!-- PWA Settings -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#FAF7F2">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -21,383 +20,119 @@
       --accent-color: #D4A373;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
     body {
       background-color: var(--bg-color);
       color: var(--text-color);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      overflow: hidden;
-      touch-action: manipulation;
+      display: flex; justify-content: center; align-items: center;
+      min-height: 100vh; overflow: hidden; touch-action: manipulation;
     }
 
-    /* Custom In-App Notification Toast (Guaranteed 5 Seconds Duration) */
+    /* Progress Bar for Onboarding */
+    #progress-container {
+      position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+      display: none; gap: 8px; z-index: 100;
+    }
+    .progress-dot { width: 30px; height: 4px; background: #EAE3D9; border-radius: 4px; transition: background 0.3s; }
+    .progress-dot.active { background: var(--accent-color); }
+
+    /* Custom In-App Notification Toast */
     #notification-toast {
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%) translateY(-20px);
-      background-color: rgba(45, 43, 42, 0.95);
-      color: #FFFFFF;
-      padding: 14px 24px;
-      border-radius: 20px;
-      font-size: 14px;
-      font-weight: 600;
-      text-align: center;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-      z-index: 100000;
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.5s ease, transform 0.5s ease, visibility 0.5s;
-      width: 90%;
-      max-width: 350px;
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-20px);
+      background-color: rgba(45, 43, 42, 0.95); color: #FFFFFF; padding: 14px 24px; border-radius: 20px;
+      font-size: 14px; font-weight: 600; text-align: center; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      z-index: 100000; opacity: 0; visibility: hidden; transition: 0.5s; width: 90%; max-width: 350px;
     }
+    #notification-toast.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
 
-    #notification-toast.show {
-      opacity: 1;
-      visibility: visible;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    /* Streamlined Compact Help Toast */
     #help-icon {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      width: 32px;
-      height: 32px;
-      background-color: var(--card-bg);
-      color: var(--accent-color);
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-weight: 800;
-      font-size: 16px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-      cursor: pointer;
-      z-index: 9999;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
+      position: fixed; top: 20px; right: 20px; width: 32px; height: 32px; background-color: var(--card-bg);
+      color: var(--accent-color); border-radius: 50%; display: flex; justify-content: center; align-items: center;
+      font-weight: 800; font-size: 16px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); cursor: pointer; z-index: 9999;
     }
-
     #help-toast {
-      position: fixed;
-      top: 60px;
-      right: 20px;
-      background-color: rgba(45, 43, 42, 0.95);
-      color: #FFFFFF;
-      padding: 8px 12px;
-      border-radius: 10px;
-      font-size: 12px;
-      font-weight: 500;
-      line-height: 1.3;
-      width: fit-content;
-      max-width: 210px;
-      text-align: center;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
-      z-index: 9998;
-      opacity: 0;
-      visibility: hidden;
-      transform: translateY(-8px);
-      transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
-      white-space: normal;
+      position: fixed; top: 60px; right: 20px; background-color: rgba(45, 43, 42, 0.95); color: #FFFFFF;
+      padding: 8px 12px; border-radius: 10px; font-size: 12px; font-weight: 500; width: fit-content;
+      max-width: 210px; text-align: center; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15); z-index: 9998;
+      opacity: 0; visibility: hidden; transform: translateY(-8px); transition: 0.3s;
     }
-
-    #help-toast.show {
-      opacity: 1;
-      visibility: visible;
-      transform: translateY(0);
-    }
+    #help-toast.show { opacity: 1; visibility: visible; transform: translateY(0); }
 
     .card-container {
-      width: 100%;
-      max-width: 400px;
-      padding: 20px;
-      position: relative;
-      height: 78vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      width: 100%; max-width: 400px; padding: 20px; position: relative;
+      height: 80vh; display: flex; justify-content: center; align-items: center;
     }
 
     .screen {
-      background-color: var(--card-bg);
-      border-radius: 24px;
-      padding: 35px 24px;
-      text-align: center;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.06);
-      width: 100%;
-      height: 100%;
-      position: absolute;
-      opacity: 0;
-      visibility: hidden;
-      transform: translateY(15px);
-      transition: opacity 0.5s ease, transform 0.5s ease, visibility 0.5s;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      align-items: center;
-      overflow-y: auto;
+      background-color: var(--card-bg); border-radius: 24px; padding: 35px 24px; text-align: center;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.06); width: 100%; height: 100%; position: absolute;
+      opacity: 0; visibility: hidden; transform: translateY(15px); transition: 0.5s; cursor: pointer;
+      display: flex; flex-direction: column; justify-content: space-between; align-items: center; overflow-y: auto;
     }
+    .screen.active { opacity: 1; visibility: visible; transform: translateY(0); z-index: 10; }
+    .screen.no-cursor { cursor: default; }
 
-    .screen.active {
-      opacity: 1;
-      visibility: visible;
-      transform: translateY(0);
-      z-index: 10;
-    }
+    .content-body { margin: auto 0; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .main-text { font-size: 17px; line-height: 1.6; font-weight: 500; margin-bottom: 16px; text-align: center; }
+    .bold-title { font-weight: 800; font-size: 22px; line-height: 1.3; margin-bottom: 18px; color: var(--accent-color); text-align: center; }
+    
+    .tap-hint { font-size: 13px; color: #9C8E80; font-style: italic; text-align: center; width: 100%; padding-top: 10px; }
+    
+    .instruction-list { list-style: none; text-align: center; margin: 12px auto; font-size: 15px; font-weight: 500; padding: 0; width: 100%; }
+    .instruction-list li { margin-bottom: 8px; background: #FAF7F2; padding: 8px 10px; border-radius: 12px; }
 
-    .screen.no-cursor {
-      cursor: default;
-    }
+    .btn-group { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; width: 100%; }
+    .btn { width: 100%; padding: 15px; border: none; border-radius: 14px; font-size: 15px; font-weight: 600; cursor: pointer; background-color: var(--text-color); color: #FFFFFF; transition: opacity 0.2s; text-align: center; }
+    .btn:active { opacity: 0.85; }
+    .btn-alt { background-color: var(--accent-color); }
 
-    .content-body {
-      margin-top: auto;
-      margin-bottom: auto;
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
+    .task-card { background: #FAF7F2; border: 2px dashed var(--accent-color); padding: 20px; border-radius: 16px; margin: 15px 0; width: 100%; }
+    .task-title { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #9C8E80; margin-bottom: 8px; }
+    .task-content { font-size: 16px; color: var(--text-color); line-height: 1.5; text-align: center; word-wrap: break-word; }
+    .task-bold { font-weight: 800; font-size: 17px; display: block; margin-bottom: 8px; color: #2D2B2A; }
+    .task-explanation { font-weight: 400; font-size: 15px; display: block; color: #555250; line-height: 1.5; }
+    
+    .habit-stack { font-size: 13px; color: var(--accent-color); font-weight: 700; margin-top: 15px; padding: 8px; background: #FFF; border-radius: 8px; }
 
-    .main-text {
-      font-size: 17px;
-      line-height: 1.6;
-      font-weight: 500;
-      margin-bottom: 16px;
-      text-align: center;
+    /* Lockscreen Overlay Styling */
+    #lockscreen-overlay {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-color);
+      z-index: 999999; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 40px;
     }
+    .lock-text { font-size: 24px; font-weight: 800; color: var(--text-color); text-align: center; margin-bottom: 20px; line-height: 1.4; }
+    .lock-hint { position: absolute; bottom: 50px; font-size: 14px; color: #9C8E80; font-weight: bold; }
+    .lock-close { position: absolute; top: 40px; right: 20px; background: #EAE3D9; padding: 8px 16px; border-radius: 20px; font-weight: bold; cursor: pointer; }
 
-    .bold-title {
-      font-weight: 800;
-      font-size: 22px;
-      line-height: 1.3;
-      margin-bottom: 18px;
-      color: var(--accent-color);
-      text-align: center;
-      user-select: none;
-    }
+    /* Glow Effect for Screen 9 */
+    .glow-effect { box-shadow: 0 0 30px rgba(212, 163, 115, 0.6) !important; border: 2px solid var(--accent-color); transition: all 0.5s ease; }
 
-    .tap-hint {
-      font-size: 13px;
-      color: #9C8E80;
-      font-style: italic;
-      text-align: center;
-      width: 100%;
-      padding-top: 10px;
-    }
+    .reflection-box { background: #FAF7F2; border-radius: 16px; padding: 20px; margin-top: 15px; width: 100%; border: 1px solid #EAE3D9; }
 
-    .bullet-list {
-      list-style: none;
-      text-align: center;
-      margin: 12px auto;
-      font-size: 17px;
-      line-height: 1.8;
-      font-weight: 600;
-      padding: 0;
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+    .spinner { width: 36px; height: 36px; border: 4px solid #EAE3D9; border-top: 4px solid var(--accent-color); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 12px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    .bullet-list li {
-      text-align: center;
-      margin-bottom: 6px;
-    }
-
-    .instruction-list {
-      list-style: none;
-      text-align: center;
-      margin: 12px auto;
-      font-size: 15px;
-      line-height: 1.6;
-      font-weight: 500;
-      padding: 0;
-      width: 100%;
-    }
-
-    .instruction-list li {
-      margin-bottom: 8px;
-      text-align: center;
-      background: #FAF7F2;
-      padding: 8px 10px;
-      border-radius: 12px;
-    }
-
-    .btn-group {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-top: 15px;
-      width: 100%;
-    }
-
-    .btn {
-      width: 100%;
-      padding: 15px;
-      border: none;
-      border-radius: 14px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      background-color: var(--text-color);
-      color: #FFFFFF;
-      transition: opacity 0.2s;
-      text-align: center;
-    }
-
-    .btn:active {
-      opacity: 0.85;
-    }
-
-    .btn-alt {
-      background-color: var(--accent-color);
-    }
-
-    /* Task Cards & Typography */
-    .task-card {
-      background: #FAF7F2;
-      border: 2px dashed var(--accent-color);
-      padding: 20px;
-      border-radius: 16px;
-      margin: 15px 0;
-      width: 100%;
-    }
-
-    .task-title {
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #9C8E80;
-      margin-bottom: 8px;
-    }
-
-    .task-content {
-      font-size: 16px;
-      color: var(--text-color);
-      line-height: 1.5;
-      text-align: center;
-      word-wrap: break-word;
-      margin: 0 auto;
-    }
-
-    .task-bold {
-      font-weight: 800;
-      font-size: 17px;
-      display: block;
-      margin-bottom: 8px;
-      color: #2D2B2A;
-    }
-
-    .task-explanation {
-      font-weight: 400;
-      font-size: 15px;
-      display: block;
-      color: #555250;
-      line-height: 1.5;
-    }
-
-    /* Loading Spinner Animation */
-    .loading-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 10px 0;
-    }
-
-    .spinner {
-      width: 36px;
-      height: 36px;
-      border: 4px solid #EAE3D9;
-      border-top: 4px solid var(--accent-color);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-bottom: 12px;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    .loading-text {
-      font-size: 13px;
-      color: #8E7D6B;
-      font-weight: 500;
-      line-height: 1.4;
-      text-align: center;
-    }
-
-    .reflection-box {
-      background: #FAF7F2;
-      border-radius: 16px;
-      padding: 20px;
-      margin-top: 15px;
-      width: 100%;
-      border: 1px solid #EAE3D9;
-    }
-
-    /* Secret Blank Sandbox Tap Target (Global Across All Screens) */
-    #sandbox-secret-tap {
-      position: absolute;
-      bottom: 0;
-      right: 0;
-      width: 60px;
-      height: 60px;
-      z-index: 99999;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    /* DEV SANDBOX MENU */
-    #dev-panel {
-      display: none;
-      position: fixed;
-      bottom: 60px;
-      left: 10px;
-      right: 10px;
-      background: rgba(45, 43, 42, 0.98);
-      color: white;
-      padding: 12px;
-      border-radius: 16px;
-      z-index: 99999;
-      flex-wrap: wrap;
-      gap: 6px;
-      justify-content: center;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-    }
-    .dev-btn {
-      background: #555; color: #fff; border: none; padding: 8px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: bold; flex-grow: 1; text-align: center;
-    }
-    .dev-btn:active { background: #777; }
-    .dev-danger { background: #d9534f; }
-    .dev-success { background: #28a745; }
-    .dev-warning { background: #f0ad4e; color: #fff; }
+    #sandbox-secret-tap { position: absolute; bottom: 0; right: 0; width: 60px; height: 60px; z-index: 99999; }
+    #dev-panel { display: none; position: fixed; bottom: 60px; left: 10px; right: 10px; background: rgba(45, 43, 42, 0.98); color: white; padding: 12px; border-radius: 16px; z-index: 99999; flex-wrap: wrap; gap: 6px; justify-content: center; }
+    .dev-btn { background: #555; color: #fff; border: none; padding: 8px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: bold; flex-grow: 1; text-align: center; }
+    .status-sub { font-size: 12px; margin-top: 8px; text-align: center; }
+    .status-sub.success { color: #28a745; }
+    .status-sub.error { color: #d9534f; }
   </style>
 </head>
 <body>
 
-  <!-- Custom Notification Toast -->
-  <div id="notification-toast"></div>
+  <!-- Lockscreen Overlay -->
+  <div id="lockscreen-overlay">
+    <div class="lock-close" onclick="closeLockscreen()">✕ Close</div>
+    <div class="lock-text" id="lockscreen-content"></div>
+    <div class="lock-hint">Take a screenshot now to save as wallpaper!</div>
+  </div>
 
-  <!-- FAQ Icon & Streamlined Toast -->
+  <div id="notification-toast"></div>
   <div id="help-icon" onclick="showHelpToast()">?</div>
   <div id="help-toast">Have questions? Ask our Community on Facebook</div>
 
-  <!-- Floating Developer Sandbox Menu -->
   <div id="dev-panel">
     <div style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; padding:0 4px;">
       <span style="font-size:12px; font-weight:800; color:#D4A373;">🛠 Sandbox Mode</span>
@@ -407,103 +142,103 @@
     <button class="dev-btn" onclick="devForceState('checkin')">🔔 9:30PM</button>
     <button class="dev-btn" onclick="devForceState('night')">🌙 Night</button>
     <button class="dev-btn" onclick="devForceState('weekend')">🏖 Weekend</button>
-    <button class="dev-btn dev-success" onclick="devSimulateRenewal()">💳 Sim Renewal</button>
-    <button class="dev-btn dev-warning" onclick="devSimulateDecline()">💳 Sim Decline</button>
-    <button class="dev-btn dev-danger" onclick="devReset()">🗑 Reset All</button>
+    <button class="dev-btn" style="background:#28a745;" onclick="devSimulateRenewal()">💳 Level Up</button>
+    <button class="dev-btn" style="background:#d9534f;" onclick="devReset()">🗑 Reset All</button>
+  </div>
+
+  <!-- Progress Bar for Onboarding -->
+  <div id="progress-container">
+    <div class="progress-dot active" id="dot-1"></div>
+    <div class="progress-dot" id="dot-2"></div>
+    <div class="progress-dot" id="dot-3"></div>
+    <div class="progress-dot" id="dot-4"></div>
   </div>
 
   <div class="card-container">
     
+    <!-- Screen Paywall (Unpaid Visitors) -->
+    <div class="screen no-cursor" id="screen-paywall">
+      <div class="content-body">
+        <div class="bold-title" style="font-size: 20px;">Invest in Yourself Today</div>
+        <div class="main-text">
+          Receive small daily action tasks that compound into unstoppable magnetic energy.<br><br>
+          Become a better version of yourself than yesterday.
+        </div>
+        <div class="btn-group">
+          <a href="https://buy.stripe.com/3cI8wPcjsbP29yWeQm0co01" class="btn btn-alt" style="text-decoration: none; display: block;">
+            Building My Fortune with $1.50 only
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen Device Locked -->
+    <div class="screen no-cursor" id="screen-device-locked">
+      <div class="content-body">
+        <div class="bold-title" style="color: #d9534f; font-size: 20px;">🔒 Subscription Active Elsewhere</div>
+        <div class="main-text">
+          This Fortune Workout subscription is already registered and active on another phone.<br><br>
+          <span style="font-size: 14px; color: #555250;">Subscriptions are strictly 1 device per member.</span>
+        </div>
+        <div class="btn-group">
+          <a href="https://buy.stripe.com/3cI8wPcjsbP29yWeQm0co01" class="btn btn-alt" style="text-decoration: none; display: block;">
+            Get My Own Membership ($1.50)
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 1: Welcome & Foundation -->
     <div class="screen" id="screen-1" onclick="nextScreen(1)">
       <div class="content-body">
-        <div class="bold-title">Welcome to the Community of Building Your Fortune Workout</div>
-        <div class="main-text">Before you start, please read every single word.<br><br>It can feel heavy, but it is totally worth your time.</div>
+        <div class="bold-title">You just took the first step toward a higher aura. Let’s set your foundation.</div>
+        <div class="main-text">Your $1.50 monthly investment is strictly here to help you become a better version of yourself than yesterday.</div>
       </div>
-      <div class="tap-hint">Tap to continue reading...</div>
+      <div class="tap-hint">Tap to continue...</div>
     </div>
 
-    <div class="screen" id="screen-2" onclick="nextScreen(2)">
+    <!-- SCREEN 2: Focus Selector -->
+    <div class="screen no-cursor" id="screen-2">
       <div class="content-body">
-        <div class="bold-title" style="font-size: 20px;">The Purpose</div>
-        <div class="main-text">This is not intended to upgrade your cars, lifestyle, or accessories.<br><br>Your $1.50 monthly investment is strictly here to help you become a better version of yourself than yesterday.</div>
+        <div class="bold-title" style="font-size: 20px;">The Choice</div>
+        <div class="main-text">What is your primary focus for this season of your life?</div>
+        <div class="btn-group">
+          <button class="btn" onclick="selectFocus('Aura', 2)">My Aura</button>
+          <button class="btn" onclick="selectFocus('Charisma', 2)">My Charisma</button>
+          <button class="btn" onclick="selectFocus('Beauty', 2)">My Beauty</button>
+          <button class="btn" onclick="selectFocus('Personality', 2)">My Personality</button>
+        </div>
       </div>
-      <div class="tap-hint">Tap to continue reading...</div>
     </div>
 
+    <!-- SCREEN 3: The Daily Rhythm -->
     <div class="screen" id="screen-3" onclick="nextScreen(3)">
       <div class="content-body">
-        <div class="bold-title" style="font-size: 20px;">Our Vision</div>
-        <div class="main-text">Our vision is clear. Through just 1 tasked action every day, build your:</div>
-        <ul class="bullet-list"><li>• Aura</li><li>• Charisma</li><li>• Body</li><li>• Personality</li></ul>
+        <div class="bold-title" style="font-size: 20px;">The Rhythm</div>
+        <div class="main-text" style="text-align: left; margin: 0 auto;">
+          ☀️ <strong>8:00 AM:</strong> Receive your task.<br><br>
+          🌙 <strong>9:30 PM:</strong> Daily check-in.<br><br>
+          🏖 <strong>Weekends:</strong> Rest & reflect.
+        </div>
       </div>
-      <div class="tap-hint">Tap to continue reading...</div>
+      <div class="tap-hint">Tap to continue...</div>
     </div>
 
+    <!-- SCREEN 4: Community Rules -->
     <div class="screen" id="screen-4" onclick="nextScreen(4)">
       <div class="content-body">
-        <div class="main-text">Every weekday at 8:00 AM, a task is pushed to your phone to improve your:</div>
-        <ul class="bullet-list"><li>• Health</li><li>• Wealth</li><li>• Social skills</li></ul>
-        <div class="main-text" style="font-size:15px; margin-bottom:0; margin-top:16px;">Doing it daily builds powerful muscle memory.</div>
+        <div class="bold-title" style="font-size: 20px;">The Rules</div>
+        <div class="main-text">
+          Keep it simple.<br><br>No history scrolling. No punishment.<br><br>Live in the moment and do what is needed today.
+        </div>
       </div>
-      <div class="tap-hint">Tap to continue reading...</div>
+      <div class="tap-hint">Tap to begin setup...</div>
     </div>
 
-    <div class="screen" id="screen-5" onclick="nextScreen(5)">
+    <!-- SCREEN 5: Device OS Choice -->
+    <div class="screen no-cursor" id="screen-5">
       <div class="content-body">
-        <div class="main-text">At 9:30 PM, we check in. Feel that dopamine rush when you get it right!<br><br>You deserve a good long rest for the night.<br><br>And if you see a task repeat the next day? Maybe heaven is telling you to do even more.</div>
-      </div>
-      <div class="tap-hint">Tap to continue reading...</div>
-    </div>
-
-    <div class="screen" id="screen-6" onclick="nextScreen(6)">
-      <div class="content-body">
-        <div class="main-text">We don't do history scrolling. Let bygones be bygones. If you missed today, let it pass.<br><br>Live in the moment, do what is needed today, and enjoy every second living on earth.</div>
-      </div>
-      <div class="tap-hint">Tap to continue reading...</div>
-    </div>
-
-    <div class="screen" id="screen-7" onclick="nextScreen(7)">
-      <div class="content-body">
-        <div class="main-text">This workout is no-ads, no-selling, no-punishment.<br><br>$1 is your investment to upgrade yourself, and $0.50 covers the admin costs to keep our community alive (unfortunately!).</div>
-      </div>
-      <div class="tap-hint">Tap to continue reading...</div>
-    </div>
-
-    <div class="screen" id="screen-8" onclick="nextScreen(8)">
-      <div class="content-body">
-        <div class="main-text">If you have 3 phones, please do not buy 3 subscriptions (although we wouldn't mind the extra money!). Stick to one.<br><br>Research has shown that keeping your life simple generates many more benefits.</div>
-      </div>
-      <div class="tap-hint">Tap to continue reading...</div>
-    </div>
-
-    <div class="screen" id="screen-9" onclick="nextScreen(9)">
-      <div class="content-body">
-        <div class="main-text">Oh, did I forget to mention?<br><br>Tasks only arrive on weekdays, because we need rest too!<br><br>Just be yourself over the weekend. You deserve it after a long week.</div>
-      </div>
-      <div class="tap-hint">Tap to continue reading...</div>
-    </div>
-
-    <div class="screen" id="screen-10" onclick="nextScreen(10)">
-      <div class="content-body">
-        <div class="bold-title" style="font-size: 20px;">Community Call</div>
-        <div class="main-text">Your tasks are not created by bots.<br><br>They are contributed by like-minded people like you who are motivated to improve themselves every day to touch the lives of more people.</div>
-      </div>
-      <div class="tap-hint">Tap to continue reading...</div>
-    </div>
-
-    <div class="screen" id="screen-11" onclick="nextScreen(11)">
-      <div class="content-body">
-        <div class="main-text">When you have made your investment today, see yourself building a stronger career and family tomorrow, and becoming a better:</div>
-        <ul class="bullet-list"><li>• Husband</li><li>• Wife</li><li>• Child</li></ul>
-        <div class="main-text" style="font-size:14px; margin-bottom:0; margin-top:16px;">Recommend this to your loved ones—working out together is always better than working alone, giving reminders to each other.</div>
-      </div>
-      <div class="tap-hint">Tap to continue reading...</div>
-    </div>
-
-    <!-- Screen 12 (OS Selection) -->
-    <div class="screen no-cursor" id="screen-12">
-      <div class="content-body">
-        <div class="main-text">To activate your daily guidance and begin tracking your aura streak, choose your phone's operating system below.</div>
+        <div class="main-text">To activate your daily guidance and track your score, choose your phone type below.</div>
         <div class="btn-group">
           <button class="btn" onclick="chooseOS('ios')">iOS / Apple</button>
           <button class="btn btn-alt" onclick="chooseOS('android')">Android</button>
@@ -511,93 +246,88 @@
       </div>
     </div>
 
-    <!-- Screen 13A (iOS) -->
-    <div class="screen no-cursor" id="screen-13a">
+    <!-- SCREEN 6A: iOS Setup Instructions -->
+    <div class="screen no-cursor" id="screen-6a">
       <div class="content-body">
         <div class="bold-title" style="font-size: 20px;">📱 For iPhone / iOS Users</div>
-        <ol class="instruction-list">
-          <li>1. Tap <strong>Share</strong> (square with arrow) at Safari's bottom.</li>
+        <ul class="instruction-list">
+          <li>1. Tap <strong>Share</strong> (square with arrow) at bottom.</li>
           <li>2. Scroll down & tap <strong>"Add to Home Screen"</strong>.</li>
           <li>3. Open app from Home Screen & tap below.</li>
-        </ol>
+        </ul>
         <button class="btn btn-alt" id="btn-ios" onclick="startWorkout('ios')">Begin your Fortune Workout Now</button>
-        <div id="status-message-ios"></div>
+        <div id="status-message-ios" class="status-sub"></div>
       </div>
     </div>
 
-    <!-- Screen 13B (Android) -->
-    <div class="screen no-cursor" id="screen-13b">
+    <!-- SCREEN 6B: Android Setup Instructions -->
+    <div class="screen no-cursor" id="screen-6b">
       <div class="content-body">
         <div class="bold-title" style="font-size: 20px;">🤖 For Android Users</div>
-        <ol class="instruction-list">
-          <li>1. Tap the <strong>three dots (⋮)</strong> in Chrome top right.</li>
-          <li>2. Tap <strong>"Install and create shortcut"</strong>.</li>
-          <li>3. Tap <strong>"Install"</strong> (or <em>"Create shortcut"</em> if install is unavailable).</li>
-          <li>4. Open app from Home Screen & tap below.</li>
-        </ol>
+        <ul class="instruction-list">
+          <li>1. Tap the <strong>three dots (⋮)</strong> top right.</li>
+          <li>2. Tap <strong>"Install / Add to Homescreen"</strong>.</li>
+          <li>3. Open app from Home Screen & tap below.</li>
+        </ul>
         <button class="btn btn-alt" id="btn-android" onclick="startWorkout('android')">Begin your Fortune Workout Now</button>
-        <div id="status-message-android"></div>
+        <div id="status-message-android" class="status-sub"></div>
       </div>
     </div>
 
-    <!-- Screen 14 (Dashboard Views) -->
-    <div class="screen no-cursor" id="screen-14">
+    <!-- SCREEN 7: Main Daily Dashboard & Weekend Rest Hub -->
+    <div class="screen no-cursor" id="screen-7">
       <div class="content-body">
-        <div id="dashboard-header" class="bold-title">✨ Active Member</div>
-        <div id="dashboard-status-text" class="main-text"></div>
+        <div id="dashboard-header" class="bold-title" style="font-size: 18px;">✨ Active Member</div>
         
         <div id="task-box-variant-a" class="task-card" style="display:none;">
           <div class="task-title" id="card-header-title">Today's Daily Task</div>
           <div class="task-content" id="task-content-text"></div>
-          <div style="font-size: 13px; color: #9C8E80; margin-top: 12px; font-weight: normal; display: none;" id="card-footer-note">
-            Complete this task today! Check your phone for your next push notification at 9:30 PM to mirror check if you have successfully accumulated your fortune for tomorrow!
+          
+          <!-- Habit Stacker Prompt (Reads from Google Sheets) -->
+          <div id="habit-stacker" class="habit-stack" style="display:none;"></div>
+          
+          <div style="margin-top:15px; display:none;" id="lockscreen-btn-container">
+            <button class="btn" style="padding:10px; font-size:13px;" onclick="openLockscreen()">📱 Format for Lockscreen</button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Screen 15 (9:30 PM Reflection Prompt) -->
-    <div class="screen no-cursor" id="screen-15">
+    <!-- SCREEN 8: 9:30 PM Self-Check Prompt -->
+    <div class="screen no-cursor" id="screen-8">
       <div class="content-body">
         <div class="bold-title">🌙 9:30 PM Daily Self-Check</div>
-        <div class="main-text">
-          How did you do with today's Fortune Workout task?<br><br>
-          Be real and honest with yourself.
-        </div>
+        <div class="main-text">How did you do with today's Fortune Workout task? Be real and honest with yourself.</div>
         <div class="btn-group">
-          <button class="btn" onclick="submitReflection(1)">Yes, I've completed</button>
+          <button class="btn" onclick="submitReflection(1)">Yes, I've completed it</button>
           <button class="btn btn-alt" onclick="submitReflection(2)">No, I did not</button>
-          <button class="btn" style="background:#8E7D6B;" onclick="submitReflection(3)">I've tried, but it wasn't easy</button>
+          <button class="btn" style="background:#8E7D6B;" onclick="submitReflection(3)">I tried, but it wasn't easy</button>
         </div>
       </div>
     </div>
 
-    <!-- Screen 16 (Reflection Closing Message & Level-Up Celebration Page) -->
-    <div class="screen" id="screen-16" onclick="closeReflection()">
+    <!-- SCREEN 9: Reflection Complete & Point Reward -->
+    <div class="screen" id="screen-9" onclick="closeReflection()">
       <div class="content-body">
         <div class="bold-title">✨ Reflection Complete</div>
-        <div class="reflection-box">
+        <div class="reflection-box" id="reflection-card">
           <div class="main-text" id="reflection-response-text" style="font-weight: 700; margin-bottom: 0;"></div>
         </div>
       </div>
       <div class="tap-hint">Tap to continue...</div>
     </div>
 
-    <!-- Screen 17 (Subscription Suspended / Lockout) -->
-    <div class="screen no-cursor" id="screen-17">
+    <!-- SCREEN 10: Subscription Paused / Billing -->
+    <div class="screen no-cursor" id="screen-10">
       <div class="content-body">
         <div class="bold-title" style="color: #d9534f;">Subscription Paused</div>
-        <div class="main-text">
-          Your monthly investment could not be processed. Your access has been temporarily suspended.<br><br>
-          <span style="font-size: 14px;">Please update your billing details via your receipt to resume your Fortune Workout and keep your streak alive.</span>
-        </div>
+        <div class="main-text">Your access has been temporarily suspended.<br><br>Please update your billing details via your receipt to resume.</div>
         <div class="btn-group">
           <button class="btn btn-alt" onclick="localStorage.clear(); window.location.reload();">I have updated my billing</button>
         </div>
       </div>
     </div>
 
-    <!-- Invisible Secret Tap Area (Active across ALL screens) -->
     <div id="sandbox-secret-tap" onclick="handleSecretTap()"></div>
 
   </div>
@@ -607,212 +337,159 @@
     let isDev = urlParams.get('dev') === 'true';
     let forceState = urlParams.get('force');
     const WEBHOOK_BASE = 'https://n8n-latest-x9ac.onrender.com/webhook';
+    const PUBLIC_VAPID_KEY = 'BHySoAIBC_AWCL3BdD2IMez4Y1MTLtuRp6Ir3HaMJ7twkR50kQLQNcTZBfdJ9bE9_SyOOnPyHETc_ANGLd0rMw';
 
-    // VAPID Public Key from n8n
-    const PUBLIC_VAPID_KEY = 'BHYSoAIBC__AWCL3BdD2lMez4Y1MTLtuRp6Ir3HaMJ7twkR50kQLQNcTZBfdj9bE9_SyOOnPyHETc_ANGLd0rMw';
+    let rawTaskText = ""; 
 
-    // Browser utility to convert the VAPID string into a secure array
     function urlB64ToUint8Array(base64String) {
       const padding = '='.repeat((4 - base64String.length % 4) % 4);
-      const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
       const rawData = window.atob(base64);
       const outputArray = new Uint8Array(rawData.length);
-      for (let i = 0; i < rawData.length; ++i) {
-        outputArray[i] = rawData.charCodeAt(i);
-      }
+      for (let i = 0; i < rawData.length; ++i) { outputArray[i] = rawData.charCodeAt(i); }
       return outputArray;
     }
 
-    // 5 Backup Fallback Tasks
-    const FALLBACK_TASKS = [
-      "Mindset & Growth: Read one page of a book that feeds your mind today. One good idea can stay with you all day and slowly change the way you think.",
-      "Helping Others & Social: Give someone a genuine compliment. Watch their eyes light up. Become the kind of person whose presence makes people feel better about themselves.",
-      "Health & Vitality: Drink 8 glasses of water today. Feel your body fully hydrated and refreshed. A healthy, radiant body carries a different kind of presence—and that presence attracts people and opportunities.",
-      "Presence & Aura: Before you leave home, take one extra look in the mirror. Fix one small thing and walk out feeling more put together. Looking good starts with taking care of the details.",
-      "Wisdom & Curiosity: Ask someone, \"What do you think?\" today. Be genuinely curious, even if you disagree. You don't have to know everything to be someone people respect."
-    ];
-
-    if (isDev) {
-      document.getElementById('dev-panel').style.display = 'flex';
+    function getUserPointName() {
+      const focus = localStorage.getItem('userFocus') || 'Aura';
+      return `${focus} Points`;
     }
 
-    // Secret Tap Trigger: Tap bottom-right blank corner 5 times
+    const FALLBACK_TASKS = [
+      { task: "Mindset & Growth: Read one page of a book that feeds your mind today.", habit: "Morning Routine" },
+      { task: "Helping Others: Give someone a genuine compliment. Watch their eyes light up.", habit: "Lunch Break" },
+      { task: "Health & Vitality: Drink 8 glasses of water today. Feel your body fully hydrated.", habit: "Throughout the Day" }
+    ];
+
+    if (isDev) document.getElementById('dev-panel').style.display = 'flex';
+
     let secretTapCount = 0;
     let secretTapTimer;
     function handleSecretTap() {
-      secretTapCount++;
-      clearTimeout(secretTapTimer);
+      secretTapCount++; clearTimeout(secretTapTimer);
       secretTapTimer = setTimeout(() => { secretTapCount = 0; }, 2000);
       if (secretTapCount >= 5) {
-        secretTapCount = 0;
-        const panel = document.getElementById('dev-panel');
-        isDev = !isDev;
-        panel.style.display = isDev ? 'flex' : 'none';
+        secretTapCount = 0; isDev = !isDev;
+        document.getElementById('dev-panel').style.display = isDev ? 'flex' : 'none';
         showAppNotification(isDev ? "🛠 Sandbox Mode Enabled" : "🔒 Sandbox Mode Hidden");
       }
     }
 
-    // Smart Task Renderer: Bolds headline/first sentence, unbolds explanation text
-    function renderFormattedTask(container, rawText) {
-      let boldTitle = "";
-      let regularExplanation = "";
-
-      if (rawText.includes(" — ")) {
-        const parts = rawText.split(" — ");
-        boldTitle = parts[0].trim();
-        regularExplanation = parts.slice(1).join(" — ").trim();
-      } else if (rawText.includes(": ")) {
-        const parts = rawText.split(": ");
-        boldTitle = parts[0].trim();
-        regularExplanation = parts.slice(1).join(": ").trim();
-      } else if (rawText.includes(" - ")) {
-        const parts = rawText.split(" - ");
-        boldTitle = parts[0].trim();
-        regularExplanation = parts.slice(1).join(" - ").trim();
-      } else if (rawText.includes(". ")) {
-        const firstDotIndex = rawText.indexOf(". ");
-        boldTitle = rawText.substring(0, firstDotIndex + 1).trim();
-        regularExplanation = rawText.substring(firstDotIndex + 2).trim();
-      } else {
-        boldTitle = rawText;
-      }
-
-      if (regularExplanation) {
-        container.innerHTML = `<span class="task-bold">${boldTitle}</span><span class="task-explanation">${regularExplanation}</span>`;
-      } else {
-        container.innerHTML = `<span class="task-bold">${boldTitle}</span>`;
-      }
-    }
-
-    // Animated Loading State
-    function renderLoadingState(container) {
-      container.innerHTML = `
-        <div class="loading-container">
-          <div class="spinner"></div>
-          <div class="loading-text">Waking up your personal guidance...<br>Please wait up to 30 seconds for today's task to load.</div>
-        </div>
-      `;
-    }
-
-    // Displays Toasts for Guaranteed 5 Seconds
     let toastTimeout;
-    function showAppNotification(message) {
-      const toast = document.getElementById('notification-toast');
-      toast.textContent = message;
-      toast.classList.add('show');
-      clearTimeout(toastTimeout);
-      toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 5000);
+    function showAppNotification(msg) {
+      const t = document.getElementById('notification-toast'); t.textContent = msg; t.classList.add('show');
+      clearTimeout(toastTimeout); toastTimeout = setTimeout(() => { t.classList.remove('show'); }, 5000);
     }
-
-    let helpTimeout;
     function showHelpToast() {
-      const toast = document.getElementById('help-toast');
-      toast.classList.add('show');
-      clearTimeout(helpTimeout);
-      helpTimeout = setTimeout(() => { toast.classList.remove('show'); }, 5000);
+      const t = document.getElementById('help-toast'); t.classList.add('show');
+      setTimeout(() => { t.classList.remove('show'); }, 5000);
     }
 
-    // Seamless Sandbox State Transitions Without Page Reload
-    function devForceState(state) {
-      localStorage.setItem('workoutSubscribed', 'true');
-      forceState = state;
-      routeActiveSubscriber();
-    }
-    
-    // Sandbox Trigger: Queues Level Up and provides instant Sandbox confirmation toast
-    function devSimulateRenewal() {
-      localStorage.setItem('workoutSubscribed', 'true');
-      localStorage.setItem('pendingLevelUp', 'true');
-      showAppNotification("💳 Level-up queued! Tap any reflection option on Screen 15 to trigger your Level Up.");
-    }
+    function devForceState(state) { localStorage.setItem('workoutSubscribed', 'true'); forceState = state; routeActiveSubscriber(); }
+    function devSimulateRenewal() { localStorage.setItem('workoutSubscribed', 'true'); localStorage.setItem('pendingLevelUp', 'true'); showAppNotification("💳 Level-up queued! Check-in to trigger."); }
+    function devReset() { localStorage.clear(); window.location.href = '?dev=true'; }
 
-    function devSimulateDecline() {
-      localStorage.setItem('workoutSubscribed', 'failed');
-      hideAllScreens();
-      document.getElementById('screen-17').classList.add('active');
-    }
+    if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
 
-    function devReset() {
-      localStorage.clear();
-      window.location.href = '?dev=true';
-    }
+    // Pre-check Logic
+    document.addEventListener('DOMContentLoaded', async () => {
+      const emailFromUrl = urlParams.get('email');
+      const savedEmail = localStorage.getItem('userEmail');
+      const targetEmail = emailFromUrl || savedEmail;
 
-    const RANDOM_REFLECTIONS = [
-      "Give yourself a pat for the effort you put in today.",
-      "If you enjoyed your day today, you earned it. If you did not, don't waste the time given to you tomorrow.",
-      "Invest a little more effort in your daily workout. Feel the difference you make for yourself and others.",
-      "Believe that you are worth more than what you are told.",
-      "Believe that our tasks are here to build you a fortune."
-    ];
+      if (isDev) {
+        const subStatus = localStorage.getItem('workoutSubscribed');
+        if (subStatus === 'failed') { hideAllScreens(); document.getElementById('screen-10').classList.add('active'); }
+        else if (subStatus === 'true') { routeActiveSubscriber(); }
+        else { hideAllScreens(); document.getElementById('screen-1').classList.add('active'); updateProgress(1); }
+        return;
+      }
 
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(() => {});
-      });
-    }
+      if (!targetEmail) { hideAllScreens(); document.getElementById('screen-paywall').classList.add('active'); return; }
+      if (emailFromUrl) localStorage.setItem('userEmail', emailFromUrl);
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const subStatus = localStorage.getItem('workoutSubscribed');
-      if (subStatus === 'failed') {
-        hideAllScreens();
-        document.getElementById('screen-17').classList.add('active');
-      } else if (subStatus === 'true') {
-        routeActiveSubscriber();
-      } else {
-        const savedOS = localStorage.getItem('userOS');
-        if (savedOS === 'ios') document.getElementById('screen-13a').classList.add('active');
-        else if (savedOS === 'android') document.getElementById('screen-13b').classList.add('active');
-        else document.getElementById('screen-1').classList.add('active');
+      try {
+        const response = await fetch(`${WEBHOOK_BASE}/verify-subscriber?email=${encodeURIComponent(targetEmail)}`);
+        const data = await response.json();
+
+        if (!data.isSubscribed) { hideAllScreens(); document.getElementById('screen-paywall').classList.add('active'); return; }
+        
+        if (localStorage.getItem('workoutSubscribed') === 'true') { routeActiveSubscriber(); }
+        else if (data.hasDeviceToken) { hideAllScreens(); document.getElementById('screen-device-locked').classList.add('active'); }
+        else { hideAllScreens(); document.getElementById('screen-1').classList.add('active'); updateProgress(1); }
+      } catch (err) {
+        if (localStorage.getItem('workoutSubscribed') !== 'true') { hideAllScreens(); document.getElementById('screen-paywall').classList.add('active'); }
+        else { routeActiveSubscriber(); }
       }
     });
 
+    // ONBOARDING PROGRESS & NAVIGATION
+    function updateProgress(step) {
+      document.getElementById('progress-container').style.display = 'flex';
+      for(let i=1; i<=4; i++) {
+        const d = document.getElementById('dot-'+i);
+        if(d) d.className = i <= step ? 'progress-dot active' : 'progress-dot';
+      }
+    }
+
     function nextScreen(currentId) {
       document.getElementById('screen-' + currentId).classList.remove('active');
-      const targetElement = document.getElementById('screen-' + (currentId + 1));
-      if (targetElement) targetElement.classList.add('active');
+      const nextId = currentId + 1;
+      const targetElement = document.getElementById('screen-' + nextId);
+      if (targetElement) {
+        targetElement.classList.add('active');
+        if(nextId <= 4) updateProgress(nextId);
+        else document.getElementById('progress-container').style.display = 'none';
+      }
+    }
+
+    function selectFocus(focusType, currentId) {
+      localStorage.setItem('userFocus', focusType);
+      nextScreen(currentId);
     }
 
     function chooseOS(os) {
       localStorage.setItem('userOS', os);
-      document.getElementById('screen-12').classList.remove('active');
-      if (os === 'ios') document.getElementById('screen-13a').classList.add('active');
-      else document.getElementById('screen-13b').classList.add('active');
+      document.getElementById('screen-5').classList.remove('active');
+      if (os === 'ios') document.getElementById('screen-6a').classList.add('active');
+      else document.getElementById('screen-6b').classList.add('active');
     }
 
     function hideAllScreens() {
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('progress-container').style.display = 'none';
+    }
+
+    // LOCKSCREEN OVERLAY LOGIC
+    function openLockscreen() {
+      const overlay = document.getElementById('lockscreen-overlay');
+      document.getElementById('lockscreen-content').textContent = rawTaskText;
+      overlay.style.display = 'flex';
+    }
+    function closeLockscreen() {
+      document.getElementById('lockscreen-overlay').style.display = 'none';
     }
 
     async function routeActiveSubscriber() {
       hideAllScreens();
-      document.getElementById('screen-14').classList.add('active');
+      document.getElementById('screen-7').classList.add('active');
 
       const currentLevel = localStorage.getItem('userLevel') || '1';
-      document.getElementById('dashboard-header').textContent = `✨ Active Member • Lv ${currentLevel}`;
+      const points = localStorage.getItem('auraPoints') || '0';
+      const pointName = getUserPointName();
+      document.getElementById('dashboard-header').textContent = `✨ Active Member • Lv ${currentLevel} • 🔥 ${points} ${pointName}`;
 
       const now = new Date();
       const day = now.getDay(); 
-      const hour = now.getHours();
-      const minute = now.getMinutes();
-
-      // Time Calculations & State Tracking
+      const hour = now.getHours(); const minute = now.getMinutes();
       const todayDateKey = `task_${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}`;
       const hasCheckedInToday = localStorage.getItem(`reflection_${todayDateKey}`) === 'true';
 
       let isWeekend = (day === 6) || (day === 0) || (day === 5 && (hour > 21 || (hour === 21 && minute >= 30))) || (day === 1 && hour < 8);
-      
-      // Check-in Window: Strictly 9:30 PM (21:30) to 11:59 PM (23:59)
       let isCheckInWindow = (hour === 21 && minute >= 30) || (hour === 22) || (hour === 23);
-      
-      // Night Time: Midnight to 7:59 AM
       let isNightTime = (hour >= 0 && hour < 8);
 
-      // If user completed check-in during the evening window, shift them to Night View immediately
-      if (isCheckInWindow && hasCheckedInToday) {
-        isCheckInWindow = false;
-        isNightTime = true;
-      }
-
+      if (isCheckInWindow && hasCheckedInToday) { isCheckInWindow = false; isNightTime = true; }
       let isReflectionTrigger = urlParams.get('checkin') === 'true' || isCheckInWindow;
 
       if (isDev && forceState) {
@@ -821,172 +498,177 @@
         isReflectionTrigger = (forceState === 'checkin');
       }
 
-      // If user enters during 9:30 PM - 11:59 PM window, it's not a weekend, and they HAVEN'T submitted yet
       if (isReflectionTrigger && !isWeekend && !isNightTime) {
         hideAllScreens();
-        document.getElementById('screen-15').classList.add('active');
+        document.getElementById('screen-8').classList.add('active');
         return;
       }
 
-      const statusText = document.getElementById('dashboard-status-text');
       const taskBoxA = document.getElementById('task-box-variant-a');
       const taskContentText = document.getElementById('task-content-text');
       const cardHeaderTitle = document.getElementById('card-header-title');
-      const cardFooterNote = document.getElementById('card-footer-note');
-
-      statusText.textContent = "";
+      const habitStack = document.getElementById('habit-stacker');
+      const lockBtn = document.getElementById('lockscreen-btn-container');
 
       if (isWeekend) {
         taskBoxA.style.display = 'block';
         cardHeaderTitle.textContent = "WEEKEND REST";
-        cardFooterNote.style.display = 'none';
-        taskContentText.innerHTML = `Your fortune workout tasks have completed for the week.<br><br>Check your phone next Monday at 8:00 AM to receive your next fortune building workout!<br><br><strong>Be yourself over the weekend. Have a blast!</strong>`;
-      } else if (isNightTime) {
-        taskBoxA.style.display = 'block';
-        cardHeaderTitle.textContent = "DAILY CHECK-IN PASSED";
-        cardFooterNote.style.display = 'none';
-        taskContentText.innerHTML = `Today's task check-in has passed.<br><br>Rest well and anticipate your next task tomorrow at 8:00 AM!`;
-      } else {
-        taskBoxA.style.display = 'block';
-        cardHeaderTitle.textContent = "TODAY'S DAILY TASK";
-        cardFooterNote.style.display = 'none';
+        habitStack.style.display = 'none'; lockBtn.style.display = 'none';
+        
+        let completedThisWeek = localStorage.getItem('weeklyCompleted') || '5';
+        let focus = localStorage.getItem('userFocus') || 'Aura';
+        
+        taskContentText.innerHTML = `<strong>Tasks Completed This Week: ${completedThisWeek}</strong><br>Your Focus: ${focus}<br><br>Rest is an active part of growth. Recharge your ${focus.toLowerCase()}.<br><br>Check your phone next Monday at 8:00 AM. Have a blast!`;
+        
+        if(navigator.clearAppBadge) navigator.clearAppBadge();
 
-        const todayDateKeyForTask = `task_${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}`;
+      } else if (isNightTime) {
+        taskBoxA.style.display = 'block'; cardHeaderTitle.textContent = "DAILY CHECK-IN PASSED";
+        habitStack.style.display = 'none'; lockBtn.style.display = 'none';
+        taskContentText.innerHTML = `Today's task check-in has passed.<br><br>Rest well and anticipate your next task tomorrow at 8:00 AM!`;
+        if(navigator.clearAppBadge) navigator.clearAppBadge();
+      } else {
+        // Morning / Day View
+        taskBoxA.style.display = 'block'; cardHeaderTitle.textContent = "TODAY'S DAILY TASK";
+        lockBtn.style.display = 'block';
+        
+        if(navigator.setAppBadge && !hasCheckedInToday) navigator.setAppBadge(1);
 
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
-          if (key && key.startsWith('task_') && key !== todayDateKeyForTask) {
-            localStorage.removeItem(key);
-          }
+          if (key && key.startsWith('task_') && key !== todayDateKey) localStorage.removeItem(key);
         }
 
-        const savedTaskToday = localStorage.getItem(todayDateKeyForTask);
+        const savedTaskToday = localStorage.getItem(todayDateKey);
+        const savedHabitToday = localStorage.getItem(todayDateKey + "_habit");
 
         if (savedTaskToday && !isDev) {
+          rawTaskText = savedTaskToday;
           renderFormattedTask(taskContentText, savedTaskToday);
-          cardFooterNote.style.display = 'block';
+          
+          if(savedHabitToday) {
+            habitStack.textContent = "💡 Best done during: " + savedHabitToday;
+            habitStack.style.display = 'block';
+          }
         } else {
-          renderLoadingState(taskContentText);
-
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 30000); 
-
+          taskContentText.innerHTML = `<div class="spinner"></div><div style="font-size:13px; color:#8E7D6B;">Waking up your personal guidance...</div>`;
+          habitStack.style.display = 'none';
           try {
-            const userEmail = localStorage.getItem('userEmail') || urlParams.get('email') || '';
-            const isSandboxMorning = isDev && forceState === 'morning';
-            const queryParams = new URLSearchParams({
-              email: userEmail,
-              ...(isSandboxMorning ? { mode: 'random', ts: Date.now() } : {})
-            });
-
-            const response = await fetch(`${WEBHOOK_BASE}/today-task?${queryParams.toString()}`, { signal: controller.signal });
-            clearTimeout(timeoutId);
-
+            const queryParams = new URLSearchParams({ email: localStorage.getItem('userEmail') || '', ...(isDev && forceState === 'morning' ? { mode: 'random', ts: Date.now() } : {}) });
+            const response = await fetch(`${WEBHOOK_BASE}/today-task?${queryParams.toString()}`);
             if (response.ok) {
               const data = await response.json();
-              const fetchedTask = data.task || "No task found.";
-              renderFormattedTask(taskContentText, fetchedTask);
-              cardFooterNote.style.display = 'block';
-              if (!isDev) localStorage.setItem(todayDateKeyForTask, fetchedTask);
-            } else {
-              throw new Error("Network issue");
-            }
+              rawTaskText = data.task || FALLBACK_TASKS[0].task;
+              const habitText = data.habit || "";
+
+              renderFormattedTask(taskContentText, rawTaskText);
+              
+              if (!isDev) {
+                localStorage.setItem(todayDateKey, rawTaskText);
+                if(habitText) localStorage.setItem(todayDateKey + "_habit", habitText);
+              }
+
+              if (habitText) {
+                habitStack.textContent = "💡 Best done during: " + habitText;
+                habitStack.style.display = 'block';
+              }
+            } else throw new Error();
           } catch (err) {
-            clearTimeout(timeoutId);
-            const randomFallback = FALLBACK_TASKS[Math.floor(Math.random() * FALLBACK_TASKS.length)];
-            renderFormattedTask(taskContentText, randomFallback);
-            cardFooterNote.style.display = 'block';
-            if (!isDev) localStorage.setItem(todayDateKeyForTask, randomFallback);
+            rawTaskText = FALLBACK_TASKS[0].task;
+            const habitText = FALLBACK_TASKS[0].habit;
+            
+            renderFormattedTask(taskContentText, rawTaskText);
+            
+            if (!isDev) {
+               localStorage.setItem(todayDateKey, rawTaskText);
+               localStorage.setItem(todayDateKey + "_habit", habitText);
+            }
+            
+            habitStack.textContent = "💡 Best done during: " + habitText;
+            habitStack.style.display = 'block';
           }
         }
       }
     }
 
-    // Reflection Submission: Guarantees Level Up celebration fires on Screen 16 (Reflection Complete)
+    function renderFormattedTask(container, rawText) {
+      let b = rawText, e = "";
+      if (rawText.includes(": ")) { const p = rawText.split(": "); b = p[0].trim() + ":"; e = p.slice(1).join(": ").trim(); }
+      else if (rawText.includes(". ")) { const i = rawText.indexOf(". "); b = rawText.substring(0, i + 1).trim(); e = rawText.substring(i + 2).trim(); }
+      container.innerHTML = e ? `<span class="task-bold">${b}</span><span class="task-explanation">${e}</span>` : `<span class="task-bold">${b}</span>`;
+    }
+
     function submitReflection(option) {
-      // 1. Save memory flag: Remember they did this today
-      const now = new Date();
-      const todayDateKey = `task_${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}`;
+      const todayDateKey = `task_${new Date().getFullYear()}_${new Date().getMonth() + 1}_${new Date().getDate()}`;
       localStorage.setItem(`reflection_${todayDateKey}`, 'true');
 
-      // 2. Hide everything and prepare Screen 16
-      hideAllScreens();
-      const randomIndex = Math.floor(Math.random() * RANDOM_REFLECTIONS.length);
-      document.getElementById('reflection-response-text').textContent = RANDOM_REFLECTIONS[randomIndex];
+      let points = parseInt(localStorage.getItem('auraPoints') || '0');
+      points += 1;
+      localStorage.setItem('auraPoints', points);
       
-      // 3. Show Screen 16
-      document.getElementById('screen-16').classList.add('active');
+      let weekly = parseInt(localStorage.getItem('weeklyCompleted') || '0');
+      localStorage.setItem('weeklyCompleted', (weekly + 1));
 
-      const hasPendingLevelUp = localStorage.getItem('pendingLevelUp') === 'true';
+      hideAllScreens();
       
-      // 4. Fire Level Up popup directly on Screen 16 if applicable
-      if (hasPendingLevelUp) {
-        let currentLevel = parseInt(localStorage.getItem('userLevel') || '1');
-        currentLevel++;
+      const pointName = getUserPointName();
+      const responseEl = document.getElementById('reflection-response-text');
+      responseEl.innerHTML = `Give yourself a pat for the effort you put in today.<br><br><span style="color:var(--accent-color);">+1 ${pointName} added!</span>`;
+      
+      const s9 = document.getElementById('screen-9');
+      s9.classList.add('active');
+      
+      if(navigator.clearAppBadge) navigator.clearAppBadge();
+      if(navigator.vibrate) navigator.vibrate([100, 50, 100]);
+      document.getElementById('reflection-card').classList.add('glow-effect');
+
+      if (localStorage.getItem('pendingLevelUp') === 'true') {
+        let currentLevel = parseInt(localStorage.getItem('userLevel') || '1') + 1;
         localStorage.setItem('userLevel', currentLevel);
         localStorage.removeItem('pendingLevelUp');
-
-        // Update Header Element
-        const headerElem = document.getElementById('dashboard-header');
-        if (headerElem) {
-          headerElem.textContent = `✨ Active Member • Lv ${currentLevel}`;
-        }
-
-        // Show Toast immediately on Screen 16
-        showAppNotification(`🎉 Level Up! You completed your daily self-check and reached Level ${currentLevel}!`);
+        setTimeout(() => { showAppNotification(`🎉 Level Up! You reached Level ${currentLevel}!`); }, 1000);
       }
     }
 
     function closeReflection() {
-      if (isDev && forceState === 'checkin') {
-        forceState = 'night';
-        routeActiveSubscriber();
-      } else {
-        routeActiveSubscriber();
-      }
+      document.getElementById('reflection-card').classList.remove('glow-effect');
+      if (isDev && forceState === 'checkin') { forceState = 'night'; routeActiveSubscriber(); } 
+      else { routeActiveSubscriber(); }
     }
 
     async function startWorkout(os) {
       const statusElementId = os === 'ios' ? 'status-message-ios' : 'status-message-android';
       const statusMessage = document.getElementById(statusElementId);
+      const userEmail = urlParams.get('email') || localStorage.getItem('userEmail') || (isDev ? 'dev@test.com' : '');
+      
+      statusMessage.textContent = "Requesting notification permission..."; statusMessage.className = "status-sub";
+      let pushPayload = null;
 
-      const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-      const userEmail = urlParams.get('email') || (isDev ? 'developer@test.com' : '');
-      if (userEmail) localStorage.setItem('userEmail', userEmail);
-
-      let pushPayload = { type: "pwa_client", status: "active", device_os: os };
-
-      if ('Notification' in window) {
+      if ('Notification' in window && 'serviceWorker' in navigator) {
         try {
           const permission = await Notification.requestPermission();
-          if (permission === 'granted' && 'serviceWorker' in navigator) {
+          if (permission === 'granted') {
             const registration = await navigator.serviceWorker.ready;
-            let subscription = await registration.pushManager.getSubscription();
-            if (!subscription) {
-              subscription = await registration.pushManager.subscribe({ 
-                userVisibleOnly: true,
-                applicationServerKey: urlB64ToUint8Array(PUBLIC_VAPID_KEY)
-              });
-            }
-            if (subscription) pushPayload = subscription;
+            pushPayload = await registration.pushManager.getSubscription() || await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64ToUint8Array(PUBLIC_VAPID_KEY) });
+          } else {
+            statusMessage.textContent = "Notification denied. Please allow in browser settings."; statusMessage.className = "status-sub error"; return;
           }
-        } catch (notifErr) {}
-      }
+        } catch (err) { statusMessage.textContent = "Push failed: " + err.message; statusMessage.className = "status-sub error"; return; }
+      } else { statusMessage.textContent = "Push not supported on this device."; statusMessage.className = "status-sub error"; return; }
 
-      statusMessage.textContent = "Activating your workout subscription...";
-      statusMessage.className = "success";
+      statusMessage.textContent = "Activating subscription..."; statusMessage.className = "status-sub success";
 
       try {
-        await fetch(`${WEBHOOK_BASE}/stripe-subscription`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: userEmail, timezone: userTimezone, subscription: pushPayload })
+        const res = await fetch(`${WEBHOOK_BASE}/stripe-subscription`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: userEmail, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC', subscription: pushPayload })
         });
-      } catch (netErr) {}
-
-      localStorage.setItem('workoutSubscribed', 'true');
-      localStorage.setItem('userLevel', '1');
-      setTimeout(() => { routeActiveSubscriber(); }, 1000);
+        if (res.ok) {
+          localStorage.setItem('workoutSubscribed', 'true'); localStorage.setItem('userLevel', '1'); localStorage.setItem('auraPoints', '1');
+          statusMessage.textContent = "Success!";
+          setTimeout(() => routeActiveSubscriber(), 1000);
+        } else { statusMessage.textContent = "Database update failed."; statusMessage.className = "status-sub error"; }
+      } catch (err) { statusMessage.textContent = "Network error."; statusMessage.className = "status-sub error"; }
     }
   </script>
 </body>
