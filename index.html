@@ -156,7 +156,7 @@
 <body>
 
   <!-- Permanent Global Header -->
-  <div id="global-header">✨ Lv 1 Active Member<br>🔥 1 Personality Points</div>
+  <div id="global-header">✨ Lv 1 Active Member<br>0 Personality Points 🔥</div>
 
   <div id="lockscreen-overlay">
     <div class="lock-close" onclick="closeLockscreen()">✕ Close</div>
@@ -582,11 +582,12 @@
       document.getElementById('lockscreen-overlay').style.display = 'none';
     }
 
+    // 2-LINE HEADER WITH FLAME EMOJI MOVED TO THE RIGHT SIDE
     function updateGlobalHeader() {
       const currentLevel = localStorage.getItem('userLevel') || '1';
       const points = localStorage.getItem('auraPoints') || '0';
       const header = document.getElementById('global-header');
-      header.innerHTML = `✨ Lv ${currentLevel} Active Member<br>🔥 ${points} ${getUserPointName()}`;
+      header.innerHTML = `✨ Lv ${currentLevel} Active Member<br>${points} ${getUserPointName()} 🔥`;
       header.style.display = 'block';
     }
 
@@ -825,7 +826,7 @@
         statusMessage.className = "status-sub success";
         localStorage.setItem('workoutSubscribed', 'true');
         localStorage.setItem('userLevel', '1');
-        localStorage.setItem('auraPoints', '1');
+        localStorage.setItem('auraPoints', '0'); // Default start 0 points
         setTimeout(() => routeActiveSubscriber(), 1000);
         return;
       }
@@ -856,7 +857,7 @@
         });
         if (res.ok) {
           localStorage.setItem('workoutSubscribed', 'true'); localStorage.setItem('userLevel', '1');
-          if (!localStorage.getItem('auraPoints')) localStorage.setItem('auraPoints', '1'); 
+          if (!localStorage.getItem('auraPoints')) localStorage.setItem('auraPoints', '0'); // Default start 0 points
           statusMessage.textContent = "Success!";
           setTimeout(() => routeActiveSubscriber(), 1000);
         } else { statusMessage.textContent = "Database update failed."; statusMessage.className = "status-sub error"; }
