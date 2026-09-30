@@ -36,10 +36,11 @@
       user-select: none; -webkit-user-select: none;
     }
 
+    /* Clean 2-Line Uncluttered Header */
     #global-header {
-      position: fixed; top: 25px; left: 0; width: 100%; text-align: center;
-      font-size: 15px; font-weight: 800; color: var(--accent-color);
-      z-index: 9999; display: none;
+      position: fixed; top: 18px; left: 0; width: 100%; text-align: center;
+      font-size: 13px; font-weight: 800; color: var(--accent-color);
+      z-index: 9999; display: none; line-height: 1.35;
     }
 
     #progress-container {
@@ -57,16 +58,17 @@
     }
     #notification-toast.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
 
+    /* Bottom-Right Help Button & Toast */
     #help-icon {
-      position: fixed; top: 20px; right: 20px; width: 32px; height: 32px; background-color: var(--card-bg);
+      position: fixed; bottom: 20px; right: 20px; width: 36px; height: 36px; background-color: var(--card-bg);
       color: var(--accent-color); border-radius: 50%; display: flex; justify-content: center; align-items: center;
-      font-weight: 800; font-size: 16px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); cursor: pointer; z-index: 9999;
+      font-weight: 800; font-size: 16px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12); cursor: pointer; z-index: 9999;
     }
     #help-toast {
-      position: fixed; top: 60px; right: 20px; background-color: rgba(45, 43, 42, 0.95); color: #FFFFFF;
+      position: fixed; bottom: 65px; right: 20px; background-color: rgba(45, 43, 42, 0.95); color: #FFFFFF;
       padding: 8px 12px; border-radius: 10px; font-size: 12px; font-weight: 500; width: fit-content;
       max-width: 210px; text-align: center; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15); z-index: 9998;
-      opacity: 0; visibility: hidden; transform: translateY(-8px); transition: 0.3s;
+      opacity: 0; visibility: hidden; transform: translateY(8px); transition: 0.3s;
     }
     #help-toast.show { opacity: 1; visibility: visible; transform: translateY(0); }
 
@@ -153,7 +155,8 @@
 </head>
 <body>
 
-  <div id="global-header">✨ Active Member</div>
+  <!-- Permanent Global Header -->
+  <div id="global-header">✨ Lv 1 Active Member<br>🔥 1 Personality Points</div>
 
   <div id="lockscreen-overlay">
     <div class="lock-close" onclick="closeLockscreen()">✕ Close</div>
@@ -296,7 +299,7 @@
     </div>
 
     <!-- SCREEN 7: Dashboard -->
-    <div class="screen no-cursor" id="screen-7" style="padding-top: 60px;">
+    <div class="screen no-cursor" id="screen-7" style="padding-top: 65px;">
       <div class="content-body" style="justify-content: flex-start; height: 100%;">
         
         <div class="swipe-viewport" id="swipe-viewport">
@@ -336,7 +339,7 @@
     </div>
 
     <!-- SCREEN 9A: Summary -->
-    <div class="screen" id="screen-9a" onclick="nextScreen(9, 'a')" style="padding-top: 60px;">
+    <div class="screen" id="screen-9a" onclick="nextScreen(9, 'a')" style="padding-top: 65px;">
       <div class="content-body">
         <div class="bold-title">🌙 Today's Summary</div>
         <div class="reflection-box" id="summary-card">
@@ -347,7 +350,7 @@
     </div>
 
     <!-- SCREEN 9B: Final Reflection -->
-    <div class="screen" id="screen-9b" onclick="closeReflection()" style="padding-top: 60px;">
+    <div class="screen" id="screen-9b" onclick="closeReflection()" style="padding-top: 65px;">
       <div class="content-body">
         <div class="bold-title">✨ Reflection Complete</div>
         <div class="reflection-box">
@@ -481,20 +484,17 @@
         return;
       }
 
-      // Existing active subscribers jump straight to Dashboard
       if (localStorage.getItem('workoutSubscribed') === 'true') {
         routeActiveSubscriber();
         return;
       }
 
-      // Store incoming email from Stripe redirect
       if (emailFromUrl) {
         localStorage.setItem('userEmail', emailFromUrl);
         window.history.replaceState({}, document.title, window.location.pathname);
         updateWelcomeNote();
       }
 
-      // Start all users directly at Screen 1 (Welcome)
       hideAllScreens();
       document.getElementById('screen-1').classList.add('active');
       updateProgress(1);
@@ -509,7 +509,6 @@
     }
 
     function nextScreen(currentId, variant) {
-      // SCREEN 4 TRANSITION: Unconditional passage directly to Screen 5
       if (currentId === 4) {
         document.getElementById('screen-4').classList.remove('active');
         document.getElementById('progress-container').style.display = 'none';
@@ -587,7 +586,7 @@
       const currentLevel = localStorage.getItem('userLevel') || '1';
       const points = localStorage.getItem('auraPoints') || '0';
       const header = document.getElementById('global-header');
-      header.textContent = `✨ Active Member • Lv ${currentLevel} • 🔥 ${points} ${getUserPointName()}`;
+      header.innerHTML = `✨ Lv ${currentLevel} Active Member<br>🔥 ${points} ${getUserPointName()}`;
       header.style.display = 'block';
     }
 
