@@ -464,8 +464,12 @@
 
     function devForceState(state) { localStorage.setItem('workoutSubscribed', 'true'); forceState = state; routeActiveSubscriber(); }
     function devSimulateRenewal() { localStorage.setItem('workoutSubscribed', 'true'); localStorage.setItem('pendingLevelUp', 'true'); showAppNotification("💳 Level-up queued! Check-in to trigger."); }
+
+    // PRESERVE EMAIL ON DEV RESET
     function devReset() { 
+      const savedEmail = localStorage.getItem('userEmail');
       localStorage.clear(); 
+      if (savedEmail) localStorage.setItem('userEmail', savedEmail);
       localStorage.setItem('isDevMode', 'true'); 
       window.location.href = '?dev=true'; 
     }
@@ -588,7 +592,7 @@
       if(globalHeader) globalHeader.style.display = 'none';
     }
 
-    // DIRECT TASK CARD LOCKSCREEN FIX
+    // LOCKSCREEN OVERLAY HANDLER
     function openLockscreen() {
       const taskCard = document.getElementById('task-content-text');
       let displayText = "";
@@ -850,6 +854,13 @@
       const statusMessage = document.getElementById(statusElementId);
       const isDevActive = isDev || localStorage.getItem('isDevMode') === 'true';
       const userEmail = localStorage.getItem('userEmail') || (isDevActive ? 'dev@test.com' : '');
+
+      // PREVENT SUBSCRIPTION WITH EMPTY EMAIL
+      if (!userEmail && !isDevActive) {
+        statusMessage.textContent = "Error: No email linked. Please open your registration link from Stripe.";
+        statusMessage.className = "status-sub error";
+        return;
+      }
       
       statusMessage.textContent = "Requesting notification permission..."; 
       statusMessage.className = "status-sub";
