@@ -242,7 +242,7 @@
           ✨ Tailored to enhance your Beauty
         </div>
         <div class="main-text" style="text-align: left; margin: 0 auto; line-height: 1.8;">
-          ☀️️ <strong>8:00 AM:</strong> Receive your task.<br><br>
+          ☀ <strong>8:00 AM:</strong> Receive your task.<br><br>
           🌙 <strong>9:30 PM:</strong> Your daily summary.<br><br>
           🏖 <strong>Weekends:</strong> Rest & reflect.
         </div>
@@ -575,11 +575,24 @@
       if(globalHeader) globalHeader.style.display = 'none';
     }
 
+    // DIRECT TASK CARD LOCKSCREEN FIX
     function openLockscreen() {
+      const taskCard = document.getElementById('task-content-text');
+      let displayText = "";
+
+      if (taskCard && taskCard.innerText && !taskCard.innerText.includes("Waking up")) {
+        displayText = taskCard.innerText.trim();
+      } else {
+        const now = new Date();
+        const todayDateKey = `task_${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}`;
+        displayText = rawTaskText || localStorage.getItem(todayDateKey) || "Try one small thing you've never done before today.";
+      }
+
       const overlay = document.getElementById('lockscreen-overlay');
-      document.getElementById('lockscreen-content').textContent = rawTaskText;
+      document.getElementById('lockscreen-content').innerText = displayText;
       overlay.style.display = 'flex';
     }
+
     function closeLockscreen() {
       document.getElementById('lockscreen-overlay').style.display = 'none';
     }
@@ -671,6 +684,7 @@
         const savedHabitToday = localStorage.getItem(todayDateKey + "_habit");
         
         if (savedTaskToday && !isDevActive) {
+          rawTaskText = savedTaskToday;
           renderFormattedTask(taskContentText, savedTaskToday);
           if(savedHabitToday) {
             taskInstruction.textContent = savedHabitToday;
