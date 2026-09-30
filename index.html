@@ -120,12 +120,25 @@
     }
     .big-red-btn:active { transform: scale(0.95); }
 
+    /* WHITE GLOWING LIGHT ANIMATION ON PRESS */
     @keyframes therapeutic-glow {
-      0% { transform: scale(0.95); }
-      40% { transform: scale(1.05); }
-      100% { transform: scale(1); }
+      0% { 
+        transform: scale(0.95); 
+        box-shadow: 0 16px 35px rgba(217, 78, 61, 0.35), inset 0 6px 16px rgba(255, 255, 255, 0.4);
+        filter: brightness(1);
+      }
+      35% { 
+        transform: scale(1.06); 
+        box-shadow: 0 0 50px rgba(255, 255, 255, 0.95), 0 0 25px rgba(255, 255, 255, 0.8), 0 16px 35px rgba(217, 78, 61, 0.5), inset 0 10px 25px rgba(255, 255, 255, 0.9);
+        filter: brightness(1.25);
+      }
+      100% { 
+        transform: scale(1); 
+        box-shadow: 0 16px 35px rgba(217, 78, 61, 0.35), inset 0 6px 16px rgba(255, 255, 255, 0.4);
+        filter: brightness(1);
+      }
     }
-    .glow-active { animation: therapeutic-glow 1.4s ease-in-out; }
+    .glow-active { animation: therapeutic-glow 0.8s ease-out; }
     
     .slide-dots { display: flex; justify-content: center; gap: 8px; margin-top: 15px; }
     .s-dot { width: 8px; height: 8px; border-radius: 50%; background: #EAE3D9; transition: 0.3s; }
@@ -242,7 +255,7 @@
           ✨ Tailored to enhance your Beauty
         </div>
         <div class="main-text" style="text-align: left; margin: 0 auto; line-height: 1.8;">
-          ☀ <strong>8:00 AM:</strong> Receive your task.<br><br>
+          ☀️ <strong>8:00 AM:</strong> Receive your task.<br><br>
           🌙 <strong>9:30 PM:</strong> Your daily summary.<br><br>
           🏖 <strong>Weekends:</strong> Rest & reflect.
         </div>
