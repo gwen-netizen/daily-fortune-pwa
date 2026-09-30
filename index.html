@@ -36,11 +36,11 @@
       user-select: none; -webkit-user-select: none;
     }
 
-    /* Clean 2-Line Uncluttered Header */
+    /* Clean 2-Line Header */
     #global-header {
-      position: fixed; top: 18px; left: 0; width: 100%; text-align: center;
+      position: fixed; top: 16px; left: 0; width: 100%; text-align: center;
       font-size: 13px; font-weight: 800; color: var(--accent-color);
-      z-index: 9999; display: none; line-height: 1.35;
+      z-index: 9999; display: none; line-height: 1.4; letter-spacing: 0.2px;
     }
 
     #progress-container {
@@ -58,24 +58,24 @@
     }
     #notification-toast.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
 
-    /* Bottom-Right Help Button & Toast */
-    #help-icon {
-      position: fixed; bottom: 20px; right: 20px; width: 36px; height: 36px; background-color: var(--card-bg);
-      color: var(--accent-color); border-radius: 50%; display: flex; justify-content: center; align-items: center;
-      font-weight: 800; font-size: 16px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12); cursor: pointer; z-index: 9999;
-    }
-    #help-toast {
-      position: fixed; bottom: 65px; right: 20px; background-color: rgba(45, 43, 42, 0.95); color: #FFFFFF;
-      padding: 8px 12px; border-radius: 10px; font-size: 12px; font-weight: 500; width: fit-content;
-      max-width: 210px; text-align: center; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15); z-index: 9998;
-      opacity: 0; visibility: hidden; transform: translateY(8px); transition: 0.3s;
-    }
-    #help-toast.show { opacity: 1; visibility: visible; transform: translateY(0); }
-
     .card-container {
       width: 100%; max-width: 400px; padding: 20px; position: relative;
       height: 80vh; display: flex; justify-content: center; align-items: center;
     }
+
+    /* Help Button Placed Inside Top-Right White Card Area */
+    #help-icon {
+      position: absolute; top: 12px; right: 12px; width: 30px; height: 30px; background-color: #FAF7F2;
+      color: var(--accent-color); border-radius: 50%; display: flex; justify-content: center; align-items: center;
+      font-weight: 800; font-size: 14px; cursor: pointer; z-index: 99999; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    }
+    #help-toast {
+      position: absolute; top: 48px; right: 12px; background-color: rgba(45, 43, 42, 0.95); color: #FFFFFF;
+      padding: 8px 12px; border-radius: 10px; font-size: 12px; font-weight: 500; width: fit-content;
+      max-width: 210px; text-align: center; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15); z-index: 99998;
+      opacity: 0; visibility: hidden; transform: translateY(-6px); transition: 0.3s;
+    }
+    #help-toast.show { opacity: 1; visibility: visible; transform: translateY(0); }
 
     .screen {
       background-color: var(--card-bg); border-radius: 24px; padding: 35px 24px; text-align: center;
@@ -165,8 +165,6 @@
   </div>
 
   <div id="notification-toast"></div>
-  <div id="help-icon" onclick="showHelpToast()">?</div>
-  <div id="help-toast">Have questions? Ask our Community on Facebook</div>
 
   <!-- Sandbox Menu -->
   <div id="dev-panel">
@@ -190,6 +188,10 @@
   </div>
 
   <div class="card-container">
+
+    <!-- Help Button Inside Top-Right Corner of White Area -->
+    <div id="help-icon" onclick="showHelpToast()">?</div>
+    <div id="help-toast">Have questions? Ask our Community on Facebook</div>
 
     <!-- SCREEN DEVICE LOCKED -->
     <div class="screen no-cursor" id="screen-device-locked">
@@ -316,9 +318,10 @@
               </div>
             </div>
 
+            <!-- Slide 2: Updated Track Progress Text -->
             <div class="slide" id="slide-2">
               <div style="font-size: 16px; font-weight: 800; color: var(--accent-color); margin-bottom: 25px; text-align: center;">
-                Press once each time a task is completed.
+                Press once each time the task is completed.
               </div>
               <button id="big-red-btn" class="big-red-btn" onclick="registerDailyAction()"></button>
               <div style="font-size: 14px; color: #9C8E80; margin-top: 25px; font-style: italic; font-weight: 500;">Be truthful to yourself.</div>
@@ -394,8 +397,7 @@
     }
 
     function getUserPointName() {
-      const focus = localStorage.getItem('userFocus') || 'Aura';
-      return `${focus} Points`;
+      return localStorage.getItem('userFocus') || 'Aura';
     }
 
     function updateWelcomeNote() {
@@ -582,12 +584,15 @@
       document.getElementById('lockscreen-overlay').style.display = 'none';
     }
 
-    // 2-LINE HEADER WITH FLAME EMOJI MOVED TO THE RIGHT SIDE
+    // DYNAMIC 2-LINE HEADER WITH SINGULAR/PLURAL POINT GRAMMAR
     function updateGlobalHeader() {
       const currentLevel = localStorage.getItem('userLevel') || '1';
-      const points = localStorage.getItem('auraPoints') || '0';
+      const points = parseInt(localStorage.getItem('auraPoints') || '0', 10);
+      const focus = getUserPointName();
+      const pointLabel = points === 1 ? 'Point' : 'Points';
+      
       const header = document.getElementById('global-header');
-      header.innerHTML = `✨ Lv ${currentLevel} Active Member<br>${points} ${getUserPointName()} 🔥`;
+      header.innerHTML = `✨ Lv ${currentLevel} Active Member<br>${points} ${focus} ${pointLabel} 🔥`;
       header.style.display = 'block';
     }
 
@@ -742,11 +747,11 @@
       
       let earnedToday = Math.min(rawClicks, 8); 
 
-      let totalPoints = parseInt(localStorage.getItem('auraPoints') || '0');
+      let totalPoints = parseInt(localStorage.getItem('auraPoints') || '0', 10);
       totalPoints += earnedToday; 
       localStorage.setItem('auraPoints', totalPoints);
       
-      let weekly = parseInt(localStorage.getItem('weeklyCompleted') || '0');
+      let weekly = parseInt(localStorage.getItem('weeklyCompleted') || '0', 10);
       if(earnedToday > 0) localStorage.setItem('weeklyCompleted', (weekly + 1));
 
       if (!isDevActive) {
@@ -765,14 +770,16 @@
       updateGlobalHeader();
       
       let clickText = rawClicks === 1 ? "1 time" : `${rawClicks} times`;
-      document.getElementById('summary-text').innerHTML = `You pressed the tracker ${clickText}.<br><br>You earned <span style="color:var(--accent-color);">+${earnedToday} ${getUserPointName()}</span> today!`;
+      const focus = getUserPointName();
+      const pointLabel = earnedToday === 1 ? 'Point' : 'Points';
+      document.getElementById('summary-text').innerHTML = `You pressed the tracker ${clickText}.<br><br>You earned <span style="color:var(--accent-color);">+${earnedToday} ${focus} ${pointLabel}</span> today!`;
       
       document.getElementById('screen-9a').classList.add('active');
       document.getElementById('summary-card').classList.add('glow-effect');
       if(navigator.clearAppBadge) navigator.clearAppBadge();
       
       if (localStorage.getItem('pendingLevelUp') === 'true') {
-        let currentLevel = parseInt(localStorage.getItem('userLevel') || '1') + 1;
+        let currentLevel = parseInt(localStorage.getItem('userLevel') || '1', 10) + 1;
         localStorage.setItem('userLevel', currentLevel);
         localStorage.removeItem('pendingLevelUp');
         setTimeout(() => { 
@@ -826,7 +833,7 @@
         statusMessage.className = "status-sub success";
         localStorage.setItem('workoutSubscribed', 'true');
         localStorage.setItem('userLevel', '1');
-        localStorage.setItem('auraPoints', '0'); // Default start 0 points
+        localStorage.setItem('auraPoints', '0'); 
         setTimeout(() => routeActiveSubscriber(), 1000);
         return;
       }
@@ -857,7 +864,7 @@
         });
         if (res.ok) {
           localStorage.setItem('workoutSubscribed', 'true'); localStorage.setItem('userLevel', '1');
-          if (!localStorage.getItem('auraPoints')) localStorage.setItem('auraPoints', '0'); // Default start 0 points
+          if (!localStorage.getItem('auraPoints')) localStorage.setItem('auraPoints', '0'); 
           statusMessage.textContent = "Success!";
           setTimeout(() => routeActiveSubscriber(), 1000);
         } else { statusMessage.textContent = "Database update failed."; statusMessage.className = "status-sub error"; }
