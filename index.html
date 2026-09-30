@@ -63,7 +63,7 @@
       height: 80vh; display: flex; justify-content: center; align-items: center;
     }
 
-    /* Help Button Placed Inside Top-Right White Card Area */
+    /* Help Button Inside Top-Right Corner of White Area */
     #help-icon {
       position: absolute; top: 12px; right: 12px; width: 30px; height: 30px; background-color: #FAF7F2;
       color: var(--accent-color); border-radius: 50%; display: flex; justify-content: center; align-items: center;
@@ -156,7 +156,7 @@
 <body>
 
   <!-- Permanent Global Header -->
-  <div id="global-header">✨ Lv 1 Active Member<br>0 Personality Points 🔥</div>
+  <div id="global-header">Lv 1 Active Member<br>0 Personality Points 🔥</div>
 
   <div id="lockscreen-overlay">
     <div class="lock-close" onclick="closeLockscreen()">✕ Close</div>
@@ -242,7 +242,7 @@
           ✨ Tailored to enhance your Beauty
         </div>
         <div class="main-text" style="text-align: left; margin: 0 auto; line-height: 1.8;">
-          ☀️ <strong>8:00 AM:</strong> Receive your task.<br><br>
+          ☀️️ <strong>8:00 AM:</strong> Receive your task.<br><br>
           🌙 <strong>9:30 PM:</strong> Your daily summary.<br><br>
           🏖 <strong>Weekends:</strong> Rest & reflect.
         </div>
@@ -318,7 +318,7 @@
               </div>
             </div>
 
-            <!-- Slide 2: Updated Track Progress Text -->
+            <!-- Slide 2: Track Progress -->
             <div class="slide" id="slide-2">
               <div style="font-size: 16px; font-weight: 800; color: var(--accent-color); margin-bottom: 25px; text-align: center;">
                 Press once each time the task is completed.
@@ -584,7 +584,7 @@
       document.getElementById('lockscreen-overlay').style.display = 'none';
     }
 
-    // DYNAMIC 2-LINE HEADER WITH SINGULAR/PLURAL POINT GRAMMAR
+    // CLEAN HEADER WITH NO EMOJI ON LINE 1
     function updateGlobalHeader() {
       const currentLevel = localStorage.getItem('userLevel') || '1';
       const points = parseInt(localStorage.getItem('auraPoints') || '0', 10);
@@ -592,7 +592,7 @@
       const pointLabel = points === 1 ? 'Point' : 'Points';
       
       const header = document.getElementById('global-header');
-      header.innerHTML = `✨ Lv ${currentLevel} Active Member<br>${points} ${focus} ${pointLabel} 🔥`;
+      header.innerHTML = `Lv ${currentLevel} Active Member<br>${points} ${focus} ${pointLabel} 🔥`;
       header.style.display = 'block';
     }
 
