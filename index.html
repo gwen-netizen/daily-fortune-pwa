@@ -447,7 +447,7 @@
     </div>
 
     <!-- SCREEN 10: Billing Suspended -->
-    <div class="screen no-cursor" id="screen-10">
+    <div class="screen no-cursor" id="screen-10" style="padding-top: 65px;">
       <div class="content-body">
         <!-- Streak Display -->
         <div class="streak-container">
@@ -577,6 +577,7 @@
     function devSimulateFailedSub() {
       localStorage.setItem('workoutSubscribed', 'failed');
       hideAllScreens();
+      updateGlobalHeader();
       updateStreakUI();
       document.getElementById('screen-10').classList.add('active');
       showAppNotification("⛔ Sub Paused Screen Triggered");
@@ -615,7 +616,11 @@
 
       if (isDevActive) {
         const subStatus = localStorage.getItem('workoutSubscribed');
-        if (subStatus === 'failed') { hideAllScreens(); document.getElementById('screen-10').classList.add('active'); }
+        if (subStatus === 'failed') { 
+          hideAllScreens(); 
+          updateGlobalHeader();
+          document.getElementById('screen-10').classList.add('active'); 
+        }
         else if (subStatus === 'true') { routeActiveSubscriber(); }
         else { hideAllScreens(); document.getElementById('screen-1').classList.add('active'); updateProgress(1); }
         return;
