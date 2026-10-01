@@ -232,7 +232,8 @@
     <button class="dev-btn" onclick="devForceState('night')">🌙 Night</button>
     <button class="dev-btn" onclick="devForceState('weekend')">🏖 Weekend</button>
     <button class="dev-btn" style="background:#28a745;" onclick="devSimulateRenewal()">💳 Level Up</button>
-    <button class="dev-btn" style="background:#d9534f;" onclick="devReset()">🗑 Reset All</button>
+    <button class="dev-btn" style="background:#d9534f;" onclick="devSimulateFailedSub()">⛔ Sub Paused</button>
+    <button class="dev-btn" style="background:#6c757d;" onclick="devReset()">🗑 Reset All</button>
   </div>
 
   <div id="progress-container">
@@ -571,6 +572,15 @@
 
     function devForceState(state) { localStorage.setItem('workoutSubscribed', 'true'); forceState = state; routeActiveSubscriber(); }
     function devSimulateRenewal() { localStorage.setItem('workoutSubscribed', 'true'); localStorage.setItem('pendingLevelUp', 'true'); showAppNotification("💳 Level-up queued! Check-in to trigger."); }
+
+    // SIMULATE PAUSED/FAILED SUBSCRIPTION
+    function devSimulateFailedSub() {
+      localStorage.setItem('workoutSubscribed', 'failed');
+      hideAllScreens();
+      updateStreakUI();
+      document.getElementById('screen-10').classList.add('active');
+      showAppNotification("⛔ Sub Paused Screen Triggered");
+    }
 
     // PRESERVE EMAIL ON DEV RESET
     function devReset() { 
