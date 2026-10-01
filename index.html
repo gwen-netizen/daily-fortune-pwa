@@ -77,6 +77,48 @@
     }
     #help-toast.show { opacity: 1; visibility: visible; transform: translateY(0); }
 
+    /* 5-DAY WINNING STREAK STYLING */
+    .streak-container {
+      display: flex;
+      justify-content: space-evenly;
+      align-items: center;
+      width: 100%;
+      max-width: 260px;
+      margin: 0 auto 14px auto;
+    }
+    .streak-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+    }
+    .streak-label {
+      font-size: 12px;
+      font-weight: 800;
+      color: #9C8E80;
+    }
+    .streak-circle {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 2px solid #EAE3D9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 800;
+      color: #FFFFFF;
+      background-color: transparent;
+      transition: all 0.3s ease;
+    }
+    .streak-circle.active {
+      background-color: #28a745;
+      border-color: #28a745;
+    }
+    .streak-circle.active::after {
+      content: '✓';
+    }
+
     .screen {
       background-color: var(--card-bg); border-radius: 24px; padding: 35px 24px; text-align: center;
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.06); width: 100%; height: 100%; position: absolute;
@@ -209,6 +251,14 @@
     <!-- SCREEN DEVICE LOCKED -->
     <div class="screen no-cursor" id="screen-device-locked">
       <div class="content-body">
+        <!-- Streak Display -->
+        <div class="streak-container">
+          <div class="streak-item"><span class="streak-label">M</span><div class="streak-circle streak-day-1"></div></div>
+          <div class="streak-item"><span class="streak-label">T</span><div class="streak-circle streak-day-2"></div></div>
+          <div class="streak-item"><span class="streak-label">W</span><div class="streak-circle streak-day-3"></div></div>
+          <div class="streak-item"><span class="streak-label">T</span><div class="streak-circle streak-day-4"></div></div>
+          <div class="streak-item"><span class="streak-label">F</span><div class="streak-circle streak-day-5"></div></div>
+        </div>
         <div class="bold-title" style="color: #d9534f; font-size: 20px;">🔒 Subscription Active Elsewhere</div>
         <div class="main-text">
           This Fortune Workout subscription is already registered and active on another phone.<br><br>
@@ -320,7 +370,17 @@
         <div class="swipe-viewport" id="swipe-viewport">
           <div class="swipe-container" id="swipe-container">
             
+            <!-- Slide 1: Task, Night Rest & Weekend Rest -->
             <div class="slide" id="slide-1">
+              <!-- Streak Display (Visible on Slide 1 Only) -->
+              <div class="streak-container">
+                <div class="streak-item"><span class="streak-label">M</span><div class="streak-circle streak-day-1"></div></div>
+                <div class="streak-item"><span class="streak-label">T</span><div class="streak-circle streak-day-2"></div></div>
+                <div class="streak-item"><span class="streak-label">W</span><div class="streak-circle streak-day-3"></div></div>
+                <div class="streak-item"><span class="streak-label">T</span><div class="streak-circle streak-day-4"></div></div>
+                <div class="streak-item"><span class="streak-label">F</span><div class="streak-circle streak-day-5"></div></div>
+              </div>
+
               <div class="task-card" style="margin: 0; min-height: 250px; display:flex; flex-direction:column; justify-content:center;">
                 <div class="task-title" id="card-header-title">TODAY'S DAILY TASK</div>
                 <div class="task-content" id="task-content-text"></div>
@@ -357,6 +417,14 @@
     <!-- SCREEN 9A: Summary -->
     <div class="screen" id="screen-9a" onclick="nextScreen(9, 'a')" style="padding-top: 65px;">
       <div class="content-body">
+        <!-- Streak Display -->
+        <div class="streak-container">
+          <div class="streak-item"><span class="streak-label">M</span><div class="streak-circle streak-day-1"></div></div>
+          <div class="streak-item"><span class="streak-label">T</span><div class="streak-circle streak-day-2"></div></div>
+          <div class="streak-item"><span class="streak-label">W</span><div class="streak-circle streak-day-3"></div></div>
+          <div class="streak-item"><span class="streak-label">T</span><div class="streak-circle streak-day-4"></div></div>
+          <div class="streak-item"><span class="streak-label">F</span><div class="streak-circle streak-day-5"></div></div>
+        </div>
         <div class="bold-title">🌙 Today's Summary</div>
         <div class="reflection-box" id="summary-card">
           <div class="main-text" id="summary-text" style="font-weight: 700; margin-bottom: 0;"></div>
@@ -379,6 +447,14 @@
     <!-- SCREEN 10: Billing Suspended -->
     <div class="screen no-cursor" id="screen-10">
       <div class="content-body">
+        <!-- Streak Display -->
+        <div class="streak-container">
+          <div class="streak-item"><span class="streak-label">M</span><div class="streak-circle streak-day-1"></div></div>
+          <div class="streak-item"><span class="streak-label">T</span><div class="streak-circle streak-day-2"></div></div>
+          <div class="streak-item"><span class="streak-label">W</span><div class="streak-circle streak-day-3"></div></div>
+          <div class="streak-item"><span class="streak-label">T</span><div class="streak-circle streak-day-4"></div></div>
+          <div class="streak-item"><span class="streak-label">F</span><div class="streak-circle streak-day-5"></div></div>
+        </div>
         <div class="bold-title" style="color: #d9534f;">Subscription Paused</div>
         <div class="main-text">Your access has been temporarily suspended.<br><br>Please update your billing details via your receipt to resume.</div>
         <div class="btn-group">
@@ -423,6 +499,36 @@
       const welcomeElem = document.getElementById('welcome-note');
       if (welcomeElem) {
         welcomeElem.textContent = name ? `Welcome, ${name}! ✨` : `Welcome! ✨`;
+      }
+    }
+
+    /* 5-DAY STREAK MANAGEMENT LOGIC */
+    function getMondayDateKey(d) {
+      const date = new Date(d);
+      const day = date.getDay();
+      const diff = date.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Sunday
+      const monday = new Date(date.setDate(diff));
+      return `monday_${monday.getFullYear()}_${monday.getMonth() + 1}_${monday.getDate()}`;
+    }
+
+    function updateStreakUI() {
+      // Reset Streak every Monday at 00:00 AM
+      const currentMondayKey = getMondayDateKey(new Date());
+      const savedMondayKey = localStorage.getItem('lastStreakMondayKey');
+      if (savedMondayKey !== currentMondayKey) {
+        for (let i = 1; i <= 5; i++) {
+          localStorage.removeItem(`streak_day_${i}`);
+        }
+        localStorage.setItem('lastStreakMondayKey', currentMondayKey);
+      }
+
+      // Sync active state across all streak circle elements
+      for (let i = 1; i <= 5; i++) {
+        const isCompleted = localStorage.getItem(`streak_day_${i}`) === 'true';
+        document.querySelectorAll(`.streak-day-${i}`).forEach(circle => {
+          if (isCompleted) circle.classList.add('active');
+          else circle.classList.remove('active');
+        });
       }
     }
 
@@ -494,6 +600,7 @@
       const isDevActive = isDev || localStorage.getItem('isDevMode') === 'true';
 
       updateWelcomeNote();
+      updateStreakUI();
 
       if (isDevActive) {
         const subStatus = localStorage.getItem('workoutSubscribed');
@@ -629,6 +736,7 @@
     async function routeActiveSubscriber() {
       hideAllScreens();
       updateGlobalHeader(); 
+      updateStreakUI();
       document.getElementById('screen-7').classList.add('active');
 
       const now = new Date();
@@ -778,6 +886,13 @@
       
       let earnedToday = Math.min(rawClicks, 8); 
 
+      // 9:30 PM STREAK TICK UPDATE (Awards checkmark if member earned >= 1 point today)
+      const now = new Date();
+      const currentDayOfWeek = now.getDay(); // 1 = Mon, 2 = Tue, 3 = Wed, 4 = Thu, 5 = Fri
+      if (earnedToday >= 1 && currentDayOfWeek >= 1 && currentDayOfWeek <= 5) {
+        localStorage.setItem(`streak_day_${currentDayOfWeek}`, 'true');
+      }
+
       let totalPoints = parseInt(localStorage.getItem('auraPoints') || '0', 10);
       totalPoints += earnedToday; 
       localStorage.setItem('auraPoints', totalPoints);
@@ -799,6 +914,7 @@
 
       hideAllScreens();
       updateGlobalHeader();
+      updateStreakUI();
       
       let clickText = rawClicks === 1 ? "1 time" : `${rawClicks} times`;
       const focus = getUserPointName();
