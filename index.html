@@ -534,6 +534,73 @@
       }
     }
 
+    // PROCESS LEVEL UP IN THE BACKGROUND REGARDLESS OF SCREEN
+    function processPendingLevelUp() {
+      if (localStorage.getItem('pendingLevelUp') === 'true') {
+        let currentLevel = parseInt(localStorage.getItem('userLevel') || '1', 10) + 1;
+        localStorage.setItem('userLevel', currentLevel);
+        localStorage.removeItem('pendingLevelUp');
+        updateGlobalHeader();
+        setTimeout(() => { 
+          showAppNotification(`🎉 Level Up! You reached Level ${currentLevel}!`); 
+        }, 800);
+      }
+    }
+
+    // AUTO-SYNC UN-TABULATED POINTS FROM PAST DAYS (IN CASE USER MISSED 9:30PM - 11:59PM WINDOW)
+    function autoSyncUntabulatedPoints() {
+      const now = new Date();
+      const todayDateKey = `task_${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}`;
+      
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('task_') && key.endsWith('_clicks')) {
+          const dateKey = key.replace('_clicks', '');
+          
+          if (dateKey !== todayDateKey && localStorage.getItem(`reflection_${dateKey}`) !== 'true') {
+            let rawClicks = parseInt(localStorage.getItem(key) || '0', 10);
+            let earned = Math.min(rawClicks, 8);
+            localStorage.setItem(`reflection_${dateKey}`, 'true');
+
+            if (earned > 0) {
+              const parts = dateKey.split('_');
+              if (parts.length === 4) {
+                const year = parseInt(parts[1], 10);
+                const month = parseInt(parts[2], 10) - 1;
+                const dayVal = parseInt(parts[3], 10);
+                const pastDate = new Date(year, month, dayVal);
+                const dayOfWeek = pastDate.getDay();
+
+                if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                  localStorage.setItem(`streak_day_${dayOfWeek}`, 'true');
+                }
+              }
+
+              let totalPoints = parseInt(localStorage.getItem('auraPoints') || '0', 10);
+              totalPoints += earned;
+              localStorage.setItem('auraPoints', totalPoints);
+
+              let weekly = parseInt(localStorage.getItem('weeklyCompleted') || '0', 10);
+              localStorage.setItem('weeklyCompleted', weekly + 1);
+
+              let isDevActive = isDev || localStorage.getItem('isDevMode') === 'true';
+              if (!isDevActive) {
+                const userEmail = localStorage.getItem('userEmail');
+                const userFocus = localStorage.getItem('userFocus') || 'Aura';
+                if (userEmail) {
+                  fetch(`${WEBHOOK_BASE}/update-points`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: userEmail, points: totalPoints, focus: userFocus })
+                  }).catch(() => {});
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
     const FALLBACK_TASKS = [
       { task: "Mindset & Growth: Read one page of a book that feeds your mind today.", habit: "🎯 Log each completion on tracker." },
       { task: "Helping Others: Give someone a genuine compliment. Watch their eyes light up.", habit: "🎯 Log each completion on tracker." },
@@ -571,7 +638,12 @@
     }
 
     function devForceState(state) { localStorage.setItem('workoutSubscribed', 'true'); forceState = state; routeActiveSubscriber(); }
-    function devSimulateRenewal() { localStorage.setItem('workoutSubscribed', 'true'); localStorage.setItem('pendingLevelUp', 'true'); showAppNotification("💳 Level-up queued! Check-in to trigger."); }
+    
+    function devSimulateRenewal() { 
+      localStorage.setItem('workoutSubscribed', 'true'); 
+      localStorage.setItem('pendingLevelUp', 'true'); 
+      processPendingLevelUp(); // Immediately process level up in background
+    }
 
     // SIMULATE PAUSED/FAILED SUBSCRIPTION
     function devSimulateFailedSub() {
@@ -606,6 +678,13 @@
         }).catch(()=>{});
       });
     }
+
+    // AUTO-REFRESH SCREEN WHEN PWA IS FOREGROUNDED FROM BACKGROUND
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && localStorage.getItem('workoutSubscribed') === 'true') {
+        routeActiveSubscriber();
+      }
+    });
 
     document.addEventListener('DOMContentLoaded', async () => {
       const emailFromUrl = urlParams.get('email');
@@ -750,6 +829,8 @@
     }
 
     async function routeActiveSubscriber() {
+      autoSyncUntabulatedPoints(); // Sync any un-reflected clicks from past days
+      processPendingLevelUp();     // Process level up in background automatically
       hideAllScreens();
       updateGlobalHeader(); 
       updateStreakUI();
@@ -827,7 +908,7 @@
 
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
-          if (key && key.startsWith('task_') && key !== todayDateKey) localStorage.removeItem(key);
+          if (key && key.startsWith('task_') && key !== todayDateKey && !key.endsWith('_clicks')) localStorage.removeItem(key);
         }
 
         const savedTaskToday = localStorage.getItem(todayDateKey);
@@ -891,10 +972,17 @@
     function registerDailyAction() {
       const now = new Date();
       const todayDateKey = `task_${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}`;
-      let clicks = parseInt(localStorage.getItem(`${todayDateKey}_clicks`) || '0');
+      let clicks = parseInt(localStorage.getItem(`${todayDateKey}_clicks`) || '0', 10);
 
       clicks++;
       localStorage.setItem(`${todayDateKey}_clicks`, clicks);
+
+      // AUTO-UPDATE STREAK TICK IMMEDIATELY WHEN AT LEAST 1 CLICK IS RECORDED
+      const currentDayOfWeek = now.getDay(); // 1 = Mon, 2 = Tue, 3 = Wed, 4 = Thu, 5 = Fri
+      if (clicks >= 1 && currentDayOfWeek >= 1 && currentDayOfWeek <= 5) {
+        localStorage.setItem(`streak_day_${currentDayOfWeek}`, 'true');
+        updateStreakUI();
+      }
 
       const btn = document.getElementById('big-red-btn');
       btn.classList.remove('glow-active');
@@ -911,7 +999,7 @@
       
       let earnedToday = Math.min(rawClicks, 8); 
 
-      // 9:30 PM STREAK TICK UPDATE (Awards checkmark if member earned >= 1 point today)
+      // 9:30 PM STREAK TICK UPDATE
       const now = new Date();
       const currentDayOfWeek = now.getDay(); // 1 = Mon, 2 = Tue, 3 = Wed, 4 = Thu, 5 = Fri
       if (earnedToday >= 1 && currentDayOfWeek >= 1 && currentDayOfWeek <= 5) {
@@ -950,15 +1038,7 @@
       document.getElementById('summary-card').classList.add('glow-effect');
       if(navigator.clearAppBadge) navigator.clearAppBadge();
       
-      if (localStorage.getItem('pendingLevelUp') === 'true') {
-        let currentLevel = parseInt(localStorage.getItem('userLevel') || '1', 10) + 1;
-        localStorage.setItem('userLevel', currentLevel);
-        localStorage.removeItem('pendingLevelUp');
-        setTimeout(() => { 
-          showAppNotification(`🎉 Level Up! You reached Level ${currentLevel}!`); 
-          updateGlobalHeader();
-        }, 1500);
-      }
+      processPendingLevelUp();
     }
 
     function closeReflection() {
