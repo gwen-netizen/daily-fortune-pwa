@@ -547,7 +547,7 @@
       }
     }
 
-    // AUTO-SYNC UN-TABULATED POINTS FROM PAST DAYS (IN CASE USER MISSED 9:30PM - 11:59PM WINDOW)
+    // AUTO-SYNC UN-TABULATED POINTS & STREAKS FROM PAST DAYS
     function autoSyncUntabulatedPoints() {
       const now = new Date();
       const todayDateKey = `task_${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}`;
@@ -587,11 +587,12 @@
               if (!isDevActive) {
                 const userEmail = localStorage.getItem('userEmail');
                 const userFocus = localStorage.getItem('userFocus') || 'Aura';
+                const userLevel = parseInt(localStorage.getItem('userLevel') || '1', 10);
                 if (userEmail) {
                   fetch(`${WEBHOOK_BASE}/update-points`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: userEmail, points: totalPoints, focus: userFocus })
+                    body: JSON.stringify({ email: userEmail, points: totalPoints, focus: userFocus, level: userLevel })
                   }).catch(() => {});
                 }
               }
@@ -829,7 +830,7 @@
     }
 
     async function routeActiveSubscriber() {
-      autoSyncUntabulatedPoints(); // Sync any un-reflected clicks from past days
+      autoSyncUntabulatedPoints(); // Sync un-reflected clicks from past days
       processPendingLevelUp();     // Process level up in background automatically
       hideAllScreens();
       updateGlobalHeader(); 
@@ -1016,11 +1017,12 @@
       if (!isDevActive) {
         const userEmail = localStorage.getItem('userEmail');
         const userFocus = localStorage.getItem('userFocus') || 'Aura';
+        const userLevel = parseInt(localStorage.getItem('userLevel') || '1', 10);
         if (userEmail) {
           fetch(`${WEBHOOK_BASE}/update-points`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: userEmail, points: totalPoints, focus: userFocus })
+            body: JSON.stringify({ email: userEmail, points: totalPoints, focus: userFocus, level: userLevel })
           }).catch(() => {});
         }
       }
