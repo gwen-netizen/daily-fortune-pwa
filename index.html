@@ -844,7 +844,8 @@
       const hasCheckedInToday = localStorage.getItem(`reflection_${todayDateKey}`) === 'true';
       const isDevActive = isDev || localStorage.getItem('isDevMode') === 'true';
 
-      let isWeekend = (day === 6) || (day === 0) || (day === 5 && (hour > 21 || (hour === 21 && minute >= 30))) || (day === 1 && hour < 8);
+      // CORRECTED WEEKEND CONDITION (Weekend starts Saturday 00:00 AM)
+      let isWeekend = (day === 6) || (day === 0) || (day === 1 && hour < 8);
       let isCheckInWindow = (hour === 21 && minute >= 30) || (hour === 22) || (hour === 23);
       let isNightTime = (hour >= 0 && hour < 8);
 
