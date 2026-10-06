@@ -508,13 +508,12 @@
     function getMondayDateKey(d) {
       const date = new Date(d);
       const day = date.getDay();
-      const diff = date.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Sunday
+      const diff = date.getDate() - day + (day === 0 ? -6 : 1);
       const monday = new Date(date.setDate(diff));
       return `monday_${monday.getFullYear()}_${monday.getMonth() + 1}_${monday.getDate()}`;
     }
 
     function updateStreakUI() {
-      // Reset Streak every Monday at 00:00 AM
       const currentMondayKey = getMondayDateKey(new Date());
       const savedMondayKey = localStorage.getItem('lastStreakMondayKey');
       if (savedMondayKey !== currentMondayKey) {
@@ -524,7 +523,6 @@
         localStorage.setItem('lastStreakMondayKey', currentMondayKey);
       }
 
-      // Sync active state across all streak circle elements
       for (let i = 1; i <= 5; i++) {
         const isCompleted = localStorage.getItem(`streak_day_${i}`) === 'true';
         document.querySelectorAll(`.streak-day-${i}`).forEach(circle => {
@@ -534,7 +532,6 @@
       }
     }
 
-    // PROCESS LEVEL UP IN THE BACKGROUND REGARDLESS OF SCREEN
     function processPendingLevelUp() {
       if (localStorage.getItem('pendingLevelUp') === 'true') {
         let currentLevel = parseInt(localStorage.getItem('userLevel') || '1', 10) + 1;
@@ -547,8 +544,8 @@
       }
     }
 
-    // AUTO-SYNC UN-TABULATED POINTS & STREAKS FROM PAST DAYS
-    function autoSyncUntabulatedPoints() {
+    // AUTO-SYNC UN-TABULATED POINTS (ONLY MARKS REFLECTION TRUE AFTER SUCCESSFUL 200 OK)
+    async function autoSyncUntabulatedPoints() {
       const now = new Date();
       const todayDateKey = `task_${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}`;
       
@@ -560,7 +557,6 @@
           if (dateKey !== todayDateKey && localStorage.getItem(`reflection_${dateKey}`) !== 'true') {
             let rawClicks = parseInt(localStorage.getItem(key) || '0', 10);
             let earned = Math.min(rawClicks, 8);
-            localStorage.setItem(`reflection_${dateKey}`, 'true');
 
             if (earned > 0) {
               const parts = dateKey.split('_');
@@ -576,26 +572,43 @@
                 }
               }
 
-              let totalPoints = parseInt(localStorage.getItem('auraPoints') || '0', 10);
-              totalPoints += earned;
-              localStorage.setItem('auraPoints', totalPoints);
-
-              let weekly = parseInt(localStorage.getItem('weeklyCompleted') || '0', 10);
-              localStorage.setItem('weeklyCompleted', weekly + 1);
-
+              let totalPoints = parseInt(localStorage.getItem('auraPoints') || '0', 10) + earned;
+              let weekly = parseInt(localStorage.getItem('weeklyCompleted') || '0', 10) + 1;
+              let userEmail = localStorage.getItem('userEmail');
+              let userFocus = localStorage.getItem('userFocus') || 'Aura';
+              let userLevel = parseInt(localStorage.getItem('userLevel') || '1', 10);
               let isDevActive = isDev || localStorage.getItem('isDevMode') === 'true';
+
+              if (!userEmail && !isDevActive) {
+                showAppNotification("⚠️ Email missing. Open Stripe link to pair email.");
+                continue;
+              }
+
               if (!isDevActive) {
-                const userEmail = localStorage.getItem('userEmail');
-                const userFocus = localStorage.getItem('userFocus') || 'Aura';
-                const userLevel = parseInt(localStorage.getItem('userLevel') || '1', 10);
-                if (userEmail) {
-                  fetch(`${WEBHOOK_BASE}/update-points`, {
+                try {
+                  const response = await fetch(`${WEBHOOK_BASE}/update-points`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: userEmail, points: totalPoints, focus: userFocus, level: userLevel })
-                  }).catch(() => {});
+                  });
+
+                  if (response.ok) {
+                    localStorage.setItem(`reflection_${dateKey}`, 'true');
+                    localStorage.setItem('auraPoints', totalPoints);
+                    localStorage.setItem('weeklyCompleted', weekly);
+                  } else {
+                    showAppNotification(`Sync Error: Server HTTP ${response.status}`);
+                  }
+                } catch (err) {
+                  showAppNotification(`Sync Failed: ${err.message}`);
                 }
+              } else {
+                localStorage.setItem(`reflection_${dateKey}`, 'true');
+                localStorage.setItem('auraPoints', totalPoints);
+                localStorage.setItem('weeklyCompleted', weekly);
               }
+            } else {
+              localStorage.setItem(`reflection_${dateKey}`, 'true');
             }
           }
         }
@@ -643,10 +656,9 @@
     function devSimulateRenewal() { 
       localStorage.setItem('workoutSubscribed', 'true'); 
       localStorage.setItem('pendingLevelUp', 'true'); 
-      processPendingLevelUp(); // Immediately process level up in background
+      processPendingLevelUp();
     }
 
-    // SIMULATE PAUSED/FAILED SUBSCRIPTION
     function devSimulateFailedSub() {
       localStorage.setItem('workoutSubscribed', 'failed');
       hideAllScreens();
@@ -656,7 +668,6 @@
       showAppNotification("⛔ Sub Paused Screen Triggered");
     }
 
-    // PRESERVE EMAIL ON DEV RESET
     function devReset() { 
       const savedEmail = localStorage.getItem('userEmail');
       localStorage.clear(); 
@@ -680,7 +691,6 @@
       });
     }
 
-    // AUTO-REFRESH SCREEN WHEN PWA IS FOREGROUNDED FROM BACKGROUND
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible' && localStorage.getItem('workoutSubscribed') === 'true') {
         routeActiveSubscriber();
@@ -693,6 +703,12 @@
 
       updateWelcomeNote();
       updateStreakUI();
+
+      if (emailFromUrl) {
+        localStorage.setItem('userEmail', emailFromUrl);
+        window.history.replaceState({}, document.title, window.location.pathname);
+        updateWelcomeNote();
+      }
 
       if (isDevActive) {
         const subStatus = localStorage.getItem('workoutSubscribed');
@@ -709,12 +725,6 @@
       if (localStorage.getItem('workoutSubscribed') === 'true') {
         routeActiveSubscriber();
         return;
-      }
-
-      if (emailFromUrl) {
-        localStorage.setItem('userEmail', emailFromUrl);
-        window.history.replaceState({}, document.title, window.location.pathname);
-        updateWelcomeNote();
       }
 
       hideAllScreens();
@@ -795,7 +805,6 @@
       if(globalHeader) globalHeader.style.display = 'none';
     }
 
-    // LOCKSCREEN OVERLAY HANDLER
     function openLockscreen() {
       const taskCard = document.getElementById('task-content-text');
       let displayText = "";
@@ -817,7 +826,6 @@
       document.getElementById('lockscreen-overlay').style.display = 'none';
     }
 
-    // CLEAN HEADER WITH NO EMOJI ON LINE 1
     function updateGlobalHeader() {
       const currentLevel = localStorage.getItem('userLevel') || '1';
       const points = parseInt(localStorage.getItem('auraPoints') || '0', 10);
@@ -830,8 +838,8 @@
     }
 
     async function routeActiveSubscriber() {
-      autoSyncUntabulatedPoints(); // Sync un-reflected clicks from past days
-      processPendingLevelUp();     // Process level up in background automatically
+      await autoSyncUntabulatedPoints();
+      processPendingLevelUp();
       hideAllScreens();
       updateGlobalHeader(); 
       updateStreakUI();
@@ -844,7 +852,6 @@
       const hasCheckedInToday = localStorage.getItem(`reflection_${todayDateKey}`) === 'true';
       const isDevActive = isDev || localStorage.getItem('isDevMode') === 'true';
 
-      // CORRECTED WEEKEND CONDITION (Weekend starts Saturday 00:00 AM)
       let isWeekend = (day === 6) || (day === 0) || (day === 1 && hour < 8);
       let isCheckInWindow = (hour === 21 && minute >= 30) || (hour === 22) || (hour === 23);
       let isNightTime = (hour >= 0 && hour < 8);
@@ -859,7 +866,7 @@
       }
 
       if (isReflectionTrigger && !isWeekend && !isNightTime) {
-        tabulateAndSyncDailyScore(todayDateKey);
+        await tabulateAndSyncDailyScore(todayDateKey);
         return;
       }
 
@@ -885,7 +892,6 @@
 
         if (isWeekend) {
           cardHeaderTitle.textContent = "WEEKEND REST";
-          
           const restPhrases = {
             'Aura': 'Protect your energy.',
             'Beauty': 'Nurture your glow.',
@@ -893,7 +899,6 @@
             'Charisma': 'Renew your spark.'
           };
           const secondLine = restPhrases[focus] || 'Protect your energy.';
-
           taskContentText.innerHTML = `<strong>Tasks Completed This Week: ${completedThisWeek}</strong><br><br>Rest is an active part of growth.<br>${secondLine}<br><br><strong>Be sure to check your next task on Monday at 8:00 AM.</strong>`;
         } else {
           cardHeaderTitle.textContent = "NIGHT REST";
@@ -946,8 +951,9 @@
                 taskInstruction.textContent = habitText;
                 taskInstruction.style.display = 'block';
               }
-            } else throw new Error();
+            } else throw new Error(`HTTP ${response.status}`);
           } catch (err) {
+            showAppNotification("Advice Fetch Failed: " + err.message);
             rawTaskText = FALLBACK_TASKS[0].task;
             const habitText = FALLBACK_TASKS[0].habit;
             renderFormattedTask(taskContentText, rawTaskText);
@@ -979,8 +985,7 @@
       clicks++;
       localStorage.setItem(`${todayDateKey}_clicks`, clicks);
 
-      // AUTO-UPDATE STREAK TICK IMMEDIATELY WHEN AT LEAST 1 CLICK IS RECORDED
-      const currentDayOfWeek = now.getDay(); // 1 = Mon, 2 = Tue, 3 = Wed, 4 = Thu, 5 = Fri
+      const currentDayOfWeek = now.getDay();
       if (clicks >= 1 && currentDayOfWeek >= 1 && currentDayOfWeek <= 5) {
         localStorage.setItem(`streak_day_${currentDayOfWeek}`, 'true');
         updateStreakUI();
@@ -994,38 +999,52 @@
       if(navigator.vibrate) navigator.vibrate([50]);
     }
 
-    function tabulateAndSyncDailyScore(dateKey) {
-      localStorage.setItem(`reflection_${dateKey}`, 'true');
-      let rawClicks = parseInt(localStorage.getItem(`${dateKey}_clicks`) || '0');
+    async function tabulateAndSyncDailyScore(dateKey) {
+      let rawClicks = parseInt(localStorage.getItem(`${dateKey}_clicks`) || '0', 10);
       let isDevActive = isDev || localStorage.getItem('isDevMode') === 'true';
-      
       let earnedToday = Math.min(rawClicks, 8); 
 
-      // 9:30 PM STREAK TICK UPDATE
       const now = new Date();
-      const currentDayOfWeek = now.getDay(); // 1 = Mon, 2 = Tue, 3 = Wed, 4 = Thu, 5 = Fri
+      const currentDayOfWeek = now.getDay();
       if (earnedToday >= 1 && currentDayOfWeek >= 1 && currentDayOfWeek <= 5) {
         localStorage.setItem(`streak_day_${currentDayOfWeek}`, 'true');
       }
 
-      let totalPoints = parseInt(localStorage.getItem('auraPoints') || '0', 10);
-      totalPoints += earnedToday; 
-      localStorage.setItem('auraPoints', totalPoints);
-      
-      let weekly = parseInt(localStorage.getItem('weeklyCompleted') || '0', 10);
-      if(earnedToday > 0) localStorage.setItem('weeklyCompleted', (weekly + 1));
+      let totalPoints = parseInt(localStorage.getItem('auraPoints') || '0', 10) + earnedToday;
+      let weekly = parseInt(localStorage.getItem('weeklyCompleted') || '0', 10) + (earnedToday > 0 ? 1 : 0);
+      let userEmail = localStorage.getItem('userEmail');
+      let userFocus = localStorage.getItem('userFocus') || 'Aura';
+      let userLevel = parseInt(localStorage.getItem('userLevel') || '1', 10);
+
+      if (!userEmail && !isDevActive) {
+        showAppNotification("⚠️ Email missing. Open Stripe link to pair email.");
+        return;
+      }
 
       if (!isDevActive) {
-        const userEmail = localStorage.getItem('userEmail');
-        const userFocus = localStorage.getItem('userFocus') || 'Aura';
-        const userLevel = parseInt(localStorage.getItem('userLevel') || '1', 10);
-        if (userEmail) {
-          fetch(`${WEBHOOK_BASE}/update-points`, {
+        try {
+          const response = await fetch(`${WEBHOOK_BASE}/update-points`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: userEmail, points: totalPoints, focus: userFocus, level: userLevel })
-          }).catch(() => {});
+          });
+
+          if (response.ok) {
+            localStorage.setItem(`reflection_${dateKey}`, 'true');
+            localStorage.setItem('auraPoints', totalPoints);
+            if (earnedToday > 0) localStorage.setItem('weeklyCompleted', weekly);
+          } else {
+            showAppNotification(`Point Sync Failed: HTTP ${response.status}`);
+            return;
+          }
+        } catch (err) {
+          showAppNotification(`Point Sync Error: ${err.message}`);
+          return;
         }
+      } else {
+        localStorage.setItem(`reflection_${dateKey}`, 'true');
+        localStorage.setItem('auraPoints', totalPoints);
+        if (earnedToday > 0) localStorage.setItem('weeklyCompleted', weekly);
       }
 
       hideAllScreens();
@@ -1079,7 +1098,6 @@
       const isDevActive = isDev || localStorage.getItem('isDevMode') === 'true';
       const userEmail = localStorage.getItem('userEmail') || (isDevActive ? 'dev@test.com' : '');
 
-      // PREVENT SUBSCRIPTION WITH EMPTY EMAIL
       if (!userEmail && !isDevActive) {
         statusMessage.textContent = "Error: No email linked. Please open your registration link from Stripe.";
         statusMessage.className = "status-sub error";
