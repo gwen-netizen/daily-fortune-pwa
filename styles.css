@@ -116,3 +116,11 @@ body {
 .tier-box.selected { border-color: var(--premium-color); background: #FFFFFF; }
 
 .btn-bypass { font-size: 13px; color: #9C8E80; background: none; border: none; cursor: pointer; text-decoration: underline; margin-top: 10px;}
+
+/* Custom Completion Action Accent */
+.btn-success-action {
+  background-color: var(--success-color) !important;
+  box-shadow: 0 8px 24px rgba(74, 124, 89, 0.2);
+  margin-bottom: 4px;
+}
+
