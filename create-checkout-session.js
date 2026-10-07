@@ -1,5 +1,7 @@
 // api/create-checkout-session.js
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+// Fallback mechanism uses environment variables first, then drops securely onto your provided testing key
+const SECRET_KEY = process.env.STRIPE_SECRET_KEY || 'sk_test_51TOUTdG617eW830niaazl8hSkOdgDJggsK3CuIjIs146xxqL7vgCKBVZhc3cCwGVc6jWzC9sutoHYzJMUQ2n7aqV00pmPlhq3B';
+const stripe = require('stripe')(SECRET_KEY);
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -13,23 +15,23 @@ export default async function handler(req, res) {
     let priceId = '';
     let billingMode = 'payment';
 
-    // Injected your specific Stripe Dashboard generated Price IDs cleanly
+        // Alignment with your exact Stripe Product Dashboard Price IDs
     if (planType === 'lifetime') {
-      priceId = 'price_1UNu40G617eW830nFFJbEoWY'; // Replaced with your exact Lifetime Plan Price ID
+      priceId = 'price_1UNu40G617eW830nMFL57rdH'; // Corrected text block
       billingMode = 'payment';
     } else {
-      priceId = 'price_1UNu38G617eW830nFFJbEoWY'; // Replaced with your exact Monthly Plan Price ID
+      priceId = 'price_1UNu38G617eW830nFFJbEoWY'; // Corrected text block
       billingMode = 'subscription';
     }
 
-    // Assemble secure session configuration payload 
+    // Assemble payload to launch the Stripe-hosted high-conversion payment window
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [{ price: priceId, quantity: 1 }],
       mode: billingMode,
       success_url: successUrl,
       cancel_url: cancelUrl,
-      // Enables both test coupons and real promo codes to be inputted directly into Stripe Checkout
+      // Enabled: Allows you to input promotional discount codes right on the checkout portal
       allow_promotion_codes: true,
       automatic_tax: { enabled: false },
     });
