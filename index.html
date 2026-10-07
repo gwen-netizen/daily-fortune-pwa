@@ -9,174 +9,409 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
-  <!-- Link External Stylesheet -->
-  <link rel="stylesheet" href="styles.css">
-  
   <!-- Web App Manifest for PWA Installation -->
   <link rel="manifest" href="manifest.json">
 
   <!-- Confetti Utility Library for the Dopamine Reward Phase -->
   <script src="https://jsdelivr.net"></script>
-</head>
-<body>
 
-  <!-- Premium Native Audio Chime Hook (Uses clean, high-clarity notification chime) -->
-  <audio id="victory-chime" src="https://mixkit.co" preload="auto"></audio>
+  <style>
+    :root {
+      --bg-color: #FAF7F2;
+      --text-color: #2D2B2A;
+      --card-bg: #FFFFFF;
+      --accent-color: #D4A373;
+      --premium-color: #8A735D;
+      --success-color: #4A7C59;
+      --timer-color: #E07A5F;
+    }
 
-  <div class="app-container">
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+      -webkit-tap-highlight-color: transparent;
+    }
 
-    <!-- SCREEN 1: ONBOARDING HOOK -->
-    <div id="screen-onboarding-1" class="screen active">
-      <div style="margin: auto 0; width: 100%;">
-        <h1 class="title-large">2 Min<br>Turnaround</h1>
-        <p class="body-text">The behavioral circuit breaker. Interrupt screen addiction and task paralysis instantly in exactly 120 seconds.</p>
-      </div>
-      <button class="btn-primary" onclick="switchScreen('screen-onboarding-2')">Take Control</button>
-    </div>
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex; 
+      justify-content: center; 
+      align-items: center;
+      min-height: 100vh; 
+      overflow: hidden; 
+      touch-action: manipulation;
+      user-select: none; 
+      -webkit-user-select: none;
+    }
 
-    <!-- SCREEN 2: ONBOARDING PERSONALITY SELECTION -->
-    <div id="screen-onboarding-2" class="screen">
-      <div style="width: 100%;">
-        <h2 class="title-large" style="font-size: 22px; margin-bottom: 6px;">Identify Your Friction Line</h2>
-        <p class="body-text" style="font-size: 14px; margin-bottom: 20px;">We program your dynamic loops based on how your brain loses focus.</p>
-        
-        <div class="onboarding-options">
-          <div class="option-card selected" onclick="selectOption(this)">
-            <div class="option-title">⚡ Mindless Loop Scrolling</div>
-            <div class="option-desc">For the Dopamine-Starved Avoider trapped in systemic social video algorithms.</div>
-          </div>
-          <div class="option-card" onclick="selectOption(this)">
-            <div class="option-title">🧠 Intimidating Task Paralysis</div>
-            <div class="option-desc">For the Overwhelmed Procrastinator frozen by complex, multi-step actions.</div>
-          </div>
-          <div class="option-card" onclick="selectOption(this)">
-            <div class="option-title">🌱 Low Physical Presence</div>
-            <div class="option-desc">For building subtle structural charisma, hydration habits, and physical presence.</div>
-          </div>
-        </div>
-      </div>
-      <!-- Progresses cleanly directly onto the target focus zone dashboard menu -->
-      <button class="btn-primary" onclick="switchScreen('screen-dashboard')">Calibrate Behavioral Deck</button>
-    </div>
+    .app-container {
+      width: 100%; 
+      max-width: 420px; 
+      height: 94vh; 
+      padding: 16px; 
+      position: relative;
+    }
 
-    <!-- SCREEN 3: DASHBOARD MENU (TARGET FOCUS PAGE) -->
-    <div id="screen-dashboard" class="screen">
-      <div style="width: 100%;">
-        <!-- Metric ribbon adjusted: Shifted from rigid day streaks to an fluid cumulative Win Stack count -->
-        <div class="metric-ribbon">
-          <div class="metric-block">
-            <span class="metric-num" id="stat-streaks">0</span>
-            <span class="metric-lbl">Total Wins</span>
-          </div>
-          <div class="metric-block">
-            <span class="metric-num" id="stat-focus">0.0m</span>
-            <span class="metric-lbl">Friction Saved</span>
-          </div>
-        </div>
+    .screen {
+      background-color: var(--card-bg); 
+      border-radius: 32px; 
+      padding: 36px 24px; 
+      text-align: center;
+      box-shadow: 0 24px 60px rgba(45, 43, 42, 0.05); 
+      width: calc(100% - 32px); 
+      height: calc(100% - 32px); 
+      position: absolute; 
+      top: 16px; 
+      left: 16px; 
+      opacity: 0; 
+      visibility: hidden; 
+      transform: translateY(20px); 
+      transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.4s;
+      display: flex; 
+      flex-direction: column; 
+      justify-content: space-between; 
+      align-items: center; 
+      overflow-y: auto;
+    }
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin: 16px 4px 8px 4px;">
-          <h2 class="title-large" style="font-size: 18px; letter-spacing: -0.3px; margin: 0;">Target Focus Area</h2>
-          <!-- NEW: Recalibrate Navigation link allowing swift backtracking to change baseline profile variables -->
-          <button class="btn-text-nav" onclick="switchScreen('screen-onboarding-2')">🔄 Change Issue</button>
-        </div>
+    .screen.active { 
+      opacity: 1; 
+      visibility: visible; 
+      transform: translateY(0); 
+      z-index: 10; 
+    }
 
-        <!-- Automated Smart Install Prompt Banner Hook (Hidden by default unless custom browser query matches triggers) -->
-        <div id="pwa-install-banner" class="install-banner" style="display: none;">
-          <div style="font-size: 13px; font-weight: 600; color: var(--premium-color);">⚡ Install App to Home Screen</div>
-          <button class="btn-small-install" id="pwa-install-btn">Add Now</button>
-        </div>
+    .title-large { 
+      font-weight: 800; 
+      font-size: 32px; 
+      line-height: 1.15; 
+      color: var(--text-color); 
+      letter-spacing: -0.5px; 
+    }
 
-        <div class="deck-list">
-          <div class="deck-item selected" onclick="selectDeck(this, false)">
-            <div class="deck-meta free">CORE ENGINE</div>
-            <div class="deck-name">The Charisma Deck</div>
-            <div class="deck-desc">Micro-actions to build instant physical stance, posture, and vocal projection.</div>
-          </div>
-          <div class="deck-item" onclick="selectDeck(this, false)">
-            <div class="deck-meta free">CORE ENGINE</div>
-            <div class="deck-name">The Quiet Wealth Deck</div>
-            <div class="deck-desc">Re-wire your perspective on immediate financial opportunity awareness.</div>
-          </div>
-          <div class="deck-item" onclick="selectDeck(this, true)">
-            <div class="deck-meta premium">PREMIUM UPGRADE</div>
-            <div class="deck-name">⚡ The Dopamine Swap Deck</div>
-            <div class="deck-desc">Intercepts hyper-stimulating phone apps to route focus to real wins.</div>
-          </div>
-          <div class="deck-item" onclick="selectDeck(this, true)">
-            <div class="deck-meta premium">PREMIUM UPGRADE</div>
-            <div class="deck-name">🧠 The Anti-Overwhelm Deck</div>
-            <div class="deck-desc">Shatters decision stress down to one simple, non-negotiable directive.</div>
-          </div>
-        </div>
-      </div>
-      <button class="btn-primary" style="margin-top: 12px;" onclick="startTriggerPhase()">Configure Interception</button>
-    </div>
+    .title-deck { 
+      font-weight: 800; 
+      font-size: 24px; 
+      color: var(--accent-color); 
+      letter-spacing: -0.3px; 
+    }
 
-    <!-- SCREEN 4: THE TRIGGER (SPIN BUTTON) -->
-    <div id="screen-trigger" class="screen">
-      <div style="margin-top: 10px;">
-        <h2 class="title-deck" id="active-deck-title">The Charisma Deck</h2>
-        <p class="body-text" style="font-size: 14px;" id="trigger-instructions">Take one slow, long breath before pushing.</p>
-      </div>
-      
-      <div class="spin-outer-ring">
-        <button class="big-red-btn" onclick="executeTurnaroundSpin()">START</button>
-      </div>
-      
-      <div>
-        <p class="italic-hint">Commit to the next 120 seconds completely.</p>
-        <button class="btn-bypass" onclick="switchScreen('screen-dashboard')">Change Focus Area</button>
-      </div>
-    </div>
+    .body-text { 
+      font-size: 15px; 
+      line-height: 1.5; 
+      color: #6E6A67; 
+      margin-top: 8px; 
+    }
 
-    <!-- SCREEN 5: LIVE COUNTDOWN TIMELINE -->
-    <div id="screen-countdown" class="screen">
-      <div class="title-deck" style="color: var(--timer-color); font-size: 14px; letter-spacing: 1px;">⚡ ACTIVE CONSTRAINTS IN EFFECT</div>
-      
-      <div class="task-display-card">
-        <p id="target-task-text" class="task-display-text">Loading baseline alignment task...</p>
-      </div>
+    .italic-hint { 
+      font-size: 13px; 
+      color: #9C8E80; 
+      font-style: italic; 
+      line-height: 1.4; 
+    }
 
-      <div style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 8px;">
-        <div id="timer-display" class="timer-ring">02:00</div>
-        
-        <button class="btn-primary btn-success-action" onclick="finishEarly()">Complete Early</button>
-        <button class="btn-bypass" onclick="cancelTimer()">Abort Task</button>
-      </div>
-    </div>
+    .metric-ribbon {
+      display: flex; 
+      width: 100%; 
+      background: #FAF7F2; 
+      border-radius: 20px; 
+      padding: 14px; 
+      gap: 10px; 
+      margin-bottom: 8px;
+    }
 
-    <!-- SCREEN 6: VICTORY CELEBRATION -->
-    <div id="screen-victory" class="screen">
-      <div style="margin: auto 0; width: 100%;">
-        <div class="victory-crown">🏆</div>
-        <h2 class="title-large" style="color: var(--success-color); margin-bottom: 8px;">Identity Calibrated.</h2>
-        <p class="body-text" style="margin-top: 8px;" id="victory-validation-copy">You chose action while the world chose mindless distraction. Your forward momentum is locked in.</p>
-      </div>
-      <button class="btn-primary" style="background-color: var(--success-color);" onclick="claimRewardStack()">Claim Reward Stack</button>
-    </div>
+    .metric-block { 
+      flex: 1; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      justify-content: center; 
+    }
 
-    <!-- PREMIUM PAYWALL OVERLAY -->
-    <div id="paywall-overlay" class="paywall-modal">
-      <div>
-        <h2 class="title-large" style="color: var(--premium-color); text-align: left; font-size: 24px;">Break Free From the Loops</h2>
-        <p class="body-text" style="font-size: 14px; text-align: left; margin-bottom: 20px;">Unlock behavioral overrides modeled on top neural productivity systems.</p>
-        
-        <div class="paywall-features">
-          <div class="feature-item"><span>⚡</span> <div><b>The Dopamine Swap:</b> Intercepts short-form screen addictions instantly.</div></div>
-          <div class="feature-item"><span>🧠</span> <div><b>The Anti-Overwhelm Protocol:</b> Permanently bypasses decision-making paralysis.</div></div>
-          <div class="feature-item"><span>📈</span> <div><b>Progress Matrix:</b> Real-time visualization tracking metrics and time claimed back.</div></div>
-        </div>
+    .metric-num { 
+      font-size: 22px; 
+      font-weight: 800; 
+      color: var(--text-color); 
+    }
 
-        <div class="tier-box selected" onclick="selectTier(this)">
-          <span style="float: right; font-weight: 800; color: var(--premium-color);">$14.99</span>
-          <div style="font-weight: 700; font-size: 15px;">Lifetime Freedom Access</div>
-          <div style="font-size: 12px; color: #7A7571; margin-top: 2px;">One-time transaction. No lingering payment stress.</div>
-        </div>
-        <div class="tier-box" onclick="selectTier(this)">
-          <span style="float: right; font-weight: 800;">$2.99/mo</span>
-          <div style="font-weight: 700; font-size: 15px;">Continuous Momentum Plan</div>
-          <div style="font-size: 12px; color: #7A7571; margin-top: 2px;">Billed monthly. Cancel instantly with zero friction hooks.</div>
-        </div>
-      </div>
+    .metric-lbl { 
+      font-size: 11px; 
+      font-weight: 700; 
+      color: #9C8E80; 
+      text-transform: uppercase; 
+      letter-spacing: 0.3px; 
+      margin-top: 2px; 
+    }
 
-      <div style="width: 100%;">
+    .onboarding-options { 
+      width: 100%; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 12px; 
+      margin-top: 24px; 
+    }
+
+    .option-card {
+      background: #FAF7F2; 
+      border: 2px solid #FAF7F2; 
+      border-radius: 20px; 
+      padding: 18px; 
+      text-align: left; 
+      cursor: pointer; 
+      transition: all 0.2s ease;
+    }
+
+    .option-card.selected { 
+      border-color: var(--accent-color); 
+      background: #FFFFFF; 
+      box-shadow: 0 8px 24px rgba(212, 163, 115, 0.1); 
+    }
+
+    .option-title { 
+      font-weight: 800; 
+      font-size: 16px; 
+      color: var(--text-color); 
+    }
+
+    .option-desc { 
+      font-size: 13px; 
+      color: #7A7571; 
+      line-height: 1.4; 
+      margin-top: 4px; 
+    }
+
+    .deck-list { 
+      width: 100%; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 10px; 
+    }
+
+    .deck-item {
+      background: #FAF7F2; 
+      border: 2px solid transparent; 
+      border-radius: 20px; 
+      padding: 16px; 
+      text-align: left; 
+      cursor: pointer; 
+      transition: all 0.2s ease;
+    }
+
+    .deck-item.selected { 
+      border-color: var(--accent-color); 
+      background: #FFFFFF; 
+      box-shadow: 0 8px 24px rgba(45, 43, 42, 0.03); 
+    }
+
+    .deck-meta { 
+      font-weight: 800; 
+      font-size: 10px; 
+      letter-spacing: 0.8px; 
+      margin-bottom: 2px; 
+    }
+
+    .deck-meta.free { color: var(--success-color); }
+    .deck-meta.premium { color: var(--premium-color); }
+    .deck-name { font-weight: 800; font-size: 16px; color: var(--text-color); }
+    .deck-desc { font-size: 13px; color: #7A7571; margin-top: 3px; line-height: 1.4; }
+
+    .btn-primary {
+      width: 100%; 
+      padding: 18px; 
+      border: none; 
+      border-radius: 20px; 
+      font-size: 16px; 
+      font-weight: 700;
+      cursor: pointer; 
+      background-color: var(--text-color); 
+      color: #FFFFFF; 
+      transition: transform 0.1s, opacity 0.2s;
+    }
+
+    .btn-primary:active { 
+      transform: scale(0.98); 
+      opacity: 0.9; 
+}
+
+    .btn-success-action { 
+      background-color: var(--success-color) !important; 
+      box-shadow: 0 8px 24px rgba(74, 124, 89, 0.2);
+      margin-bottom: 4px; 
+    }
+
+    .spin-outer-ring {
+      width: 220px; 
+      height: 220px; 
+      border-radius: 50%; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center;
+      background: rgba(255, 107, 91, 0.05); 
+      margin: auto; 
+      animation: radialPulse 2.5s infinite ease-in-out;
+    }
+
+    .big-red-btn {
+      background: linear-gradient(135deg, #FF6B5B 0%, #D94E3D 100%); 
+      border: none; 
+      width: 180px; 
+      height: 180px; 
+      border-radius: 50%;
+      cursor: pointer; 
+      box-shadow: 0 20px 45px rgba(217, 78, 61, 0.25), inset 0 4px 12px rgba(255, 255, 255, 0.3);
+      font-size: 24px; 
+      font-weight: 900; 
+      color: #FFFFFF; 
+      letter-spacing: 0.5px; 
+      transition: transform 0.1s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .big-red-btn:active { transform: scale(0.92); }
+
+    .timer-ring { 
+      font-size: 56px; 
+      font-weight: 800; 
+      color: var(--timer-color); 
+      margin: 12px 0; 
+      font-family: -apple-system-font, monospace; 
+      letter-spacing: -1px; 
+    }
+
+    .task-display-card {
+      background: #FAF7F2; 
+      border: 2px dashed #EAE3D9; 
+      padding: 28px 24px; 
+      border-radius: 24px; 
+      width: 100%; 
+      margin: auto 0;
+    }
+
+    .task-display-text { 
+      font-size: 18px; 
+      font-weight: 700; 
+      line-height: 1.5; 
+      color: var(--text-color); 
+      letter-spacing: -0.2px; 
+    }
+
+    .victory-crown { 
+      font-size: 64px; 
+      margin-bottom: 8px; 
+      animation: scaleEntrance 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+    }
+
+    .paywall-modal {
+      position: absolute; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      background: #FAF7F2; 
+      z-index: 100;
+      border-radius: 32px; 
+      padding: 36px 24px; 
+      display: flex; 
+      flex-direction: column; 
+      justify-content: space-between;
+      opacity: 0; 
+      visibility: hidden; 
+      transform: scale(0.95); 
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .paywall-modal.active { opacity: 1; visibility: visible; transform: scale(1); }
+
+    .paywall-features { 
+      text-align: left; 
+      width: 100%; 
+      margin: 20px 0; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 14px; 
+    }
+
+    .feature-item { 
+      font-size: 14px; 
+      font-weight: 500; 
+      display: flex; 
+      align-items: flex-start; 
+      gap: 12px; 
+      line-height: 1.4; 
+      color: #555250; 
+    }
+
+    .feature-item span { font-size: 18px; line-height: 1; }
+
+    .tier-box {
+      border: 2px solid #EAE3D9; 
+      border-radius: 20px; 
+      padding: 18px; 
+      width: 100%; 
+      text-align: left; 
+      margin-bottom: 12px; 
+      cursor: pointer; 
+      background: #FFFFFF; 
+      transition: border-color 0.2s;
+    }
+
+    .tier-box.selected { 
+      border-color: var(--premium-color); 
+      box-shadow: 0 8px 24px rgba(138, 115, 93, 0.08); 
+    }
+
+    .btn-bypass { 
+      font-size: 14px; 
+      font-weight: 600; 
+      color: #A8A29E; 
+      background: none; 
+      border: none; 
+      cursor: pointer; 
+      text-decoration: none; 
+      margin-top: 8px; 
+      transition: color 0.2s; 
+    }
+
+    .btn-bypass:hover { color: var(--text-color); }
+
+    .btn-text-nav {
+      background: none;
+      border: none;
+      color: var(--accent-color);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+
+    .btn-text-nav:active { background: rgba(212, 163, 115, 0.08); }
+
+    .install-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #FFFBF7;
+      border: 1px solid #EAE3D9;
+      border-radius: 14px;
+      padding: 10px 14px;
+      margin-bottom: 14px;
+      animation: scaleEntrance 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn-small-install {
+      background: var(--text-color);
+      color: #FFFFFF;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-small-install:active { opacity: 0.85; }
+
