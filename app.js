@@ -117,6 +117,14 @@ function startActionTimer(seconds) {
   }, 1000);
 }
 
+/**
+ * Instantly intercepts the running clock when user finishes the activity early
+ */
+function finishEarly() {
+  clearInterval(countdownInterval);
+  triggerVictoryPhase();
+}
+
 function cancelTimer() {
   clearInterval(countdownInterval);
   switchScreen('screen-dashboard');
