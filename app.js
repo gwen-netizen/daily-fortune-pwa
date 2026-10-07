@@ -17,7 +17,9 @@ const victoryValidationStrings = [
 
 let isPremiumSelected = false;
 let countdownInterval = null;
-let currentStreak = parseInt(localStorage.getItem('nudge_streak') || '0');
+
+// METRIC RETAINMENT LOAD: Shifted from single day-streaks to a cumulative Win Log ecosystem
+let totalWinsCount = parseInt(localStorage.getItem('nudge_total_wins') || '0');
 let totalMinutesSaved = parseFloat(localStorage.getItem('nudge_minutes') || '0.0');
 
 // Initial metric interface deployment bootstrap
@@ -26,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function updateMetricDashboard() {
-  document.getElementById('stat-streaks').innerText = currentStreak;
+  document.getElementById('stat-streaks').innerText = totalWinsCount;
   document.getElementById('stat-focus').innerText = totalMinutesSaved.toFixed(1) + 'm';
 }
 
@@ -34,7 +36,6 @@ function switchScreen(screenId) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(screenId).classList.add('active');
   
-  // UX Optimization: Reset trigger screen strings if returning to start
   if(screenId === 'screen-trigger') {
     document.getElementById('trigger-instructions').innerText = "Take one slow, long breath before pushing.";
     document.querySelector('.big-red-btn').innerText = "START";
@@ -79,9 +80,6 @@ function simulatePurchase() {
   switchScreen('screen-trigger');
 }
 
-/**
- * Mindful Friction Interception Pattern (Inspired by One Sec app dynamics)
- */
 function executeTurnaroundSpin() {
   const btn = document.querySelector('.big-red-btn');
   const instruction = document.getElementById('trigger-instructions');
@@ -89,7 +87,6 @@ function executeTurnaroundSpin() {
   btn.innerText = "HOLD...";
   instruction.innerText = "Exhale slowly... allowing your focus to narrow down completely.";
   
-  // Variable sensory feedback timing to stop impulsive looping choices
   setTimeout(() => {
     const randomTask = taskDatabase[Math.floor(Math.random() * taskDatabase.length)];
     document.getElementById('target-task-text').innerText = randomTask;
@@ -116,13 +113,12 @@ function startActionTimer(seconds) {
 
     if (--timeLeft < 0) {
       clearInterval(countdownInterval);
-      triggerVictoryPhase(2.0); // Full 2 minutes saved allocation
+      triggerVictoryPhase(2.0); 
     }
   }, 1000);
 }
 
 function finishEarly() {
-  // UX Calibration: Calculate exactly how much active friction time was intercepted early
   const displayVal = document.getElementById('timer-display').innerText;
   const parts = displayVal.split(':');
   const elapsedSeconds = 120 - (parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10));
@@ -134,24 +130,36 @@ function finishEarly() {
 
 function cancelTimer() {
   clearInterval(countdownInterval);
-  currentStreak = 0; // Penalize behavior drop tracking to encourage platform value stickiness
-  localStorage.setItem('nudge_streak', '0');
+  // Non-punitive reset: Since it's no longer a streak tracker, users keep their total count even if they cancel a task
   updateMetricDashboard();
   switchScreen('screen-dashboard');
 }
 
+/**
+ * Trigger behavioral confirmation loops with canvas visuals and premium audio chimes
+ */
 function triggerVictoryPhase(minutesEarned) {
-  // Pick structural identity copy variant
   const copy = victoryValidationStrings[Math.floor(Math.random() * victoryValidationStrings.length)];
   document.getElementById('victory-validation-copy').innerText = copy;
   
-  // Increment state variables
-  currentStreak += 1;
+  // Increments metrics cumulatively without enforcing strict calendar tracking bounds
+  totalWinsCount += 1;
   totalMinutesSaved += minutesEarned;
   
-  localStorage.setItem('nudge_streak', currentStreak.toString());
+  localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
   localStorage.setItem('nudge_minutes', totalMinutesSaved.toString());
   
+  // PREMIUM AUDIO REWARD ANCHOR: Fires high-clarity victory tone safely on mobile devices
+  try {
+    const audioNode = document.getElementById('victory-chime');
+    if (audioNode) {
+      audioNode.currentTime = 0;
+      audioNode.play().catch(err => console.log("Audio node autoplay blocked by mobile gesture lifecycle rules:", err));
+    }
+  } catch (audioError) {
+    console.warn("Audio chime initialization intercepted:", audioError);
+  }
+
   switchScreen('screen-victory');
   
   try {
