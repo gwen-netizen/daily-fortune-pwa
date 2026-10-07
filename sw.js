@@ -7,16 +7,22 @@ self.addEventListener('push', function(event) {
     try {
       data = event.data.json();
     } catch (e) {
-      data = { title: "Fortune Workout", body: event.data.text() };
+      // Rebranded fallback title and copy to match the new psychological framing
+      data = { 
+        title: "2 Min Turnaround", 
+        body: event.data.text() || "Stuck in a loop? Tap to launch a 120-second circuit breaker." 
+      };
     }
   }
 
-  const title = data.title || "Daily Guidance";
+  const title = data.title || "Brain Reset Available";
   const options = {
-    body: data.body || "Tap to view your daily fortune workout.",
-    icon: data.icon || "/icon-192.png",
-    badge: data.badge || "/icon-192.png", // Falls back to the main icon if a specific badge isn't available
-    vibrate: [100, 50, 100],
+    body: data.body || "Tap to smash the button and shatter your current procrastination loop.",
+    // Updated default paths to a generic icon naming convention
+    icon: data.icon || "/icon-512.png",
+    badge: data.badge || "/icon-512.png", 
+    // Double pulse pattern designed to penetrate deep attention blocks
+    vibrate:, 
     data: {
       url: (data.data && data.data.url) ? data.data.url : "/"
     }
@@ -27,7 +33,7 @@ self.addEventListener('push', function(event) {
   );
 });
 
-// Handles tap/click on mobile pull-down banner
+// Handles tap/click on mobile pull-down banner notifications
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
   
@@ -36,14 +42,14 @@ self.addEventListener('notificationclick', function(event) {
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
-      // If the PWA is already open in the background, bring it to the foreground
+      // If the PWA is already open in the background, bring it to the foreground immediately
       for (let i = 0; i < clientList.length; i++) {
         let client = clientList[i];
         if (client.url.includes(urlToOpen) && 'focus' in client) {
           return client.focus();
         }
       }
-      // If the PWA is fully closed, launch it
+      // If the PWA is fully closed, launch it instantly
       if (clients.openWindow) {
         return clients.openWindow(urlToOpen);
       }
