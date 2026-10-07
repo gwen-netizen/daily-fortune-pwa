@@ -1,37 +1,51 @@
-// Pool of curated tasks mapped to lower executive friction requirements
+// Neuro-calibrated text arrays mapping to the core problem solutions
 const taskDatabase = [
-  "Do the thing you've been avoiding for just two minutes. Feel the absolute win of breaking the friction line.",
-  "Roll your shoulders cleanly back and stand completely tall. Head up, chest wide open. Let your physical stance re-wire focus.",
-  "Put your screen completely away for the remaining countdown time. Sit in absolute stillness and listen to the environment background.",
-  "Clear off your immediate desk array. Snatch one loose piece of visual clutter and drop it directly into the bin.",
-  "Drink a complete glass of pure water immediately. Re-hydrate your system and trigger a fresh metabolic physical reset.",
-  "Write down or mentally lock in one thing you are genuinely excellent at doing. Do not compare it or reduce it for anyone.",
-  "Take three deep abdominal breaths right now. Hold at the top for three counts, then let it clear away structural nervous stress."
+  "Do the single task you have been avoiding for exactly two minutes. Move right now. No choices, just execution.",
+  "Roll your shoulders completely back, step away from the desk, and stand fully tall. Force a clean neurological change of state.",
+  "Invert your phone screen face down right now. Sit in continuous, total quiet breathing until the system chimes zero.",
+  "Locate one piece of physical friction or clutter in your visual field. Trash it or store it out of sight immediately.",
+  "Drink a full clean glass of water right now. Clear away physical systemic sludge and re-anchor attention fields.",
+  "Isolate one capability you brought to the table this week. Write it down or state it out loud without comparing it to anyone.",
+  "Take three deliberate, ultra-slow abdominal breaths. Lock focus onto the movement of your lungs. Clear the static."
 ];
 
-let selectedDeckElement = null;
+const victoryValidationStrings = [
+  "You chose active alignment while the rest of the world remained paralyzed on the couch scrolling algorithms. Momentum is yours.",
+  "Friction broken. By taking action for 120 seconds, you proved to your brain that execution is entirely safe.",
+  "The dopamine loop has been successfully redirected. You are now running on true clean execution energy."
+];
+
 let isPremiumSelected = false;
 let countdownInterval = null;
+let currentStreak = parseInt(localStorage.getItem('nudge_streak') || '0');
+let totalMinutesSaved = parseFloat(localStorage.getItem('nudge_minutes') || '0.0');
 
-/**
- * Screen state machine swapper
- */
+// Initial metric interface deployment bootstrap
+document.addEventListener("DOMContentLoaded", () => {
+  updateMetricDashboard();
+});
+
+function updateMetricDashboard() {
+  document.getElementById('stat-streaks').innerText = currentStreak;
+  document.getElementById('stat-focus').innerText = totalMinutesSaved.toFixed(1) + 'm';
+}
+
 function switchScreen(screenId) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(screenId).classList.add('active');
+  
+  // UX Optimization: Reset trigger screen strings if returning to start
+  if(screenId === 'screen-trigger') {
+    document.getElementById('trigger-instructions').innerText = "Take one slow, long breath before pushing.";
+    document.querySelector('.big-red-btn').innerText = "START";
+  }
 }
 
-/**
- * Handles choices within onboarding steps
- */
 function selectOption(el) {
   document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
 }
 
-/**
- * Tracks premium hooks vs free deck configs
- */
 function selectDeck(el, isPremium) {
   document.querySelectorAll('.deck-item').forEach(d => d.classList.remove('selected'));
   el.classList.add('selected');
@@ -41,9 +55,6 @@ function selectDeck(el, isPremium) {
   document.getElementById('active-deck-title').innerText = deckName;
 }
 
-/**
- * Intercepts selection process with a premium paywall modal if needed
- */
 function startTriggerPhase() {
   if (isPremiumSelected) {
     document.getElementById('paywall-overlay').classList.add('active');
@@ -61,40 +72,33 @@ function selectTier(el) {
   el.classList.add('selected');
 }
 
-/**
- * Resolves paywall states on mock purchase execution
- */
 function simulatePurchase() {
-  alert("Subscription integrated. Premium decks unlocked successfully for sandbox deployment!");
+  alert("Premium Access Initialized! Algorithmic interceptor systems unlocked.");
   isPremiumSelected = false; 
   closePaywall();
   switchScreen('screen-trigger');
 }
 
 /**
- * Leverages latency intervals to produce variable reward mechanics (Slot Machine Shuffle)
+ * Mindful Friction Interception Pattern (Inspired by One Sec app dynamics)
  */
 function executeTurnaroundSpin() {
   const btn = document.querySelector('.big-red-btn');
-  btn.innerText = "SHUFFLING...";
-  btn.style.opacity = "0.6";
-
-  // Intentional 1.2s delay to maximize anticipation loops
+  const instruction = document.getElementById('trigger-instructions');
+  
+  btn.innerText = "HOLD...";
+  instruction.innerText = "Exhale slowly... allowing your focus to narrow down completely.";
+  
+  // Variable sensory feedback timing to stop impulsive looping choices
   setTimeout(() => {
-    btn.innerText = "SPIN";
-    btn.style.opacity = "1";
-    
     const randomTask = taskDatabase[Math.floor(Math.random() * taskDatabase.length)];
     document.getElementById('target-task-text').innerText = randomTask;
     
     switchScreen('screen-countdown');
-    startActionTimer(120); // Initialize 2-minute countdown execution
-  }, 1200);
+    startActionTimer(120); 
+  }, 1500);
 }
 
-/**
- * Core 2-minute live timer clock logic
- */
 function startActionTimer(seconds) {
   const display = document.getElementById('timer-display');
   let timeLeft = seconds;
@@ -112,47 +116,54 @@ function startActionTimer(seconds) {
 
     if (--timeLeft < 0) {
       clearInterval(countdownInterval);
-      triggerVictoryPhase();
+      triggerVictoryPhase(2.0); // Full 2 minutes saved allocation
     }
   }, 1000);
 }
 
-/**
- * Instantly intercepts the running clock when user finishes the activity early
- */
 function finishEarly() {
+  // UX Calibration: Calculate exactly how much active friction time was intercepted early
+  const displayVal = document.getElementById('timer-display').innerText;
+  const parts = displayVal.split(':');
+  const elapsedSeconds = 120 - (parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10));
+  const elapsedMinutes = Math.max(0.2, elapsedSeconds / 60);
+
   clearInterval(countdownInterval);
-  triggerVictoryPhase();
+  triggerVictoryPhase(elapsedMinutes);
 }
 
 function cancelTimer() {
   clearInterval(countdownInterval);
+  currentStreak = 0; // Penalize behavior drop tracking to encourage platform value stickiness
+  localStorage.setItem('nudge_streak', '0');
+  updateMetricDashboard();
   switchScreen('screen-dashboard');
 }
 
-/**
- * Programmatic global check for canvas-confetti initialization
- */
-function triggerVictoryPhase() {
+function triggerVictoryPhase(minutesEarned) {
+  // Pick structural identity copy variant
+  const copy = victoryValidationStrings[Math.floor(Math.random() * victoryValidationStrings.length)];
+  document.getElementById('victory-validation-copy').innerText = copy;
+  
+  // Increment state variables
+  currentStreak += 1;
+  totalMinutesSaved += minutesEarned;
+  
+  localStorage.setItem('nudge_streak', currentStreak.toString());
+  localStorage.setItem('nudge_minutes', totalMinutesSaved.toString());
+  
   switchScreen('screen-victory');
   
   try {
     if (typeof confetti === 'function') {
-      confetti({
-        particleCount: 140,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#D4A373', '#4A7C59', '#2D2B2A']
-      });
-    } else if (window.confetti) {
-      window.confetti({
-        particleCount: 140,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#D4A373', '#4A7C59', '#2D2B2A']
-      });
+      confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#D4A373', '#4A7C59', '#2D2B2A'] });
     }
-  } catch (error) {
-    console.warn("Confetti resource initialization caught by server environment wrapper:", error);
+  } catch (e) {
+    console.log(e);
   }
+}
+
+function claimRewardStack() {
+  updateMetricDashboard();
+  switchScreen('screen-dashboard');
 }
