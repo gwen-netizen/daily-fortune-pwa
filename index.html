@@ -390,7 +390,7 @@
               </div>
             </div>
 
-            <!-- Slide 2: Red Button Tracker & Hit Counter (No Brackets) -->
+            <!-- Slide 2: Red Button Tracker & Live Hit Counter (No Brackets) -->
             <div class="slide" id="slide-2">
               <div style="font-size: 16px; font-weight: 800; color: var(--accent-color); margin-bottom: 15px; text-align: center;">
                 Press once each time the task is completed.
@@ -502,13 +502,10 @@
       const monthsToAdd = targetLevel - 1;
       const target = new Date(joinDate.getFullYear(), joinDate.getMonth() + monthsToAdd, joinDate.getDate());
       
-      // If target falls on weekend, queue to next Monday
+      // Defer weekend anniversaries to Monday
       const day = target.getDay();
-      if (day === 6) { // Saturday -> Defer to Monday (+2 days)
-        target.setDate(target.getDate() + 2);
-      } else if (day === 0) { // Sunday -> Defer to Monday (+1 day)
-        target.setDate(target.getDate() + 1);
-      }
+      if (day === 6) { target.setDate(target.getDate() + 2); }
+      else if (day === 0) { target.setDate(target.getDate() + 1); }
       target.setHours(0, 0, 0, 0);
       return target;
     }
@@ -529,7 +526,6 @@
         
         const loggedActiveDays = JSON.parse(localStorage.getItem('loggedActiveDays') || '[]');
         
-        // Count distinct active days during the current month cycle
         const cycleActiveDays = loggedActiveDays.filter(dateStr => {
           const d = new Date(dateStr);
           d.setHours(0, 0, 0, 0);
@@ -574,16 +570,35 @@
       }
     }
 
-    function handleShare() {
-      const shareUrl = window.location.origin + window.location.pathname;
+    async function handleShare() {
+      const shareData = {
+        title: 'Fortune Workout',
+        text: 'Check out Fortune Workout — daily push tasks to build your aura and focus!',
+        url: window.location.origin + window.location.pathname
+      };
+
+      if (navigator.share) {
+        try {
+          await navigator.share(shareData);
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            copyLinkToClipboard(shareData.url);
+          }
+        }
+      } else {
+        copyLinkToClipboard(shareData.url);
+      }
+    }
+
+    function copyLinkToClipboard(url) {
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(shareUrl).then(() => {
+        navigator.clipboard.writeText(url).then(() => {
           showAppNotification("Copied link");
         }).catch(() => {
-          fallbackCopyText(shareUrl);
+          fallbackCopyText(url);
         });
       } else {
-        fallbackCopyText(shareUrl);
+        fallbackCopyText(url);
       }
     }
 
@@ -791,7 +806,7 @@
       const emailFromUrl = urlParams.get('email');
       const isDevActive = isDev || localStorage.getItem('isDevMode') === 'true';
 
-      getJoinDate(); // Ensure join date is initialized
+      getJoinDate();
       updateWelcomeNote();
       updateStreakUI();
 
@@ -1119,7 +1134,6 @@
       clicks++;
       localStorage.setItem(`${todayDateKey}_clicks`, clicks);
 
-      // Track unique active day for 7-day monthly level-up requirement
       let loggedActiveDays = JSON.parse(localStorage.getItem('loggedActiveDays') || '[]');
       if (!loggedActiveDays.includes(todayIsoDate)) {
         loggedActiveDays.push(todayIsoDate);
