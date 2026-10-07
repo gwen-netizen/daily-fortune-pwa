@@ -390,14 +390,14 @@
               </div>
             </div>
 
-            <!-- Slide 2: Red Button Tracker & Live Hit Counter -->
+            <!-- Slide 2: Red Button Tracker & Hit Counter (No Brackets) -->
             <div class="slide" id="slide-2">
               <div style="font-size: 16px; font-weight: 800; color: var(--accent-color); margin-bottom: 15px; text-align: center;">
                 Press once each time the task is completed.
               </div>
               <button id="big-red-btn" class="big-red-btn" onclick="registerDailyAction()"></button>
               <div class="hit-counter-text">
-                Number of hits: (<span id="hit-count-num">0</span>)
+                Number of hits: <span id="hit-count-num">0</span>
               </div>
               <div style="font-size: 14px; color: #9C8E80; margin-top: 15px; font-style: italic; font-weight: 500;">Be truthful to yourself.</div>
             </div>
@@ -487,6 +487,62 @@
 
     function getUserPointName() {
       return localStorage.getItem('userFocus') || 'Aura';
+    }
+
+    function getJoinDate() {
+      let joinStr = localStorage.getItem('userJoinDate');
+      if (!joinStr) {
+        joinStr = new Date().toISOString();
+        localStorage.setItem('userJoinDate', joinStr);
+      }
+      return new Date(joinStr);
+    }
+
+    function getTargetLevelUpDate(joinDate, targetLevel) {
+      const monthsToAdd = targetLevel - 1;
+      const target = new Date(joinDate.getFullYear(), joinDate.getMonth() + monthsToAdd, joinDate.getDate());
+      
+      // If target falls on weekend, queue to next Monday
+      const day = target.getDay();
+      if (day === 6) { // Saturday -> Defer to Monday (+2 days)
+        target.setDate(target.getDate() + 2);
+      } else if (day === 0) { // Sunday -> Defer to Monday (+1 day)
+        target.setDate(target.getDate() + 1);
+      }
+      target.setHours(0, 0, 0, 0);
+      return target;
+    }
+
+    function checkLevelUpStatus() {
+      const joinDate = getJoinDate();
+      let currentLevel = parseInt(localStorage.getItem('userLevel') || '1', 10);
+      const nextLevel = currentLevel + 1;
+      const targetDate = getTargetLevelUpDate(joinDate, nextLevel);
+      
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+
+      if (now >= targetDate) {
+        const previousCycleStart = currentLevel === 1 
+          ? new Date(getJoinDate().setHours(0, 0, 0, 0)) 
+          : getTargetLevelUpDate(joinDate, currentLevel);
+        
+        const loggedActiveDays = JSON.parse(localStorage.getItem('loggedActiveDays') || '[]');
+        
+        // Count distinct active days during the current month cycle
+        const cycleActiveDays = loggedActiveDays.filter(dateStr => {
+          const d = new Date(dateStr);
+          d.setHours(0, 0, 0, 0);
+          return d >= previousCycleStart && d <= now;
+        });
+
+        if (cycleActiveDays.length >= 7) {
+          currentLevel++;
+          localStorage.setItem('userLevel', currentLevel);
+          updateGlobalHeader();
+          showAppNotification(`🎉 Level Up! You reached Level ${currentLevel}!`);
+        }
+      }
     }
 
     function updateWelcomeNote() {
@@ -735,6 +791,7 @@
       const emailFromUrl = urlParams.get('email');
       const isDevActive = isDev || localStorage.getItem('isDevMode') === 'true';
 
+      getJoinDate(); // Ensure join date is initialized
       updateWelcomeNote();
       updateStreakUI();
 
@@ -892,6 +949,7 @@
 
     async function routeActiveSubscriber() {
       await autoSyncUntabulatedPoints();
+      checkLevelUpStatus();
       processPendingLevelUp();
 
       const now = new Date();
@@ -1055,13 +1113,23 @@
     function registerDailyAction() {
       const now = new Date();
       const todayDateKey = `task_${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}`;
-      let clicks = parseInt(localStorage.getItem(`${todayDateKey}_clicks`) || '0', 10);
+      const todayIsoDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
+      let clicks = parseInt(localStorage.getItem(`${todayDateKey}_clicks`) || '0', 10);
       clicks++;
       localStorage.setItem(`${todayDateKey}_clicks`, clicks);
 
+      // Track unique active day for 7-day monthly level-up requirement
+      let loggedActiveDays = JSON.parse(localStorage.getItem('loggedActiveDays') || '[]');
+      if (!loggedActiveDays.includes(todayIsoDate)) {
+        loggedActiveDays.push(todayIsoDate);
+        localStorage.setItem('loggedActiveDays', JSON.stringify(loggedActiveDays));
+      }
+
       const hitCountElem = document.getElementById('hit-count-num');
       if (hitCountElem) hitCountElem.textContent = clicks;
+
+      checkLevelUpStatus();
 
       const currentDayOfWeek = now.getDay();
       if (clicks >= 1 && currentDayOfWeek >= 1 && currentDayOfWeek <= 5) {
@@ -1175,51 +1243,42 @@
         return;
       }
       
-      statusMessage.textContent = "Requesting notification permission..."; 
+      statusMessage.textContent = "Setting up your account..."; 
       statusMessage.className = "status-sub";
       let pushPayload = null;
 
-      if (isDevActive) {
-        statusMessage.textContent = "🛠 Sandbox: Bypassing real push registration...";
-        statusMessage.className = "status-sub success";
-        localStorage.setItem('workoutSubscribed', 'true');
-        localStorage.setItem('userLevel', '1');
-        localStorage.setItem('auraPoints', '0'); 
-        setTimeout(() => routeActiveSubscriber(), 1000);
-        return;
-      }
-
-      if ('Notification' in window && 'serviceWorker' in navigator) {
+      if ('Notification' in window && 'serviceWorker' in navigator && !isDevActive) {
         try {
           const permission = await Notification.requestPermission();
           if (permission === 'granted') {
             const registration = await navigator.serviceWorker.ready;
             pushPayload = await registration.pushManager.getSubscription() || await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64ToUint8Array(PUBLIC_VAPID_KEY) });
-          } else {
-            statusMessage.textContent = "Notification denied. Please allow in browser settings."; statusMessage.className = "status-sub error"; return;
           }
-        } catch (err) { statusMessage.textContent = "Push failed: " + err.message; statusMessage.className = "status-sub error"; return; }
-      } else { statusMessage.textContent = "Push not supported on this device."; statusMessage.className = "status-sub error"; return; }
+        } catch (err) {}
+      }
 
-      statusMessage.textContent = "Activating free registration..."; statusMessage.className = "status-sub success";
+      statusMessage.textContent = "Activating free registration..."; 
+      statusMessage.className = "status-sub success";
+
+      localStorage.setItem('workoutSubscribed', 'true'); 
+      localStorage.setItem('userLevel', '1');
+      localStorage.setItem('userJoinDate', new Date().toISOString());
+      if (!localStorage.getItem('auraPoints')) localStorage.setItem('auraPoints', '0'); 
 
       try {
-        const res = await fetch(`${WEBHOOK_BASE}/stripe-subscription`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+        fetch(`${WEBHOOK_BASE}/stripe-subscription`, {
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             email: userEmail,
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC', 
             subscription: pushPayload,
             focus: localStorage.getItem('userFocus') || 'Aura' 
           })
-        });
-        if (res.ok) {
-          localStorage.setItem('workoutSubscribed', 'true'); localStorage.setItem('userLevel', '1');
-          if (!localStorage.getItem('auraPoints')) localStorage.setItem('auraPoints', '0'); 
-          statusMessage.textContent = "Success!";
-          setTimeout(() => routeActiveSubscriber(), 1000);
-        } else { statusMessage.textContent = "Database update failed."; statusMessage.className = "status-sub error"; }
-      } catch (err) { statusMessage.textContent = "Network error."; statusMessage.className = "status-sub error"; }
+        }).catch(() => {});
+      } catch (err) {}
+
+      setTimeout(() => routeActiveSubscriber(), 800);
     }
   </script>
 </body>
