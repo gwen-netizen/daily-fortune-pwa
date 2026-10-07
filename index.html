@@ -20,6 +20,9 @@
 </head>
 <body>
 
+  <!-- Premium Native Audio Chime Hook (Uses clean, high-clarity notification chime) -->
+  <audio id="victory-chime" src="https://mixkit.co" preload="auto"></audio>
+
   <div class="app-container">
 
     <!-- SCREEN 1: ONBOARDING HOOK -->
@@ -52,31 +55,42 @@
           </div>
         </div>
       </div>
+      <!-- Progresses cleanly directly onto the target focus zone dashboard menu -->
       <button class="btn-primary" onclick="switchScreen('screen-dashboard')">Calibrate Behavioral Deck</button>
     </div>
 
-    <!-- SCREEN 3: DASHBOARD MENU -->
+    <!-- SCREEN 3: DASHBOARD MENU (TARGET FOCUS PAGE) -->
     <div id="screen-dashboard" class="screen">
       <div style="width: 100%;">
-        <!-- High-conversion value metric layout inspired by Opal/Habitica -->
+        <!-- Metric ribbon adjusted: Shifted from rigid day streaks to an fluid cumulative Win Stack count -->
         <div class="metric-ribbon">
           <div class="metric-block">
             <span class="metric-num" id="stat-streaks">0</span>
-            <span class="metric-lbl">Day Streak</span>
+            <span class="metric-lbl">Total Wins</span>
           </div>
           <div class="metric-block">
-            <span class="metric-num" id="stat-focus">0m</span>
+            <span class="metric-num" id="stat-focus">0.0m</span>
             <span class="metric-lbl">Friction Saved</span>
           </div>
         </div>
 
-        <h2 class="title-large" style="font-size: 18px; text-align: left; margin: 16px 0 8px 4px; letter-spacing: -0.3px;">Target Focus Area</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 16px 4px 8px 4px;">
+          <h2 class="title-large" style="font-size: 18px; letter-spacing: -0.3px; margin: 0;">Target Focus Area</h2>
+          <!-- NEW: Recalibrate Navigation link allowing swift backtracking to change baseline profile variables -->
+          <button class="btn-text-nav" onclick="switchScreen('screen-onboarding-2')">🔄 Change Issue</button>
+        </div>
+
+        <!-- Automated Smart Install Prompt Banner Hook (Hidden by default unless custom browser query matches triggers) -->
+        <div id="pwa-install-banner" class="install-banner" style="display: none;">
+          <div style="font-size: 13px; font-weight: 600; color: var(--premium-color);">⚡ Install App to Home Screen</div>
+          <button class="btn-small-install" id="pwa-install-btn">Add Now</button>
+        </div>
 
         <div class="deck-list">
           <div class="deck-item selected" onclick="selectDeck(this, false)">
             <div class="deck-meta free">CORE ENGINE</div>
             <div class="deck-name">The Charisma Deck</div>
-            <div class="deck-desc">Micro-actions to build instant physical stance, posture, and verbal projection.</div>
+            <div class="deck-desc">Micro-actions to build instant physical stance, posture, and vocal projection.</div>
           </div>
           <div class="deck-item" onclick="selectDeck(this, false)">
             <div class="deck-meta free">CORE ENGINE</div>
@@ -95,10 +109,10 @@
           </div>
         </div>
       </div>
-      <button class="btn-primary" onclick="startTriggerPhase()">Configure Interception</button>
+      <button class="btn-primary" style="margin-top: 12px;" onclick="startTriggerPhase()">Configure Interception</button>
     </div>
 
-    <!-- SCREEN 4: THE TRIGGER (SPIN BUTTON) WITH MINDFUL FRICTION DELAY -->
+    <!-- SCREEN 4: THE TRIGGER (SPIN BUTTON) -->
     <div id="screen-trigger" class="screen">
       <div style="margin-top: 10px;">
         <h2 class="title-deck" id="active-deck-title">The Charisma Deck</h2>
@@ -127,11 +141,11 @@
         <div id="timer-display" class="timer-ring">02:00</div>
         
         <button class="btn-primary btn-success-action" onclick="finishEarly()">Complete Early</button>
-        <button class="btn-bypass" onclick="cancelTimer()">Abort & Lose Streak</button>
+        <button class="btn-bypass" onclick="cancelTimer()">Abort Task</button>
       </div>
     </div>
 
-    <!-- SCREEN 6: VICTORY CELEBRATION (IDENTITY RESET) -->
+    <!-- SCREEN 6: VICTORY CELEBRATION -->
     <div id="screen-victory" class="screen">
       <div style="margin: auto 0; width: 100%;">
         <div class="victory-crown">🏆</div>
@@ -166,22 +180,3 @@
       </div>
 
       <div style="width: 100%;">
-        <button class="btn-primary" style="background: var(--text-color);" onclick="simulatePurchase()">Upgrade Mindset Portfolio</button>
-        <button class="btn-bypass" style="display: block; margin: 12px auto 0 auto;" onclick="closePaywall()">Continue with Limitations</button>
-      </div>
-    </div>
-
-  </div>
-
-  <script src="app.js"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then(reg => console.log('SW Registered:', reg.scope))
-          .catch(err => console.error('SW Failed:', err));
-      });
-    }
-  </script>
-</body>
-</html>
