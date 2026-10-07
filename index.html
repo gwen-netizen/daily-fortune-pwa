@@ -114,9 +114,13 @@
         <p id="target-task-text" class="task-display-text">Do the thing you have been avoiding for just two minutes. Feel the win of moving.</p>
       </div>
 
-      <div>
+      <div style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px;">
         <div id="timer-display" class="timer-ring">02:00</div>
-        <p class="italic-hint" style="margin-bottom: 12px;">Turn your phone face down and complete this action right now.</p>
+        
+        <!-- NEW INSTANT COMPLETION ACTION BUTTON -->
+        <button class="btn-primary btn-success-action" onclick="finishEarly()">Done! Claim My Win Early</button>
+        
+        <p class="italic-hint" style="margin-bottom: 8px;">Complete this action right now.</p>
         <button class="btn-bypass" onclick="cancelTimer()">Abort Phase</button>
       </div>
     </div>
