@@ -25,20 +25,32 @@ let totalMinutesSaved = parseFloat(localStorage.getItem('nudge_minutes') || '0.0
 // Initial metric interface deployment bootstrap
 document.addEventListener("DOMContentLoaded", () => {
   updateMetricDashboard();
+  checkStripeRedirectStatus();
 });
 
 function updateMetricDashboard() {
-  document.getElementById('stat-streaks').innerText = totalWinsCount;
-  document.getElementById('stat-focus').innerText = totalMinutesSaved.toFixed(1) + 'm';
+  const streaksEl = document.getElementById('stat-streaks');
+  const focusEl = document.getElementById('stat-focus');
+  
+  // High-reliability structural guard checking elements exist before updating DOM strings
+  if (streaksEl && focusEl) {
+    streaksEl.innerText = totalWinsCount;
+    focusEl.innerText = totalMinutesSaved.toFixed(1) + 'm';
+  }
 }
 
 function switchScreen(screenId) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(screenId).classList.add('active');
+  const targetScreen = document.getElementById(screenId);
+  if (targetScreen) {
+    targetScreen.classList.add('active');
+  }
   
-  if(screenId === 'screen-trigger') {
-    document.getElementById('trigger-instructions').innerText = "Take one slow, long breath before pushing.";
-    document.querySelector('.big-red-btn').innerText = "START";
+  if (screenId === 'screen-trigger') {
+    const instructions = document.getElementById('trigger-instructions');
+    const spinBtn = document.querySelector('.big-red-btn');
+    if (instructions) instructions.innerText = "Take one slow, long breath before pushing.";
+    if (spinBtn) spinBtn.innerText = "START";
   }
 }
 
@@ -52,20 +64,25 @@ function selectDeck(el, isPremium) {
   el.classList.add('selected');
   isPremiumSelected = isPremium;
   
-  const deckName = el.querySelector('.deck-name').innerText;
-  document.getElementById('active-deck-title').innerText = deckName;
+  const deckTitleEl = document.getElementById('active-deck-title');
+  if (deckTitleEl) {
+    const deckName = el.querySelector('.deck-name').innerText;
+    deckTitleEl.innerText = deckName;
+  }
 }
 
 function startTriggerPhase() {
   if (isPremiumSelected) {
-    document.getElementById('paywall-overlay').classList.add('active');
+    const paywall = document.getElementById('paywall-overlay');
+    if (paywall) paywall.classList.add('active');
   } else {
     switchScreen('screen-trigger');
   }
 }
 
 function closePaywall() {
-  document.getElementById('paywall-overlay').classList.remove('active');
+  const paywall = document.getElementById('paywall-overlay');
+  if (paywall) paywall.classList.remove('active');
 }
 
 function selectTier(el) {
@@ -73,23 +90,88 @@ function selectTier(el) {
   el.classList.add('selected');
 }
 
-function simulatePurchase() {
-  alert("Premium Access Initialized! Algorithmic interceptor systems unlocked.");
-  isPremiumSelected = false; 
-  closePaywall();
-  switchScreen('screen-trigger');
+/**
+ * Functional Route Engine linking the frontend Paywall Selection seamlessly to Stripe Checkout
+ */
+async function simulatePurchase() {
+  const selectedTierBox = document.querySelector('.tier-box.selected');
+  if (!selectedTierBox) {
+    alert("Please select a tracking tier to continue.");
+    return;
+  }
+
+  const isLifetime = selectedTierBox.innerText.includes("Lifetime");
+  const paywallBtn = document.querySelector('.paywall-modal .btn-primary');
+  const originalText = paywallBtn ? paywallBtn.innerText : "Upgrade Mindset Portfolio";
+  
+  if (paywallBtn) {
+    paywallBtn.innerText = "INITIALIZING SECURE GATEWAY...";
+    paywallBtn.style.opacity = "0.7";
+  }
+
+  try {
+    const response = await fetch('/api/create-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        planType: isLifetime ? 'lifetime' : 'monthly',
+        successUrl: window.location.origin + '/?session=success',
+        cancelUrl: window.location.origin
+      })
+    });
+
+    const session = await response.json();
+
+    if (session.url) {
+      window.location.href = session.url;
+    } else {
+      throw new Error(session.error || "Failed to generate dynamic session payload.");
+    }
+  } catch (paymentError) {
+    console.error("Stripe Checkout Session routing failure:", paymentError);
+    alert("Could not initialize Stripe Session. Please ensure backend parameters are configured.");
+    
+    if (paywallBtn) {
+      paywallBtn.innerText = originalText;
+      paywallBtn.style.opacity = "1";
+    }
+  }
+}
+
+/**
+ * Handles validation status parameter checks when landing back from Stripe domains
+ */
+function checkStripeRedirectStatus() {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('session') === 'success') {
+    localStorage.setItem('nudge_premium_user', 'true');
+    alert("Premium Portfolio Active! Algorithmic intercepts completely unlocked.");
+    window.history.replaceState({}, document.title, window.location.pathname);
+    switchScreen('screen-dashboard');
+  }
 }
 
 function executeTurnaroundSpin() {
   const btn = document.querySelector('.big-red-btn');
   const instruction = document.getElementById('trigger-instructions');
   
-  btn.innerText = "HOLD...";
-  instruction.innerText = "Exhale slowly... allowing your focus to narrow down completely.";
+  if (btn) {
+    btn.innerText = "HOLD...";
+    btn.style.opacity = "0.6";
+  }
+  if (instruction) {
+    instruction.innerText = "Exhale slowly... allowing your focus to narrow down completely.";
+  }
   
   setTimeout(() => {
+    if (btn) {
+      btn.innerText = "START";
+      btn.style.opacity = "1";
+    }
+    
     const randomTask = taskDatabase[Math.floor(Math.random() * taskDatabase.length)];
-    document.getElementById('target-task-text').innerText = randomTask;
+    const taskDisplayEl = document.getElementById('target-task-text');
+    if (taskDisplayEl) taskDisplayEl.innerText = randomTask;
     
     switchScreen('screen-countdown');
     startActionTimer(120); 
@@ -109,7 +191,7 @@ function startActionTimer(seconds) {
     minutes = minutes < 10 ? "0" + minutes : minutes;
     secs = secs < 10 ? "0" + secs : secs;
 
-    display.innerText = `${minutes}:${secs}`;
+    if (display) display.innerText = `${minutes}:${secs}`;
 
     if (--timeLeft < 0) {
       clearInterval(countdownInterval);
@@ -119,10 +201,17 @@ function startActionTimer(seconds) {
 }
 
 function finishEarly() {
-  const displayVal = document.getElementById('timer-display').innerText;
-  const parts = displayVal.split(':');
-  const elapsedSeconds = 120 - (parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10));
-  const elapsedMinutes = Math.max(0.2, elapsedSeconds / 60);
+  const displayEl = document.getElementById('timer-display');
+  let elapsedMinutes = 2.0;
+
+  if (displayEl) {
+    const displayVal = displayEl.innerText;
+    const parts = displayVal.split(':');
+    if (parts.length === 2) {
+      const elapsedSeconds = 120 - (parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10));
+      elapsedMinutes = Math.max(0.2, elapsedSeconds / 60);
+    }
+  }
 
   clearInterval(countdownInterval);
   triggerVictoryPhase(elapsedMinutes);
@@ -130,34 +219,29 @@ function finishEarly() {
 
 function cancelTimer() {
   clearInterval(countdownInterval);
-  // Non-punitive reset: Since it's no longer a streak tracker, users keep their total count even if they cancel a task
   updateMetricDashboard();
   switchScreen('screen-dashboard');
 }
 
-/**
- * Trigger behavioral confirmation loops with canvas visuals and premium audio chimes
- */
 function triggerVictoryPhase(minutesEarned) {
   const copy = victoryValidationStrings[Math.floor(Math.random() * victoryValidationStrings.length)];
-  document.getElementById('victory-validation-copy').innerText = copy;
+  const validationCopyEl = document.getElementById('victory-validation-copy');
+  if (validationCopyEl) validationCopyEl.innerText = copy;
   
-  // Increments metrics cumulatively without enforcing strict calendar tracking bounds
   totalWinsCount += 1;
   totalMinutesSaved += minutesEarned;
   
   localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
   localStorage.setItem('nudge_minutes', totalMinutesSaved.toString());
   
-  // PREMIUM AUDIO REWARD ANCHOR: Fires high-clarity victory tone safely on mobile devices
   try {
     const audioNode = document.getElementById('victory-chime');
     if (audioNode) {
       audioNode.currentTime = 0;
-      audioNode.play().catch(err => console.log("Audio node autoplay blocked by mobile gesture lifecycle rules:", err));
+      audioNode.play().catch(err => console.log("Audio presentation skipped under current window configuration context:", err));
     }
   } catch (audioError) {
-    console.warn("Audio chime initialization intercepted:", audioError);
+    console.warn("Audio node playback tracking catch:", audioError);
   }
 
   switchScreen('screen-victory');
@@ -167,7 +251,7 @@ function triggerVictoryPhase(minutesEarned) {
       confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#D4A373', '#4A7C59', '#2D2B2A'] });
     }
   } catch (e) {
-    console.log(e);
+    console.log("Confetti component reference uninitialized:", e);
   }
 }
 
