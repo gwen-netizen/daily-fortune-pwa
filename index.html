@@ -36,7 +36,6 @@
       user-select: none; -webkit-user-select: none;
     }
 
-    /* Clean 2-Line Header */
     #global-header {
       position: fixed; top: 16px; left: 0; width: 100%; text-align: center;
       font-size: 13px; font-weight: 800; color: var(--accent-color);
@@ -63,7 +62,13 @@
       height: 80vh; display: flex; justify-content: center; align-items: center;
     }
 
-    /* Help Button Inside Top-Right Corner of White Area */
+    /* About & Help Buttons */
+    #about-icon {
+      position: absolute; top: 12px; left: 12px; background-color: #FAF7F2;
+      color: var(--accent-color); padding: 5px 12px; border-radius: 20px;
+      font-weight: 800; font-size: 12px; cursor: pointer; z-index: 99999;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    }
     #help-icon {
       position: absolute; top: 12px; right: 12px; width: 30px; height: 30px; background-color: #FAF7F2;
       color: var(--accent-color); border-radius: 50%; display: flex; justify-content: center; align-items: center;
@@ -77,7 +82,7 @@
     }
     #help-toast.show { opacity: 1; visibility: visible; transform: translateY(0); }
 
-    /* 5-DAY WINNING STREAK STYLING */
+    /* Streak Display */
     .streak-container {
       display: flex; justify-content: space-evenly; align-items: center;
       width: 100%; max-width: 260px; margin: 0 auto 14px auto;
@@ -110,6 +115,12 @@
     .instruction-list { list-style: none; text-align: center; margin: 12px auto; font-size: 15px; font-weight: 500; padding: 0; width: 100%; }
     .instruction-list li { margin-bottom: 8px; background: #FAF7F2; padding: 8px 10px; border-radius: 12px; }
 
+    .email-input {
+      width: 100%; padding: 14px; border-radius: 14px; border: 2px solid #EAE3D9;
+      font-size: 15px; text-align: center; margin-bottom: 12px; outline: none; transition: border-color 0.2s;
+    }
+    .email-input:focus { border-color: var(--accent-color); }
+
     .btn-group { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; width: 100%; }
     .btn { width: 100%; padding: 15px; border: none; border-radius: 14px; font-size: 15px; font-weight: 600; cursor: pointer; background-color: var(--text-color); color: #FFFFFF; transition: opacity 0.2s; text-align: center; }
     .btn:active { opacity: 0.85; }
@@ -131,9 +142,13 @@
       cursor: pointer; box-shadow: 0 16px 35px rgba(217, 78, 61, 0.35), inset 0 6px 16px rgba(255, 255, 255, 0.4);
       display: flex; justify-content: center; align-items: center;
       transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease;
-      margin: 15px auto; -webkit-tap-highlight-color: transparent;
+      margin: 15px auto 10px auto; -webkit-tap-highlight-color: transparent;
     }
     .big-red-btn:active { transform: scale(0.95); }
+
+    .hit-counter-text {
+      font-size: 15px; font-weight: 700; color: var(--text-color); margin-top: 8px; text-align: center;
+    }
 
     @keyframes therapeutic-glow {
       0% { transform: scale(0.95); box-shadow: 0 16px 35px rgba(217, 78, 61, 0.35), inset 0 6px 16px rgba(255, 255, 255, 0.4); filter: brightness(1); }
@@ -146,13 +161,23 @@
     .s-dot { width: 8px; height: 8px; border-radius: 50%; background: #EAE3D9; transition: 0.3s; }
     .s-dot.active { background: var(--accent-color); }
 
-    #lockscreen-overlay {
+    /* Overlay Modals */
+    #lockscreen-overlay, #about-overlay {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-color);
-      z-index: 999999; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 40px;
+      z-index: 999999; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 30px;
     }
     .lock-text { font-size: 24px; font-weight: 800; color: var(--text-color); text-align: center; margin-bottom: 20px; line-height: 1.4; }
     .lock-hint { position: absolute; bottom: 50px; font-size: 14px; color: #9C8E80; font-weight: bold; }
-    .lock-close { position: absolute; top: 40px; right: 20px; background: #EAE3D9; padding: 8px 16px; border-radius: 20px; font-weight: bold; cursor: pointer; }
+    .modal-close { position: absolute; top: 40px; right: 20px; background: #EAE3D9; padding: 8px 16px; border-radius: 20px; font-weight: bold; cursor: pointer; }
+
+    .btn-donate {
+      background: linear-gradient(135deg, #FF6B5B 0%, #D94E3D 100%);
+      color: #FFFFFF; border: none; border-radius: 14px; padding: 15px; font-size: 15px; font-weight: 700; width: 100%; cursor: pointer; text-align: center;
+    }
+    .btn-share {
+      background-color: #FF85A1;
+      color: #FFFFFF; border: none; border-radius: 14px; padding: 15px; font-size: 15px; font-weight: 700; width: 100%; cursor: pointer; text-align: center;
+    }
 
     .glow-effect { box-shadow: 0 0 30px rgba(212, 163, 115, 0.6) !important; border: 2px solid var(--accent-color); transition: all 0.5s ease; }
     .reflection-box { background: #FAF7F2; border-radius: 16px; padding: 20px; margin-top: 15px; width: 100%; border: 1px solid #EAE3D9; }
@@ -173,10 +198,26 @@
   <!-- Permanent Global Header -->
   <div id="global-header">Lv 1 Active Member<br>0 Personality Points 🔥</div>
 
+  <!-- Lockscreen Overlay -->
   <div id="lockscreen-overlay">
-    <div class="lock-close" onclick="closeLockscreen()">✕ Close</div>
+    <div class="modal-close" onclick="closeLockscreen()">✕ Close</div>
     <div class="lock-text" id="lockscreen-content"></div>
     <div class="lock-hint">Take a screenshot now to save as wallpaper!</div>
+  </div>
+
+  <!-- About & Donate Overlay -->
+  <div id="about-overlay">
+    <div class="modal-close" onclick="closeAboutModal()">✕ Close</div>
+    <div class="bold-title" style="margin-bottom: 20px;">About</div>
+    <div class="main-text" style="line-height: 1.7; max-width: 320px; margin-bottom: 28px; text-align: center;">
+      Everyone has the right to be lazy sometimes — too tired to think, or simply stuck for too long.<br><br>
+      This little push-task app has helped me get moving again, and I hope it helps you too.<br><br>
+      If this helped you, or you simply appreciate the effort behind it, a small donation would mean more than you think. It helps me keep making little things that give people like us a push when we just can't get ourselves moving. ❤️
+    </div>
+    <div class="btn-group" style="max-width: 280px;">
+      <button class="btn-donate" onclick="handleDonate()">Donate</button>
+      <button class="btn-share" onclick="handleShare()">Share</button>
+    </div>
   </div>
 
   <div id="notification-toast"></div>
@@ -205,6 +246,7 @@
 
   <div class="card-container">
 
+    <div id="about-icon" onclick="openAboutModal()">About</div>
     <div id="help-icon" onclick="showHelpToast()">?</div>
     <div id="help-toast">Have questions? Ask our Community on Facebook</div>
 
@@ -218,16 +260,13 @@
           <div class="streak-item"><span class="streak-label">T</span><div class="streak-circle streak-day-4"></div></div>
           <div class="streak-item"><span class="streak-label">F</span><div class="streak-circle streak-day-5"></div></div>
         </div>
-        <div class="bold-title" style="color: #d9534f; font-size: 20px;">🔒 Subscription Active Elsewhere</div>
+        <div class="bold-title" style="color: #d9534f; font-size: 20px;">🔒 Registered on Another Phone</div>
         <div class="main-text">
-          This Fortune Workout subscription is already registered and active on another phone.<br><br>
-          <span style="font-size: 14px; color: #555250;">Subscriptions are strictly 1 device per member.</span>
+          This email is currently associated with another device.<br><br>
+          <span style="font-size: 14px; color: #555250;">Accounts are limited to 1 device per user.</span>
         </div>
         <div class="btn-group">
-          <button class="btn" style="background-color: #2D2B2A; color: white;" onclick="transferDevice()">🔄 Transfer subscription to this phone</button>
-          <a href="https://buy.stripe.com/3cI8wPcjsbP29yWeQm0co01" class="btn btn-alt" style="text-decoration: none; display: block;">
-            Get My Own Membership ($1.50)
-          </a>
+          <button class="btn" style="background-color: #2D2B2A; color: white;" onclick="transferDevice()">🔄 Transfer access to this phone</button>
         </div>
       </div>
     </div>
@@ -302,9 +341,10 @@
         <ul class="instruction-list">
           <li>1. Tap <strong>Share</strong> (square with arrow) at bottom.</li>
           <li>2. Scroll down & tap <strong>"Add to Home Screen"</strong>.</li>
-          <li>3. Open app from Home Screen & tap below.</li>
+          <li>3. Open app from Home Screen & enter email below.</li>
         </ul>
-        <button class="btn btn-alt" id="btn-ios" onclick="startWorkout('ios')">Begin your Fortune Workout Now</button>
+        <input type="email" id="email-ios" class="email-input" placeholder="Enter your email address">
+        <button class="btn btn-alt" id="btn-ios" onclick="startWorkout('ios')">Begin Free Fortune Workout</button>
         <div id="status-message-ios" class="status-sub"></div>
       </div>
     </div>
@@ -316,9 +356,10 @@
         <ul class="instruction-list">
           <li>1. Tap the <strong>three dots (⋮)</strong> top right.</li>
           <li>2. Tap <strong>"Install / Add to Homescreen"</strong>.</li>
-          <li>3. Open app from Home Screen & tap below.</li>
+          <li>3. Open app from Home Screen & enter email below.</li>
         </ul>
-        <button class="btn btn-alt" id="btn-android" onclick="startWorkout('android')">Begin your Fortune Workout Now</button>
+        <input type="email" id="email-android" class="email-input" placeholder="Enter your email address">
+        <button class="btn btn-alt" id="btn-android" onclick="startWorkout('android')">Begin Free Fortune Workout</button>
         <div id="status-message-android" class="status-sub"></div>
       </div>
     </div>
@@ -349,12 +390,16 @@
               </div>
             </div>
 
+            <!-- Slide 2: Red Button Tracker & Live Hit Counter -->
             <div class="slide" id="slide-2">
-              <div style="font-size: 16px; font-weight: 800; color: var(--accent-color); margin-bottom: 25px; text-align: center;">
+              <div style="font-size: 16px; font-weight: 800; color: var(--accent-color); margin-bottom: 15px; text-align: center;">
                 Press once each time the task is completed.
               </div>
               <button id="big-red-btn" class="big-red-btn" onclick="registerDailyAction()"></button>
-              <div style="font-size: 14px; color: #9C8E80; margin-top: 25px; font-style: italic; font-weight: 500;">Be truthful to yourself.</div>
+              <div class="hit-counter-text">
+                Number of hits: (<span id="hit-count-num">0</span>)
+              </div>
+              <div style="font-size: 14px; color: #9C8E80; margin-top: 15px; font-style: italic; font-weight: 500;">Be truthful to yourself.</div>
             </div>
 
           </div>
@@ -400,7 +445,7 @@
       <div class="tap-hint">Tap to continue...</div>
     </div>
 
-    <!-- SCREEN 10: Billing Suspended -->
+    <!-- SCREEN 10: Account Suspended -->
     <div class="screen no-cursor" id="screen-10" style="padding-top: 65px;">
       <div class="content-body">
         <div class="streak-container">
@@ -410,10 +455,10 @@
           <div class="streak-item"><span class="streak-label">T</span><div class="streak-circle streak-day-4"></div></div>
           <div class="streak-item"><span class="streak-label">F</span><div class="streak-circle streak-day-5"></div></div>
         </div>
-        <div class="bold-title" style="color: #d9534f;">Subscription Paused</div>
-        <div class="main-text">Your access has been temporarily suspended.<br><br>Please update your billing details via your receipt to resume.</div>
+        <div class="bold-title" style="color: #d9534f;">Access Suspended</div>
+        <div class="main-text">Your access has been temporarily paused.</div>
         <div class="btn-group">
-          <button class="btn btn-alt" onclick="localStorage.clear(); window.location.reload();">I have updated my billing</button>
+          <button class="btn btn-alt" onclick="localStorage.clear(); window.location.reload();">Reset Account</button>
         </div>
       </div>
     </div>
@@ -455,6 +500,49 @@
       if (welcomeElem) {
         welcomeElem.textContent = name ? `Welcome, ${name}! ✨` : `Welcome! ✨`;
       }
+    }
+
+    function openAboutModal() {
+      document.getElementById('about-overlay').style.display = 'flex';
+    }
+
+    function closeAboutModal() {
+      document.getElementById('about-overlay').style.display = 'none';
+    }
+
+    function handleDonate() {
+      const STRIPE_DONATION_URL = 'https://donate.stripe.com/28EdR9erAg5icL8dMi0co03';
+      const donationWindow = window.open(STRIPE_DONATION_URL, '_blank');
+      if (!donationWindow || donationWindow.closed || typeof donationWindow.closed === 'undefined') {
+        window.location.href = STRIPE_DONATION_URL;
+      }
+    }
+
+    function handleShare() {
+      const shareUrl = window.location.origin + window.location.pathname;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(shareUrl).then(() => {
+          showAppNotification("Copied link");
+        }).catch(() => {
+          fallbackCopyText(shareUrl);
+        });
+      } else {
+        fallbackCopyText(shareUrl);
+      }
+    }
+
+    function fallbackCopyText(text) {
+      const tempInput = document.createElement("input");
+      tempInput.value = text;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      try {
+        document.execCommand("copy");
+        showAppNotification("Copied link");
+      } catch (err) {
+        showAppNotification("Failed to copy link");
+      }
+      document.body.removeChild(tempInput);
     }
 
     function getMondayDateKey(d) {
@@ -531,7 +619,6 @@
               let isDevActive = isDev || localStorage.getItem('isDevMode') === 'true';
 
               if (!userEmail && !isDevActive) {
-                showAppNotification("⚠️ Email missing. Open Stripe link to pair email.");
                 continue;
               }
 
@@ -547,12 +634,8 @@
                     localStorage.setItem(`reflection_${dateKey}`, 'true');
                     localStorage.setItem('auraPoints', totalPoints);
                     localStorage.setItem('weeklyCompleted', weekly);
-                  } else {
-                    showAppNotification(`Sync Error: Server HTTP ${response.status}`);
                   }
-                } catch (err) {
-                  showAppNotification(`Sync Failed: ${err.message}`);
-                }
+                } catch (err) {}
               } else {
                 localStorage.setItem(`reflection_${dateKey}`, 'true');
                 localStorage.setItem('auraPoints', totalPoints);
@@ -818,17 +901,18 @@
       const hasCheckedInToday = localStorage.getItem(`reflection_${todayDateKey}`) === 'true';
       const isDevActive = isDev || localStorage.getItem('isDevMode') === 'true';
 
+      const todayClicks = parseInt(localStorage.getItem(`${todayDateKey}_clicks`) || '0', 10);
+      const hitCountElem = document.getElementById('hit-count-num');
+      if (hitCountElem) hitCountElem.textContent = todayClicks;
+
       let isWeekend = (day === 6) || (day === 0) || (day === 1 && hour < 8);
       let isCheckInWindow = (hour === 21 && minute >= 30) || (hour === 22) || (hour === 23);
       let isNightTime = (hour >= 0 && hour < 8);
 
-      // If inside the 9:30 PM - 11:59 PM window AND user has already completed 9B reflection,
-      // transition directly to Night Rest / Weekend Rest
       if (isCheckInWindow && hasCheckedInToday) {
         isNightTime = true;
       }
 
-      // Reflection only triggers if in 9:30 PM window AND has NOT completed check-in yet
       let isReflectionTrigger = (urlParams.get('checkin') === 'true' || isCheckInWindow) && !hasCheckedInToday;
 
       if (isDevActive && forceState) {
@@ -837,7 +921,7 @@
         if (forceState === 'checkin') isReflectionTrigger = true;
       }
 
-      // 1. NIGHT REST OR WEEKEND REST (MIDNIGHT TO 7:59 AM, WEEKENDS, OR POST-REFLECTION 9:30 PM)
+      // 1. NIGHT REST OR WEEKEND REST
       if (isWeekend || isNightTime) {
         hideAllScreens();
         updateGlobalHeader(); 
@@ -875,13 +959,13 @@
         return;
       }
 
-      // 2. EVENING SUMMARY WINDOW (9:30 PM TO 11:59 PM WEEKDAYS - UNCHECKED)
+      // 2. EVENING SUMMARY WINDOW
       if (isReflectionTrigger) {
         await tabulateAndSyncDailyScore(todayDateKey);
         return;
       }
 
-      // 3. DAYTIME TASK & TRACKER WINDOW (8:00 AM TO 9:29 PM WEEKDAYS)
+      // 3. DAYTIME TASK & TRACKER WINDOW
       hideAllScreens();
       updateGlobalHeader(); 
       updateStreakUI();
@@ -976,6 +1060,9 @@
       clicks++;
       localStorage.setItem(`${todayDateKey}_clicks`, clicks);
 
+      const hitCountElem = document.getElementById('hit-count-num');
+      if (hitCountElem) hitCountElem.textContent = clicks;
+
       const currentDayOfWeek = now.getDay();
       if (clicks >= 1 && currentDayOfWeek >= 1 && currentDayOfWeek <= 5) {
         localStorage.setItem(`streak_day_${currentDayOfWeek}`, 'true');
@@ -1008,7 +1095,6 @@
       let userLevel = parseInt(localStorage.getItem('userLevel') || '1', 10);
 
       if (!userEmail && !isDevActive) {
-        showAppNotification("⚠️ Email missing. Open Stripe link to pair email.");
         renderSummaryUI(dateKey);
         return;
       }
@@ -1071,12 +1157,20 @@
 
     async function startWorkout(os) {
       const statusElementId = os === 'ios' ? 'status-message-ios' : 'status-message-android';
+      const emailInputId = os === 'ios' ? 'email-ios' : 'email-android';
       const statusMessage = document.getElementById(statusElementId);
+      const emailInput = document.getElementById(emailInputId);
       const isDevActive = isDev || localStorage.getItem('isDevMode') === 'true';
-      const userEmail = localStorage.getItem('userEmail') || (isDevActive ? 'dev@test.com' : '');
+
+      let userEmail = localStorage.getItem('userEmail');
+
+      if (emailInput && emailInput.value.trim() && emailInput.value.includes('@')) {
+        userEmail = emailInput.value.trim();
+        localStorage.setItem('userEmail', userEmail);
+      }
 
       if (!userEmail && !isDevActive) {
-        statusMessage.textContent = "Error: No email linked. Please open your registration link from Stripe.";
+        statusMessage.textContent = "Please enter a valid email address.";
         statusMessage.className = "status-sub error";
         return;
       }
@@ -1107,7 +1201,7 @@
         } catch (err) { statusMessage.textContent = "Push failed: " + err.message; statusMessage.className = "status-sub error"; return; }
       } else { statusMessage.textContent = "Push not supported on this device."; statusMessage.className = "status-sub error"; return; }
 
-      statusMessage.textContent = "Activating subscription..."; statusMessage.className = "status-sub success";
+      statusMessage.textContent = "Activating free registration..."; statusMessage.className = "status-sub success";
 
       try {
         const res = await fetch(`${WEBHOOK_BASE}/stripe-subscription`, {
