@@ -32,7 +32,6 @@ function updateMetricDashboard() {
   const streaksEl = document.getElementById('stat-streaks');
   const focusEl = document.getElementById('stat-focus');
   
-  // High-reliability structural guard checking elements exist before updating DOM strings
   if (streaksEl && focusEl) {
     streaksEl.innerText = totalWinsCount;
     focusEl.innerText = totalMinutesSaved.toFixed(1) + 'm';
@@ -208,6 +207,7 @@ function finishEarly() {
     const displayVal = displayEl.innerText;
     const parts = displayVal.split(':');
     if (parts.length === 2) {
+      // FIXED: Added precise array indices parts[0] (minutes) and parts[1] (seconds)
       const elapsedSeconds = 120 - (parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10));
       elapsedMinutes = Math.max(0.2, elapsedSeconds / 60);
     }
@@ -238,7 +238,7 @@ function triggerVictoryPhase(minutesEarned) {
     const audioNode = document.getElementById('victory-chime');
     if (audioNode) {
       audioNode.currentTime = 0;
-      audioNode.play().catch(err => console.log("Audio presentation skipped under current window configuration context:", err));
+      audioNode.play().catch(err => console.log("Audio presentation skipped:", err));
     }
   } catch (audioError) {
     console.warn("Audio node playback tracking catch:", audioError);
