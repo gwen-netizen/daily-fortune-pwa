@@ -22,7 +22,7 @@ let countdownInterval = null;
 let totalWinsCount = parseInt(localStorage.getItem('nudge_total_wins') || '0');
 let totalMinutesSaved = parseFloat(localStorage.getItem('nudge_minutes') || '0.0');
 
-// Initial metric interface deployment bootstrap
+// High-reliability page setup engine load sequence
 document.addEventListener("DOMContentLoaded", () => {
   updateMetricDashboard();
   checkStripeRedirectStatus();
@@ -207,8 +207,10 @@ function finishEarly() {
     const displayVal = displayEl.innerText;
     const parts = displayVal.split(':');
     if (parts.length === 2) {
-      // FIXED: Added precise array indices parts[0] (minutes) and parts[1] (seconds)
-      const elapsedSeconds = 120 - (parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10));
+      // FIXED PARSING ENGINE: Tracks accurate array indices mapping separately to minutes and seconds parameters
+      const currentMinutesVal = parseInt(parts[0], 10) || 0;
+      const currentSecondsVal = parseInt(parts[1], 10) || 0;
+      const elapsedSeconds = 120 - (currentMinutesVal * 60 + currentSecondsVal);
       elapsedMinutes = Math.max(0.2, elapsedSeconds / 60);
     }
   }
@@ -238,10 +240,10 @@ function triggerVictoryPhase(minutesEarned) {
     const audioNode = document.getElementById('victory-chime');
     if (audioNode) {
       audioNode.currentTime = 0;
-      audioNode.play().catch(err => console.log("Audio presentation skipped:", err));
+      audioNode.play().catch(err => console.log("Audio skipped:", err));
     }
   } catch (audioError) {
-    console.warn("Audio node playback tracking catch:", audioError);
+    console.warn("Audio catch execution layer bypassed:", audioError);
   }
 
   switchScreen('screen-victory');
@@ -251,7 +253,7 @@ function triggerVictoryPhase(minutesEarned) {
       confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#D4A373', '#4A7C59', '#2D2B2A'] });
     }
   } catch (e) {
-    console.log("Confetti component reference uninitialized:", e);
+    console.log("Confetti library processing bypass:", e);
   }
 }
 
