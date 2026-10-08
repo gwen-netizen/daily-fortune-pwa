@@ -65,27 +65,28 @@ async function initializeUserProfile() {
   }
 
   try {
-    const response = await fetch(`/api/sync-user?email=${userEmail}&action=login`);
+    const response = await fetch(`/api/sync-user?email=${userEmail}&action=request_otp`);
     const data = await response.json();
 
-    if (data.exists) {
-      totalWinsCount = data.total_wins || 0;
-      totalFocusReclaimed = data.focus_reclaimed || 0.0;
-      localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
-      localStorage.setItem('nudge_minutes', totalFocusReclaimed.toString());
-      if (data.premium_user) {
-        localStorage.setItem('nudge_premium_user', 'true');
-      }
-      alert("Welcome back! Your lifetime focus assets have been successfully restored.");
+    if (data.sent) {
+      switchScreen('screen-auth-verify');
+    } else {
+      bypassToDiagnostic();
     }
-    
-    updateMetricDashboard();
-    applyPremiumUIVisuals();
-    switchScreen('screen-onboarding-2');
   } catch (error) {
     console.error(error);
-    switchScreen('screen-onboarding-2');
+    bypassToDiagnostic();
   }
+}
+
+function bypassToDiagnostic() {
+  const emailInput = document.getElementById('user-auth-email');
+  if (emailInput && emailInput.value.includes('@')) {
+    localStorage.setItem('nudge_user_email', emailInput.value.trim().toLowerCase());
+  }
+  updateMetricDashboard();
+  applyPremiumUIVisuals();
+  switchScreen('screen-onboarding-2');
 }
 
 async function syncLifetimeProgressToCloud() {
@@ -109,21 +110,20 @@ async function syncLifetimeProgressToCloud() {
   }
 }
 
-function selectOption(el) {
+function selectOption(el, frictionKey) {
   document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
-  const textContent = el.querySelector('.option-title').innerText;
-  if (textContent.includes("Scrolling")) mindFrictionStyle = 'scroll';
-  else if (textContent.includes("Paralysis")) mindFrictionStyle = 'paralysis';
-  else mindFrictionStyle = 'routine';
+  mindFrictionStyle = frictionKey || 'scroll';
+  switchScreen('screen-dashboard');
 }
 
-function selectDeck(el, isPremium) {
+function selectDeck(el, isPremium, categoryKey) {
   document.querySelectorAll('.deck-item').forEach(d => d.classList.remove('selected'));
   el.classList.add('selected');
   isPremiumSelected = isPremium;
   const deckTitleEl = document.getElementById('active-deck-title');
   if (deckTitleEl) deckTitleEl.innerText = el.querySelector('.deck-name').innerText;
+  startTriggerPhase();
 }
 
 function startTriggerPhase() {
@@ -226,7 +226,7 @@ function checkStripeRedirectStatus() {
 }
 
 /**
- * Programmatic Yellow Stars Formatter Node
+ * MOD 3: Programmatic Yellow Stars Formatter Node
  */
 function renderSingleChallengeRating(label, ratingScore) {
   const labelNode = document.getElementById('target-metric-label');
@@ -244,6 +244,9 @@ function renderSingleChallengeRating(label, ratingScore) {
   }
 }
 
+/**
+ * MOD 3: Updated executeTurnaroundSpin logic to render task text & stars
+ */
 async function executeTurnaroundSpin() {
   const btn = document.querySelector('.big-red-btn');
   const instruction = document.getElementById('trigger-instructions');
@@ -259,84 +262,169 @@ async function executeTurnaroundSpin() {
   const userEmail = localStorage.getItem('nudge_user_email') || 'anonymous_tester';
 
   try {
-    const response = await fetch(/api/get-task?category=${categoryKey}&friction=${mindFrictionStyle}&email=${userEmail});
-if (!response.ok) {
-const serverErr = await response.json();
-throw new Error(serverErr.error || "Server validation failure.");
+    const response = await fetch(`/api/get-task?category=${categoryKey}&friction=${mindFrictionStyle}&email=${encodeURIComponent(userEmail)}`);
+    if (!response.ok) {
+      const serverErr = await response.json();
+      throw new Error(serverErr.error || "Server validation failure.");
+    }
+    
+    const data = await response.json();
+    
+    setTimeout(() => {
+      if (btn) { btn.innerText = "START"; btn.style.opacity = "1"; }
+      
+      const taskDisplayEl = document.getElementById('target-task-text');
+      if (taskDisplayEl && data.task) {
+        // Render objective copy string
+        taskDisplayEl.innerText = data.task.text;
+        // Mount yellow star system metadata variables dynamically
+        renderSingleChallengeRating(data.task.metricLabel, data.task.rating);
+      }
+      
+      switchScreen('screen-countdown');
+      startActionTimer(120);
+    }, 1500);
+  } catch (err) {
+    alert(`Focus Engine Response: ${err.message}`);
+    switchScreen('screen-dashboard');
+    if (btn) { btn.innerText = "START"; btn.style.opacity = "1"; }
+  }
 }
-const data = await response.json();
-setTimeout(() => {
-if (btn) { btn.innerText = "START"; btn.style.opacity = "1"; }
-const taskDisplayEl = document.getElementById('target-task-text');
-if (taskDisplayEl && data.task) {
-// Render objective copy string
-taskDisplayEl.innerText = data.task.text;
-// Mount yellow star system metadata variables dynamically
-renderSingleChallengeRating(data.task.metricLabel, data.task.rating);
-}
-switchScreen('screen-countdown');
-startActionTimer(120);
-}, 1500);
-} catch (err) {
-alert(Focus Engine Response: ${err.message});
-switchScreen('screen-dashboard');
-}
-}
+
 function startActionTimer(seconds) {
-const display = document.getElementById('timer-display');
-let timeLeft = seconds;
-clearInterval(countdownInterval);
-countdownInterval = setInterval(() => {
-let minutes = Math.floor(timeLeft / 60);
-let secs = timeLeft % 60;
-minutes = minutes < 10 ? "0" + minutes : minutes;
-secs = secs < 10 ? "0" + secs : secs;
-if (display) display.innerText = minutes + ":" + secs;
-if (--timeLeft < 0) { clearInterval(countdownInterval); triggerVictoryPhase(2.0); }
-}, 1000);
+  const display = document.getElementById('timer-display');
+  let timeLeft = seconds;
+  clearInterval(countdownInterval);
+  
+  countdownInterval = setInterval(() => {
+    let minutes = Math.floor(timeLeft / 60);
+    let secs = timeLeft % 60;
+    minutes = minutes < 10 ? "0" + minutes : minutes;
+    secs = secs < 10 ? "0" + secs : secs;
+    if (display) display.innerText = minutes + ":" + secs;
+    if (--timeLeft < 0) { 
+      clearInterval(countdownInterval); 
+      triggerVictoryPhase(2.0); 
+    }
+  }, 1000);
 }
+
 function finishEarly() {
-const displayEl = document.getElementById('timer-display');
-let elapsedMinutes = 2.0;
-if (displayEl) {
-const displayVal = displayEl.innerText;
-const parts = displayVal.split(':');
-if (parts.length === 2) {
-const currentMinutesVal = parseInt(parts[0], 10) || 0;
-const currentSecondsVal = parseInt(parts[1], 10) || 0;
-const elapsedSeconds = 120 - (currentMinutesVal * 60 + currentSecondsVal);
-elapsedMinutes = Math.max(0.2, elapsedSeconds / 60);
+  const displayEl = document.getElementById('timer-display');
+  let elapsedMinutes = 2.0;
+  if (displayEl) {
+    const displayVal = displayEl.innerText;
+    const parts = displayVal.split(':');
+    if (parts.length === 2) {
+      const currentMinutesVal = parseInt(parts[0], 10) || 0;
+      const currentSecondsVal = parseInt(parts[1], 10) || 0;
+      const elapsedSeconds = 120 - (currentMinutesVal * 60 + currentSecondsVal);
+      elapsedMinutes = Math.max(0.2, elapsedSeconds / 60);
+    }
+  }
+  clearInterval(countdownInterval);
+  triggerVictoryPhase(elapsedMinutes);
 }
-}
-clearInterval(countdownInterval);
-triggerVictoryPhase(elapsedMinutes);
-}
+
 function cancelTimer() {
-clearInterval(countdownInterval);
-updateMetricDashboard();
-switchScreen('screen-dashboard');
+  clearInterval(countdownInterval);
+  updateMetricDashboard();
+  switchScreen('screen-dashboard');
 }
+
 function triggerVictoryPhase(minutesEarned) {
-const copy = victoryValidationStrings[Math.floor(Math.random() * victoryValidationStrings.length)];
-const validationCopyEl = document.getElementById('victory-validation-copy');
-if (validationCopyEl) validationCopyEl.innerText = copy;
-totalWinsCount += 1;
-totalFocusReclaimed += minutesEarned;
-localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
-localStorage.setItem('nudge_minutes', totalFocusReclaimed.toString());
-try {
-if (!isAppMuted) {
-const audioNode = document.getElementById('victory-chime');
-if (audioNode) { audioNode.currentTime = 0; audioNode.play(); }
+  const copy = victoryValidationStrings[Math.floor(Math.random() * victoryValidationStrings.length)];
+  const validationCopyEl = document.getElementById('victory-validation-copy');
+  if (validationCopyEl) validationCopyEl.innerText = copy;
+  
+  totalWinsCount += 1;
+  totalFocusReclaimed += minutesEarned;
+  localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
+  localStorage.setItem('nudge_minutes', totalFocusReclaimed.toString());
+  
+  try {
+    if (!isAppMuted) {
+      const audioNode = document.getElementById('victory-chime');
+      if (audioNode) { audioNode.currentTime = 0; audioNode.play().catch(e=>{}); }
+    }
+  } catch (e) { console.warn(e); }
+  
+  switchScreen('screen-victory');
+  
+  try {
+    if (typeof confetti === 'function') {
+      confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#D4A373', '#4A7C59', '#2D2B2A'] });
+    }
+  } catch (e) { console.log(e); }
 }
-} catch (e) { console.warn(e); }
-switchScreen('screen-victory');
-try {
-if (typeof confetti === 'function') confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#D4A373', '#4A7C59', '#2D2B2A'] });
-} catch (e) { console.log(e); }
-}
+
 function claimRewardStack() {
-updateMetricDashboard();
-syncLifetimeProgressToCloud();
-switchScreen('screen-dashboard');
+  updateMetricDashboard();
+  syncLifetimeProgressToCloud();
+  switchScreen('screen-dashboard');
+}
+
+/* ========================================================
+   CUSTOM LIFELINES ENGINE
+======================================================== */
+function openCustomLifelineModal() {
+  const isUserPremium = localStorage.getItem('nudge_premium_user') === 'true';
+  if (!isUserPremium) {
+    const paywall = document.getElementById('paywall-overlay');
+    if (paywall) paywall.classList.add('active');
+  } else {
+    const modal = document.getElementById('custom-lifeline-modal');
+    if (modal) modal.classList.add('active');
+  }
+}
+
+function closeCustomLifelineModal() {
+  const modal = document.getElementById('custom-lifeline-modal');
+  if (modal) modal.classList.remove('active');
+}
+
+function saveCustomLifeline() {
+  const timeInput = document.getElementById('custom-time-input').value;
+  const frictionInput = document.getElementById('custom-friction-input').value;
+  const deckInput = document.getElementById('custom-deck-input').value;
+
+  if (!timeInput) {
+    alert("Please select a valid time.");
+    return;
+  }
+
+  const newCustom = { time: timeInput, friction: frictionInput, deck: deckInput };
+  let customs = JSON.parse(localStorage.getItem('nudge_custom_lifelines') || '[]');
+  customs.push(newCustom);
+  localStorage.setItem('nudge_custom_lifelines', JSON.stringify(customs));
+
+  closeCustomLifelineModal();
+  renderCustomLifelines();
+}
+
+function renderCustomLifelines() {
+  const injectionPoint = document.getElementById('custom-lifelines-injection-point');
+  if (!injectionPoint) return;
+  
+  injectionPoint.innerHTML = ''; 
+  const customs = JSON.parse(localStorage.getItem('nudge_custom_lifelines') || '[]');
+  
+  customs.forEach(c => {
+    const [hourStr, minStr] = c.time.split(':');
+    let hour = parseInt(hourStr, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    hour = hour % 12 || 12;
+    const formattedTime = `${hour}:${minStr} ${ampm}`;
+
+    const html = `
+      <div class="lifeline-item" style="border-color: var(--accent-color);">
+        <div>
+          <div style="font-weight: 800; font-size: 14px; color: var(--premium-color);">${formattedTime}</div>
+          <div style="font-size: 11px; color: #7A7571; font-weight: 600;">Custom: ${c.friction}</div>
+        </div>
+        <label class="toggle-switch"><input type="checkbox" checked disabled><span class="slider"></span></label>
+      </div>
+    `;
+    injectionPoint.insertAdjacentHTML('beforeend', html);
+  });
 }
