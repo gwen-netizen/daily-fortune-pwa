@@ -1,13 +1,26 @@
-// Neuro-calibrated text arrays mapping to the core problem solutions
-const taskDatabase = [
-  "Do the single task you have been avoiding for exactly two minutes. Move right now. No choices, just execution.",
-  "Roll your shoulders completely back, step away from the desk, and stand fully tall. Force a clean neurological change of state.",
-  "Invert your phone screen face down right now. Sit in continuous, total quiet breathing until the system chimes zero.",
-  "Locate one piece of physical friction or clutter in your visual field. Trash it or store it out of sight immediately.",
-  "Drink a full clean glass of water right now. Clear away physical systemic sludge and re-anchor attention fields.",
-  "Isolate one capability you brought to the table this week. Write it down or state it out loud without comparing it to anyone.",
-  "Take three deliberate, ultra-slow abdominal breaths. Lock focus onto the movement of your lungs. Clear the static."
-];
+// Category-specific fallback task arrays for offline execution
+const fallbackTasksByCategory = {
+  charisma: [
+    "Roll your shoulders back, plant both feet firmly on the ground, and maintain high posture for 120 seconds.",
+    "Unclench your jaw, soften your shoulders, and slow your breathing down to build a calm physical baseline.",
+    "Practice speaking your next sentence out loud with deliberate volume and clear inflection."
+  ],
+  wealth: [
+    "Identify one immediate, unnecessary recurring subscription in your digital accounts and cancel it right now.",
+    "Open your primary bank app and review your last 5 transactions with zero judgment.",
+    "Calculate your true hourly worth based on your income and weigh your next purchase against hours worked."
+  ],
+  dopamine: [
+    "Close your eyes, clear your mind, and take 5 slow, long breaths to break the algorithmic tracking cycle.",
+    "Set a timer for 2 minutes, turn your phone face down, and allow your dopamine receptors to recalibrate.",
+    "Do 10 steady bodyweight squats right now to replace cheap digital stimulation with biological circulation."
+  ],
+  overwhelm: [
+    "Identify the single absolute largest project on your desk. Write down only the very first, 2-minute micro-step.",
+    "Open your task list and ruthlessly cross out three items that do not absolutely need to happen today.",
+    "Isolate the single item you have been avoiding out of performance anxiety and commit to working on it for 120 seconds."
+  ]
+};
 
 const victoryValidationStrings = [
   "You chose active alignment while the rest of the world remained paralyzed on the couch scrolling algorithms. Focus Reclaimed.",
@@ -17,22 +30,56 @@ const victoryValidationStrings = [
 
 let isPremiumSelected = false;
 let countdownInterval = null;
-let mindFrictionStyle = 'scroll'; // Tracks Screen 2 profile choices: 'scroll', 'paralysis', 'routine'
 
-// METRIC STATE FRAME: Tracks your new premium rebrand parameter values safely across reloads
+// Initialize state from sessionStorage if available, otherwise default
+let mindFrictionStyle = sessionStorage.getItem('nudge_friction') || 'scroll'; 
+let selectedCategory = sessionStorage.getItem('nudge_category') || 'charisma'; 
+
 let totalWinsCount = parseInt(localStorage.getItem('nudge_total_wins') || '0');
 let totalFocusReclaimed = parseFloat(localStorage.getItem('nudge_minutes') || '0.0');
 
-// High-reliability page setup engine load sequence
 document.addEventListener("DOMContentLoaded", () => {
+  restoreStateFromSession();
   updateMetricDashboard();
   checkStripeRedirectStatus();
-  applyPremiumUIVisuals(); // Checks authorization and handles menu aesthetics instantly
+  applyPremiumUIVisuals();
 });
 
 /**
- * Metric Scaling Engine: Automatically scales presentation layout from 'min' to 'hr' based on volume milestones
+ * Restores selection states from sessionStorage across page reloads
  */
+function restoreStateFromSession() {
+  // Restore friction option selection on Screen 2
+  const optionCards = document.querySelectorAll('.option-card');
+  optionCards.forEach(card => {
+    const textContent = card.querySelector('.option-title')?.innerText || '';
+    if (
+      (mindFrictionStyle === 'scroll' && textContent.includes("Scrolling")) ||
+      (mindFrictionStyle === 'paralysis' && textContent.includes("Paralysis")) ||
+      (mindFrictionStyle === 'routine' && !textContent.includes("Scrolling") && !textContent.includes("Paralysis"))
+    ) {
+      optionCards.forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+    }
+  });
+
+  // Restore deck selection on Screen 3
+  const deckItems = document.querySelectorAll('.deck-item');
+  deckItems.forEach(item => {
+    const categoryAttr = item.getAttribute('data-category');
+    if (categoryAttr === selectedCategory) {
+      deckItems.forEach(d => d.classList.remove('selected'));
+      item.classList.add('selected');
+      const isPremium = item.querySelector('.deck-meta')?.innerText.includes("PREMIUM") || false;
+      isPremiumSelected = isPremium;
+      const deckTitleEl = document.getElementById('active-deck-title');
+      if (deckTitleEl) {
+        deckTitleEl.innerText = item.querySelector('.deck-name')?.innerText || '';
+      }
+    }
+  });
+}
+
 function updateMetricDashboard() {
   const streaksEl = document.getElementById('stat-streaks');
   const focusEl = document.getElementById('stat-focus');
@@ -41,10 +88,8 @@ function updateMetricDashboard() {
     streaksEl.innerText = totalWinsCount;
     
     if (totalFocusReclaimed < 60) {
-      // Presentation under 1 hour baseline milestone metrics
       focusEl.innerText = totalFocusReclaimed.toFixed(1) + ' min';
     } else {
-      // Progressive presentation transformation to Hours metric frames
       const hoursScaled = totalFocusReclaimed / 60;
       focusEl.innerText = hoursScaled.toFixed(1) + ' hr';
     }
@@ -66,9 +111,6 @@ function switchScreen(screenId) {
   }
 }
 
-/**
- * Maps Screen 2 selection metrics cleanly down to behavioral engine context labels
- */
 function selectOption(el) {
   document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
@@ -77,12 +119,17 @@ function selectOption(el) {
   if (textContent.includes("Scrolling")) mindFrictionStyle = 'scroll';
   else if (textContent.includes("Paralysis")) mindFrictionStyle = 'paralysis';
   else mindFrictionStyle = 'routine';
+
+  sessionStorage.setItem('nudge_friction', mindFrictionStyle);
 }
 
-function selectDeck(el, isPremium) {
+function selectDeck(el, isPremium, categoryKey) {
   document.querySelectorAll('.deck-item').forEach(d => d.classList.remove('selected'));
   el.classList.add('selected');
+  
   isPremiumSelected = isPremium;
+  selectedCategory = categoryKey || el.getAttribute('data-category') || 'charisma';
+  sessionStorage.setItem('nudge_category', selectedCategory);
   
   const deckTitleEl = document.getElementById('active-deck-title');
   if (deckTitleEl) {
@@ -91,19 +138,13 @@ function selectDeck(el, isPremium) {
   }
 }
 
-/**
- * Intercepts deck routing selection and verifies active subscription access authorizations
- */
 function startTriggerPhase() {
-  // HIGH-RELIABILITY AUTH ENGINE: Checks browser local storage token values
   const isUserPremium = localStorage.getItem('nudge_premium_user') === 'true';
 
   if (isPremiumSelected && !isUserPremium) {
-    // If the tier is premium and user has NOT paid, activate lock paywall overlay view frame
     const paywall = document.getElementById('paywall-overlay');
     if (paywall) paywall.classList.add('active');
   } else {
-    // Standard bypass loop: If it's a free tier OR paid user is active, forward cleanly onto the spin wheel
     switchScreen('screen-trigger');
   }
 }
@@ -118,9 +159,6 @@ function selectTier(el) {
   el.classList.add('selected');
 }
 
-/**
- * Strips lock emoji design components if user is authorized inside local profile cache logs
- */
 function applyPremiumUIVisuals() {
   const isUserPremium = localStorage.getItem('nudge_premium_user') === 'true';
   
@@ -132,7 +170,6 @@ function applyPremiumUIVisuals() {
       if (meta && meta.innerText.includes("PREMIUM UPGRADE")) {
         meta.innerText = "UNLOCKED PREMIUM AREA";
         meta.style.color = "var(--success-color)";
-        // Strips out text lock string glyph markers smoothly into success checkmarks
         if (name) {
           name.innerText = name.innerText.replace('⚡ ', '✅ ').replace('🧠 ', '✅ ');
         }
@@ -141,9 +178,6 @@ function applyPremiumUIVisuals() {
   }
 }
 
-/**
- * Functional Route Engine linking the frontend Paywall Selection seamlessly to Stripe Checkout
- */
 async function simulatePurchase() {
   const selectedTierBox = document.querySelector('.tier-box.selected');
   if (!selectedTierBox) {
@@ -173,7 +207,6 @@ async function simulatePurchase() {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`SERVER LOG INFRASTRUCTURE ERROR [Status ${response.status}]:`, errorText);
       throw new Error(`Server returned status ${response.status}: ${errorText}`);
     }
 
@@ -186,7 +219,7 @@ async function simulatePurchase() {
     }
   } catch (paymentError) {
     console.error("Stripe Checkout Session routing failure details:", paymentError);
-    alert(`Gateway Error: ${paymentError.message}. Open browser inspect console for full stack trace parameters.`);
+    alert(`Gateway Error: ${paymentError.message}.`);
     
     if (paywallBtn) {
       paywallBtn.innerText = originalText;
@@ -195,16 +228,12 @@ async function simulatePurchase() {
   }
 }
 
-/**
- * Handles validation status parameter checks when landing back from Stripe domains
- */
 function checkStripeRedirectStatus() {
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('session') === 'success') {
     localStorage.setItem('nudge_premium_user', 'true');
     alert("Premium Portfolio Active! Algorithmic intercepts completely unlocked.");
     
-    // Dynamically updates UI without requiring a hard window reload routine
     applyPremiumUIVisuals();
     
     window.history.replaceState({}, document.title, window.location.pathname);
@@ -212,9 +241,6 @@ function checkStripeRedirectStatus() {
   }
 }
 
-/**
- * Variable Reward Core: Sends asynchronous tracking requests to fetch one task programmatically from the matrix
- */
 async function executeTurnaroundSpin() {
   const btn = document.querySelector('.big-red-btn');
   const instruction = document.getElementById('trigger-instructions');
@@ -227,16 +253,11 @@ async function executeTurnaroundSpin() {
     instruction.innerText = "Exhale slowly... allowing your focus to narrow down completely.";
   }
 
-  const activeDeckName = document.getElementById('active-deck-title').innerText.toLowerCase();
-  let categoryKey = 'charisma';
-  if (activeDeckName.includes("wealth")) categoryKey = 'wealth';
-  else if (activeDeckName.includes("dopamine")) categoryKey = 'dopamine';
-  else if (activeDeckName.includes("overwhelm")) categoryKey = 'overwhelm';
-
-  let selectedTask = taskDatabase[Math.floor(Math.random() * taskDatabase.length)];
+  const categoryPool = fallbackTasksByCategory[selectedCategory] || fallbackTasksByCategory['charisma'];
+  let selectedTask = categoryPool[Math.floor(Math.random() * categoryPool.length)];
 
   try {
-    const response = await fetch(`/api/get-task?category=${categoryKey}&friction=${mindFrictionStyle}`);
+    const response = await fetch(`/api/get-task?category=${selectedCategory}&friction=${mindFrictionStyle}`);
     if (response.ok) {
       const data = await response.json();
       if (data && data.task) {
@@ -245,6 +266,13 @@ async function executeTurnaroundSpin() {
     }
   } catch (err) {
     console.error("Task payload transport error:", err);
+  }
+
+  // Guarantees friction prefix application even on offline fallbacks
+  if (!selectedTask.startsWith('⚡') && !selectedTask.startsWith('🧠') && !selectedTask.startsWith('🌱')) {
+    if (mindFrictionStyle === 'scroll') selectedTask = "⚡ INTERCEPTION: " + selectedTask;
+    else if (mindFrictionStyle === 'paralysis') selectedTask = "🧠 BREAK OUT: " + selectedTask;
+    else if (mindFrictionStyle === 'routine') selectedTask = "🌱 GROUNDING: " + selectedTask;
   }
 
   setTimeout(() => {
