@@ -110,11 +110,10 @@
           </div>
         </div>
 
-        <!-- NEW: DAILY INTERCEPTS SECTION -->
+        <!-- DAILY INTERCEPTS SECTION -->
         <div style="margin-top: 24px; text-align: left;">
           <h2 class="title-large" style="font-size: 18px; margin-bottom: 12px; margin-left: 4px;">Daily Intercepts</h2>
           <div class="lifeline-list" id="lifeline-container">
-            <!-- Static Baseline Anchors -->
             <div class="lifeline-item">
               <div><div style="font-weight: 800; font-size: 14px; color: var(--text-color);">08:15 AM</div><div style="font-size: 11px; color: #7A7571; font-weight: 600;">Morning Bed-Lock</div></div>
               <label class="toggle-switch"><input type="checkbox" checked disabled><span class="slider"></span></label>
@@ -135,7 +134,11 @@
             <!-- Injection Target for User's Custom Arrays -->
             <div id="custom-lifelines-injection-point"></div>
 
-            <button class="btn-bypass" style="width: 100%; border: 2px dashed #EAE3D9; padding: 14px; border-radius: 14px; margin-top: 4px; font-weight: 700;" onclick="openCustomLifelineModal()">+ Add Custom Lifeline Intercept</button>
+            <!-- PREMIUM CUSTOM LIFELINE TRIGGER BUTTON -->
+            <button id="custom-lifeline-add-btn" class="btn-bypass" style="width: 100%; border: 2px dashed var(--premium-color); padding: 14px; border-radius: 14px; margin-top: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; background: #FAF7F2;" onclick="openCustomLifelineModal()">
+              <div id="custom-lifeline-meta" class="deck-meta premium" style="margin-bottom: 4px;">PREMIUM UPGRADE</div>
+              <div id="custom-lifeline-text" style="font-weight: 800; font-size: 14px; color: var(--text-color);">⚡ + Add Custom Lifeline</div>
+            </button>
           </div>
         </div>
 
@@ -257,7 +260,6 @@
 
   <script>
     let deferredPrompt;
-    
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
@@ -265,7 +267,6 @@
           .catch(err => console.error('SW Registration error:', err));
       });
     }
-    
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
