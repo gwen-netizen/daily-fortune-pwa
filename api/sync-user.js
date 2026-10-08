@@ -10,6 +10,9 @@ module.exports = async function handler(req, res) {
 
   const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
+  // ----------------------------------------------------
+  // 1. CLOUD PROGRESS BACKUP (POST)
+  // ----------------------------------------------------
   if (req.method === 'POST') {
     try {
       const { email, total_wins, focus_reclaimed, premium_user } = req.body;
@@ -32,6 +35,9 @@ module.exports = async function handler(req, res) {
     }
   }
 
+  // ----------------------------------------------------
+  // 2. AUTHENTICATION & PROFILE RETRIEVAL (GET)
+  // ----------------------------------------------------
   if (req.method === 'GET') {
     const { email, action, token } = req.query;
     if (!email) return res.status(400).json({ error: "Email parameter missing" });
@@ -39,33 +45,48 @@ module.exports = async function handler(req, res) {
     const lowerEmail = email.toLowerCase();
     
     try {
+      // Action A: Request 6-digit OTP Code
       if (action === 'request_otp') {
-        const { error } = await supabase.auth.signInWithOtp({ email: lowerEmail });
+        const { error } = await supabase.auth.signInWithOtp({ 
+          email: lowerEmail,
+          options: {
+            shouldCreateUser: true // Automatically registers new users
+          }
+        });
         if (error) throw error;
         return res.status(200).json({ sent: true });
       }
       
+      // Action B: Verify 6-digit OTP Code (Fail-Safe Matrix)
       if (action === 'verify_otp') {
-        // FIXED: Changed 'magiclink' to 'email' to match Supabase OTP tokens
-        let { data: authData, error: authErr } = await supabase.auth.verifyOtp({
-          email: lowerEmail,
-          token: token,
-          type: 'email'
-        });
-        
-        // Backup verification check for new signups
-        if (authErr) {
-          const fallback = await supabase.auth.verifyOtp({
+        if (!token) return res.status(400).json({ error: "Token missing" });
+
+        const otpTypes = ['email', 'signup', 'magiclink'];
+        let verifiedAuthData = null;
+        let lastAuthError = null;
+
+        // Iterates through all possible Supabase OTP token types to guarantee verification
+        for (const otpType of otpTypes) {
+          const { data, error } = await supabase.auth.verifyOtp({
             email: lowerEmail,
-            token: token,
-            type: 'signup'
+            token: token.trim(),
+            type: otpType
           });
-          authData = fallback.data;
-          authErr = fallback.error;
+
+          if (!error && data?.session) {
+            verifiedAuthData = data;
+            break;
+          } else {
+            lastAuthError = error;
+          }
         }
 
-        if (authErr) return res.status(401).json({ error: "Invalid or expired code." });
+        if (!verifiedAuthData) {
+          console.warn("OTP verification rejected on all types for:", lowerEmail, lastAuthError);
+          return res.status(401).json({ error: "Invalid or expired code. Please try requesting a new one." });
+        }
 
+        // Fetch or initialize user profile from DB
         const { data: profileData } = await supabase
           .from('user_profiles')
           .select('*')
@@ -78,8 +99,9 @@ module.exports = async function handler(req, res) {
         });
       }
 
+      // Action C: Secure Premium Check after Payment
       if (action === 'get_profile') {
-        const { data: profileData, error } = await supabase
+        const { data: profileData } = await supabase
           .from('user_profiles')
           .select('*')
           .eq('email', lowerEmail)
