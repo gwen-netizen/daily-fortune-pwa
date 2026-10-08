@@ -1,38 +1,25 @@
-// sw.js - Handles incoming Web Push API triggers and standard offline fallbacks
+// sw.js - Handles push events and focuses the PWA tab
 
 self.addEventListener('push', function(event) {
-  let data = {};
-  
+  // If the push comes from an external remote server (fallback support)
+  let data = { title: "2-min", body: "Tap to break your friction loop." };
   if (event.data) {
-    try {
-      data = event.data.json();
-    } catch (e) {
-      data = { 
-        title: "2 Min Turnaround", 
-        body: event.data.text() || "Stuck in a loop? Tap to launch a 120-second circuit breaker." 
-      };
-    }
+    try { data = event.data.json(); } 
+    catch (e) { data.body = event.data.text(); }
   }
 
-  const title = data.title || "Brain Reset Lifeline";
-  const options = {
-    body: data.body || "Tap to smash the button and shatter your current procrastination loop.",
-    icon: data.icon || "https://flaticon.com",
-    badge: data.badge || "https://flaticon.com", 
-    vibrate: [100, 50, 100], 
-    data: {
-      url: (data.data && data.data.url) ? data.data.url : "/"
-    }
-  };
-
   event.waitUntil(
-    self.registration.showNotification(title, options)
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: "https://flaticon.com",
+      vibrate: [100, 50, 100],
+      data: { url: "/" }
+    })
   );
 });
 
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
-  
   const urlToOpen = (event.notification.data && event.notification.data.url) ? event.notification.data.url : '/';
 
   event.waitUntil(
