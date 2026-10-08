@@ -31,7 +31,6 @@ const victoryValidationStrings = [
 let isPremiumSelected = false;
 let countdownInterval = null;
 
-// Initialize state from sessionStorage if available, otherwise default
 let mindFrictionStyle = sessionStorage.getItem('nudge_friction') || 'scroll'; 
 let selectedCategory = sessionStorage.getItem('nudge_category') || 'charisma'; 
 
@@ -43,13 +42,37 @@ document.addEventListener("DOMContentLoaded", () => {
   updateMetricDashboard();
   checkStripeRedirectStatus();
   applyPremiumUIVisuals();
+  checkExistingUserEmail();
 });
 
 /**
- * Restores selection states from sessionStorage across page reloads
+ * Validates user email input on Screen 1
  */
+function submitEmailAndProceed() {
+  const emailInput = document.getElementById('user-email-input');
+  const errorMsg = document.getElementById('email-error-msg');
+  const emailVal = emailInput ? emailInput.value.trim() : '';
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(emailVal)) {
+    if (errorMsg) errorMsg.style.display = 'block';
+    return;
+  }
+
+  if (errorMsg) errorMsg.style.display = 'none';
+  localStorage.setItem('nudge_user_email', emailVal);
+  switchScreen('screen-onboarding-2');
+}
+
+function checkExistingUserEmail() {
+  const savedEmail = localStorage.getItem('nudge_user_email');
+  if (savedEmail) {
+    const emailInput = document.getElementById('user-email-input');
+    if (emailInput) emailInput.value = savedEmail;
+  }
+}
+
 function restoreStateFromSession() {
-  // Restore friction option selection on Screen 2
   const optionCards = document.querySelectorAll('.option-card');
   optionCards.forEach(card => {
     const textContent = card.querySelector('.option-title')?.innerText || '';
@@ -63,7 +86,6 @@ function restoreStateFromSession() {
     }
   });
 
-  // Restore deck selection on Screen 3
   const deckItems = document.querySelectorAll('.deck-item');
   deckItems.forEach(item => {
     const categoryAttr = item.getAttribute('data-category');
@@ -111,18 +133,23 @@ function switchScreen(screenId) {
   }
 }
 
-function selectOption(el) {
+/**
+ * Screen 2: Selecting an option immediately advances to Screen 3 (Dashboard)
+ */
+function selectOption(el, styleType) {
   document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
   
-  const textContent = el.querySelector('.option-title').innerText;
-  if (textContent.includes("Scrolling")) mindFrictionStyle = 'scroll';
-  else if (textContent.includes("Paralysis")) mindFrictionStyle = 'paralysis';
-  else mindFrictionStyle = 'routine';
-
+  mindFrictionStyle = styleType || 'scroll';
   sessionStorage.setItem('nudge_friction', mindFrictionStyle);
+
+  // Immediate smooth screen transition without bottom button
+  switchScreen('screen-dashboard');
 }
 
+/**
+ * Screen 3: Selecting a deck immediately advances to Screen 4 (or triggers Paywall)
+ */
 function selectDeck(el, isPremium, categoryKey) {
   document.querySelectorAll('.deck-item').forEach(d => d.classList.remove('selected'));
   el.classList.add('selected');
@@ -136,6 +163,9 @@ function selectDeck(el, isPremium, categoryKey) {
     const deckName = el.querySelector('.deck-name').innerText;
     deckTitleEl.innerText = deckName;
   }
+
+  // Immediate execution phase without bottom button
+  startTriggerPhase();
 }
 
 function startTriggerPhase() {
@@ -268,7 +298,6 @@ async function executeTurnaroundSpin() {
     console.error("Task payload transport error:", err);
   }
 
-  // Guarantees friction prefix application even on offline fallbacks
   if (!selectedTask.startsWith('⚡') && !selectedTask.startsWith('🧠') && !selectedTask.startsWith('🌱')) {
     if (mindFrictionStyle === 'scroll') selectedTask = "⚡ INTERCEPTION: " + selectedTask;
     else if (mindFrictionStyle === 'paralysis') selectedTask = "🧠 BREAK OUT: " + selectedTask;
