@@ -1,0 +1,9 @@
+{
+  "name": "2min-turnaround",
+  "version": "1.0.0",
+  "description": "Behavioral circuit breaker application",
+  "main": "app.js",
+  "dependencies": {
+    "stripe": "^14.24.0"
+  }
+}
