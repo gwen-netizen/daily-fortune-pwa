@@ -1,7 +1,6 @@
 // sw.js - Handles push events and focuses the PWA tab
 
 self.addEventListener('push', function(event) {
-  // If the push comes from an external remote server (fallback support)
   let data = { title: "2-min", body: "Tap to break your friction loop." };
   if (event.data) {
     try { data = event.data.json(); } 
