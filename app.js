@@ -1,24 +1,43 @@
-// Category-specific fallback task arrays for offline execution
+// Local Notification Push Strings (Triggered by client clock)
+const staticLifelines = {
+  "08:15": [
+    "🚀 Trapped under the covers scrolling? Tap here for an immediate 120-second rescue breakout.",
+    "🚀 Reclaim your morning. Open now for a zero-effort momentum win.",
+    "🚀 Scrolling now wastes your evening freedom. Smash the red button to take control."
+  ],
+  "09:45": [
+    "🧠 Frozen by a massive to-do list? Let the app pick one 2-minute step.",
+    "🧠 Lower your task anxiety to zero. Spin the dial and execute for 120 seconds.",
+    "🧠 Waiting for motivation is a trap. Intercept your friction line and move now."
+  ],
+  "15:45": [
+    "📉 Staring blankly at your monitor? Tap now for a clean physical energy reset.",
+    "📉 Afternoon slipping away? Stop the guilt loop and reclaim your focus instantly.",
+    "📉 Your thumb is searching for a digital escape. Secure your focus stack right now."
+  ],
+  "23:15": [
+    "🛑 Late-night scrolling hijacks your sleep. Tap this banner to execute a mental shutdown.",
+    "🛑 One last scroll is a trap. Turn your screen face down and claim victory.",
+    "🛑 True high-status execution requires deep sleep. Shatter the addiction loop right now."
+  ]
+};
+
 const fallbackTasksByCategory = {
   charisma: [
     "Roll your shoulders back, plant both feet firmly on the ground, and maintain high posture for 120 seconds.",
-    "Unclench your jaw, soften your shoulders, and slow your breathing down to build a calm physical baseline.",
-    "Practice speaking your next sentence out loud with deliberate volume and clear inflection."
+    "Unclench your jaw, soften your shoulders, and slow your breathing down to build a calm physical baseline."
   ],
   wealth: [
     "Identify one immediate, unnecessary recurring subscription in your digital accounts and cancel it right now.",
-    "Open your primary bank app and review your last 5 transactions with zero judgment.",
-    "Calculate your true hourly worth based on your income and weigh your next purchase against hours worked."
+    "Open your primary bank app and review your last 5 transactions with zero judgment."
   ],
   dopamine: [
     "Close your eyes, clear your mind, and take 5 slow, long breaths to break the algorithmic tracking cycle.",
-    "Set a timer for 2 minutes, turn your phone face down, and allow your dopamine receptors to recalibrate.",
-    "Do 10 steady bodyweight squats right now to replace cheap digital stimulation with biological circulation."
+    "Set a timer for 2 minutes, turn your phone face down, and allow your dopamine receptors to recalibrate."
   ],
   overwhelm: [
     "Identify the single absolute largest project on your desk. Write down only the very first, 2-minute micro-step.",
-    "Open your task list and ruthlessly cross out three items that do not absolutely need to happen today.",
-    "Isolate the single item you have been avoiding out of performance anxiety and commit to working on it for 120 seconds."
+    "Open your task list and ruthlessly cross out three items that do not absolutely need to happen today."
   ]
 };
 
@@ -30,24 +49,31 @@ const victoryValidationStrings = [
 
 let isPremiumSelected = false;
 let countdownInterval = null;
-
 let mindFrictionStyle = sessionStorage.getItem('nudge_friction') || 'scroll'; 
 let selectedCategory = sessionStorage.getItem('nudge_category') || 'charisma'; 
-
 let totalWinsCount = parseInt(localStorage.getItem('nudge_total_wins') || '0');
 let totalFocusReclaimed = parseFloat(localStorage.getItem('nudge_minutes') || '0.0');
 
+// Initial Routing Logic
 document.addEventListener("DOMContentLoaded", () => {
-  restoreStateFromSession();
-  updateMetricDashboard();
+  const savedEmail = localStorage.getItem('nudge_user_email');
+  
+  if (savedEmail) {
+    // Existing User Default Load
+    restoreStateFromSession();
+    updateMetricDashboard();
+    switchScreen('screen-onboarding-2');
+  } else {
+    // New User Onboarding Load
+    switchScreen('screen-onboarding-1');
+  }
+  
   checkStripeRedirectStatus();
   applyPremiumUIVisuals();
-  checkExistingUserEmail();
+  renderCustomLifelines();
+  startClockTicker();
 });
 
-/**
- * Validates user email input on Screen 1
- */
 function submitEmailAndProceed() {
   const emailInput = document.getElementById('user-email-input');
   const errorMsg = document.getElementById('email-error-msg');
@@ -61,15 +87,11 @@ function submitEmailAndProceed() {
 
   if (errorMsg) errorMsg.style.display = 'none';
   localStorage.setItem('nudge_user_email', emailVal);
+  
+  // Ask for notification permission after email submit as a fallback
+  if ('Notification' in window) Notification.requestPermission();
+  
   switchScreen('screen-onboarding-2');
-}
-
-function checkExistingUserEmail() {
-  const savedEmail = localStorage.getItem('nudge_user_email');
-  if (savedEmail) {
-    const emailInput = document.getElementById('user-email-input');
-    if (emailInput) emailInput.value = savedEmail;
-  }
 }
 
 function restoreStateFromSession() {
@@ -105,10 +127,8 @@ function restoreStateFromSession() {
 function updateMetricDashboard() {
   const streaksEl = document.getElementById('stat-streaks');
   const focusEl = document.getElementById('stat-focus');
-  
   if (streaksEl && focusEl) {
     streaksEl.innerText = totalWinsCount;
-    
     if (totalFocusReclaimed < 60) {
       focusEl.innerText = totalFocusReclaimed.toFixed(1) + ' min';
     } else {
@@ -121,9 +141,7 @@ function updateMetricDashboard() {
 function switchScreen(screenId) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const targetScreen = document.getElementById(screenId);
-  if (targetScreen) {
-    targetScreen.classList.add('active');
-  }
+  if (targetScreen) targetScreen.classList.add('active');
   
   if (screenId === 'screen-trigger') {
     const instructions = document.getElementById('trigger-instructions');
@@ -133,45 +151,36 @@ function switchScreen(screenId) {
   }
 }
 
-/**
- * Screen 2: Selecting an option immediately advances to Screen 3 (Dashboard)
- */
 function selectOption(el, styleType) {
   document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
-  
   mindFrictionStyle = styleType || 'scroll';
   sessionStorage.setItem('nudge_friction', mindFrictionStyle);
-
-  // Immediate smooth screen transition without bottom button
   switchScreen('screen-dashboard');
 }
 
-/**
- * Screen 3: Selecting a deck immediately advances to Screen 4 (or triggers Paywall)
- */
 function selectDeck(el, isPremium, categoryKey) {
   document.querySelectorAll('.deck-item').forEach(d => d.classList.remove('selected'));
   el.classList.add('selected');
-  
   isPremiumSelected = isPremium;
   selectedCategory = categoryKey || el.getAttribute('data-category') || 'charisma';
   sessionStorage.setItem('nudge_category', selectedCategory);
   
   const deckTitleEl = document.getElementById('active-deck-title');
   if (deckTitleEl) {
-    const deckName = el.querySelector('.deck-name').innerText;
-    deckTitleEl.innerText = deckName;
+    deckTitleEl.innerText = el.querySelector('.deck-name').innerText;
   }
-
-  // Immediate execution phase without bottom button
   startTriggerPhase();
 }
 
 function startTriggerPhase() {
   const isUserPremium = localStorage.getItem('nudge_premium_user') === 'true';
-
   if (isPremiumSelected && !isUserPremium) {
+    const paywallTitle = document.getElementById('paywall-title');
+    const paywallDesc = document.getElementById('paywall-desc');
+    if(paywallTitle) paywallTitle.innerText = "Break Free From the Loops";
+    if(paywallDesc) paywallDesc.innerText = "Unlock behavioral overrides modeled on top neural productivity systems.";
+    
     const paywall = document.getElementById('paywall-overlay');
     if (paywall) paywall.classList.add('active');
   } else {
@@ -184,6 +193,137 @@ function closePaywall() {
   if (paywall) paywall.classList.remove('active');
 }
 
+/* ========================================================
+   PREMIUM CUSTOM LIFELINE ENGINE
+======================================================== */
+function openCustomLifelineModal() {
+  const isUserPremium = localStorage.getItem('nudge_premium_user') === 'true';
+  if (!isUserPremium) {
+    // Modify Paywall for Contextual Up-sell
+    const paywallTitle = document.getElementById('paywall-title');
+    const paywallDesc = document.getElementById('paywall-desc');
+    if(paywallTitle) paywallTitle.innerText = "Build Custom Anchors";
+    if(paywallDesc) paywallDesc.innerText = "Your friction doesn't wait for standard slumps. Upgrade to create unlimited custom time anchors to intercept your exact daily block hours.";
+    
+    const paywall = document.getElementById('paywall-overlay');
+    if (paywall) paywall.classList.add('active');
+  } else {
+    const modal = document.getElementById('custom-lifeline-modal');
+    if(modal) modal.classList.add('active');
+  }
+}
+
+function closeCustomLifelineModal() {
+  const modal = document.getElementById('custom-lifeline-modal');
+  if(modal) modal.classList.remove('active');
+}
+
+function saveCustomLifeline() {
+  const timeInput = document.getElementById('custom-time-input').value;
+  const frictionInput = document.getElementById('custom-friction-input').value;
+  const deckInput = document.getElementById('custom-deck-input').value;
+
+  if(!timeInput) {
+    alert("Please select a valid time.");
+    return;
+  }
+
+  const newCustom = { time: timeInput, friction: frictionInput, deck: deckInput };
+  let customs = JSON.parse(localStorage.getItem('nudge_custom_lifelines') || '[]');
+  customs.push(newCustom);
+  localStorage.setItem('nudge_custom_lifelines', JSON.stringify(customs));
+
+  closeCustomLifelineModal();
+  renderCustomLifelines();
+}
+
+function renderCustomLifelines() {
+  const injectionPoint = document.getElementById('custom-lifelines-injection-point');
+  if (!injectionPoint) return;
+  
+  injectionPoint.innerHTML = ''; // Clear out old renders
+  const customs = JSON.parse(localStorage.getItem('nudge_custom_lifelines') || '[]');
+  
+  customs.forEach(c => {
+    // Convert 24hr to 12hr visually
+    const [hourStr, minStr] = c.time.split(':');
+    let hour = parseInt(hourStr, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    hour = hour % 12 || 12;
+    const formattedTime = `${hour}:${minStr} ${ampm}`;
+
+    const html = `
+      <div class="lifeline-item" style="border-color: var(--accent-color);">
+        <div>
+          <div style="font-weight: 800; font-size: 14px; color: var(--premium-color);">${formattedTime}</div>
+          <div style="font-size: 11px; color: #7A7571; font-weight: 600;">Custom: ${c.friction}</div>
+        </div>
+        <label class="toggle-switch"><input type="checkbox" checked disabled><span class="slider"></span></label>
+      </div>
+    `;
+    injectionPoint.insertAdjacentHTML('beforeend', html);
+  });
+}
+
+/* ========================================================
+   LOCAL PUSH NOTIFICATION TICKER
+======================================================== */
+let lastFiredTime = null;
+let lastFiredDate = null;
+
+function startClockTicker() {
+  setInterval(() => {
+    const now = new Date();
+    // 24-hour format string (e.g., "15:45") to match inputs and static keys
+    const timeString = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+    checkAndFireNotification(timeString);
+  }, 30000); // Check every 30 seconds
+}
+
+function checkAndFireNotification(timeString) {
+  const today = new Date().toDateString();
+  // Prevent firing multiple times in the same minute
+  if (timeString === lastFiredTime && today === lastFiredDate) return;
+
+  let pushBody = null;
+  let pushTitle = "2-min Turnaround";
+
+  // Check Static Fixed Anchors
+  if (staticLifelines[timeString]) {
+    const options = staticLifelines[timeString];
+    pushBody = options[Math.floor(Math.random() * options.length)];
+    pushTitle = "Standard Slump Intercept";
+  }
+
+  // Check Premium Custom Arrays
+  const customs = JSON.parse(localStorage.getItem('nudge_custom_lifelines') || '[]');
+  const matchedCustom = customs.find(c => c.time === timeString);
+  
+  if (matchedCustom) {
+    pushBody = `⚡ Custom Intercept activated: Time to shatter your ${matchedCustom.friction} pattern. Execute now.`;
+    pushTitle = "Custom Lifeline Trigger";
+  }
+
+  // Instruct Service Worker to Fire
+  if (pushBody) {
+    if ('serviceWorker' in navigator && Notification.permission === 'granted') {
+      navigator.serviceWorker.ready.then(reg => {
+        reg.showNotification(pushTitle, {
+          body: pushBody,
+          icon: "https://flaticon.com",
+          vibrate: [100, 50, 100],
+          data: { url: "/" }
+        });
+      });
+    }
+    lastFiredTime = timeString;
+    lastFiredDate = today;
+  }
+}
+
+/* ========================================================
+   EXECUTION & UTILITY LOGIC 
+======================================================== */
 function selectTier(el) {
   document.querySelectorAll('.tier-box').forEach(b => b.classList.remove('selected'));
   el.classList.add('selected');
@@ -191,18 +331,14 @@ function selectTier(el) {
 
 function applyPremiumUIVisuals() {
   const isUserPremium = localStorage.getItem('nudge_premium_user') === 'true';
-  
   if (isUserPremium) {
     document.querySelectorAll('.deck-item').forEach(item => {
       const meta = item.querySelector('.deck-meta');
       const name = item.querySelector('.deck-name');
-      
       if (meta && meta.innerText.includes("PREMIUM UPGRADE")) {
         meta.innerText = "UNLOCKED PREMIUM AREA";
         meta.style.color = "var(--success-color)";
-        if (name) {
-          name.innerText = name.innerText.replace('⚡ ', '✅ ').replace('🧠 ', '✅ ');
-        }
+        if (name) name.innerText = name.innerText.replace('⚡ ', '✅ ').replace('🧠 ', '✅ ');
       }
     });
   }
@@ -210,10 +346,7 @@ function applyPremiumUIVisuals() {
 
 async function simulatePurchase() {
   const selectedTierBox = document.querySelector('.tier-box.selected');
-  if (!selectedTierBox) {
-    alert("Please select a tracking tier to continue.");
-    return;
-  }
+  if (!selectedTierBox) return alert("Please select a tracking tier to continue.");
 
   const isLifetime = selectedTierBox.innerText.includes("Lifetime");
   const paywallBtn = document.querySelector('.paywall-modal .btn-primary');
@@ -234,23 +367,11 @@ async function simulatePurchase() {
         cancelUrl: window.location.origin
       })
     });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Server returned status ${response.status}: ${errorText}`);
-    }
-
+    if (!response.ok) throw new Error(`Server returned status ${response.status}`);
     const session = await response.json();
-
-    if (session.url) {
-      window.location.href = session.url;
-    } else {
-      throw new Error(session.error || "Failed to generate dynamic session payload.");
-    }
-  } catch (paymentError) {
-    console.error("Stripe Checkout Session routing failure details:", paymentError);
-    alert(`Gateway Error: ${paymentError.message}.`);
-    
+    if (session.url) window.location.href = session.url;
+  } catch (error) {
+    alert(`Gateway Error: ${error.message}.`);
     if (paywallBtn) {
       paywallBtn.innerText = originalText;
       paywallBtn.style.opacity = "1";
@@ -263,9 +384,7 @@ function checkStripeRedirectStatus() {
   if (urlParams.get('session') === 'success') {
     localStorage.setItem('nudge_premium_user', 'true');
     alert("Premium Portfolio Active! Algorithmic intercepts completely unlocked.");
-    
     applyPremiumUIVisuals();
-    
     window.history.replaceState({}, document.title, window.location.pathname);
     switchScreen('screen-dashboard');
   }
@@ -275,13 +394,8 @@ async function executeTurnaroundSpin() {
   const btn = document.querySelector('.big-red-btn');
   const instruction = document.getElementById('trigger-instructions');
   
-  if (btn) {
-    btn.innerText = "HOLD...";
-    btn.style.opacity = "0.6";
-  }
-  if (instruction) {
-    instruction.innerText = "Exhale slowly... allowing your focus to narrow down completely.";
-  }
+  if (btn) { btn.innerText = "HOLD..."; btn.style.opacity = "0.6"; }
+  if (instruction) instruction.innerText = "Exhale slowly... allowing your focus to narrow down completely.";
 
   const categoryPool = fallbackTasksByCategory[selectedCategory] || fallbackTasksByCategory['charisma'];
   let selectedTask = categoryPool[Math.floor(Math.random() * categoryPool.length)];
@@ -290,9 +404,7 @@ async function executeTurnaroundSpin() {
     const response = await fetch(`/api/get-task?category=${selectedCategory}&friction=${mindFrictionStyle}`);
     if (response.ok) {
       const data = await response.json();
-      if (data && data.task) {
-        selectedTask = data.task;
-      }
+      if (data && data.task) selectedTask = data.task;
     }
   } catch (err) {
     console.error("Task payload transport error:", err);
@@ -305,15 +417,9 @@ async function executeTurnaroundSpin() {
   }
 
   setTimeout(() => {
-    if (btn) {
-      btn.innerText = "START";
-      btn.style.opacity = "1";
-    }
-    
+    if (btn) { btn.innerText = "START"; btn.style.opacity = "1"; }
     const taskDisplayEl = document.getElementById('target-task-text');
-    if (taskDisplayEl) {
-      taskDisplayEl.innerText = selectedTask;
-    }
+    if (taskDisplayEl) taskDisplayEl.innerText = selectedTask;
     
     switchScreen('screen-countdown');
     startActionTimer(120); 
@@ -327,9 +433,7 @@ function startActionTimer(seconds) {
   countdownInterval = setInterval(() => {
     let minutes = Math.floor(timeLeft / 60);
     let secs = timeLeft % 60;
-    minutes = minutes < 10 ? "0" + minutes : minutes;
-    secs = secs < 10 ? "0" + secs : secs;
-    if (display) display.innerText = minutes + ":" + secs;
+    if (display) display.innerText = (minutes < 10 ? "0" + minutes : minutes) + ":" + (secs < 10 ? "0" + secs : secs);
     if (--timeLeft < 0) {
       clearInterval(countdownInterval);
       triggerVictoryPhase(2.0);
@@ -341,12 +445,9 @@ function finishEarly() {
   const displayEl = document.getElementById('timer-display');
   let elapsedMinutes = 2.0;
   if (displayEl) {
-    const displayVal = displayEl.innerText;
-    const parts = displayVal.split(':');
+    const parts = displayEl.innerText.split(':');
     if (parts.length === 2) {
-      const currentMinutesVal = parseInt(parts[0], 10) || 0;
-      const currentSecondsVal = parseInt(parts[1], 10) || 0;
-      const elapsedSeconds = 120 - (currentMinutesVal * 60 + currentSecondsVal);
+      const elapsedSeconds = 120 - ((parseInt(parts[0], 10) || 0) * 60 + (parseInt(parts[1], 10) || 0));
       elapsedMinutes = Math.max(0.2, elapsedSeconds / 60);
     }
   }
@@ -364,27 +465,24 @@ function triggerVictoryPhase(minutesEarned) {
   const copy = victoryValidationStrings[Math.floor(Math.random() * victoryValidationStrings.length)];
   const validationCopyEl = document.getElementById('victory-validation-copy');
   if (validationCopyEl) validationCopyEl.innerText = copy;
+  
   totalWinsCount += 1;
   totalFocusReclaimed += minutesEarned;
   localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
   localStorage.setItem('nudge_minutes', totalFocusReclaimed.toString());
+  
   try {
     const audioNode = document.getElementById('victory-chime');
-    if (audioNode) {
-      audioNode.currentTime = 0;
-      audioNode.play().catch(err => console.log("Audio presentation skipped:", err));
-    }
-  } catch (audioError) {
-    console.warn("Audio catch execution layer bypassed:", audioError);
-  }
+    if (audioNode) { audioNode.currentTime = 0; audioNode.play().catch(e=>{}); }
+  } catch (e) {}
+  
   switchScreen('screen-victory');
+  
   try {
     if (typeof confetti === 'function') {
       confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#D4A373', '#4A7C59', '#2D2B2A'] });
     }
-  } catch (e) {
-    console.log("Confetti library processing bypass:", e);
-  }
+  } catch (e) {}
 }
 
 function claimRewardStack() {
