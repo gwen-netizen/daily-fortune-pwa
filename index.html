@@ -10,32 +10,36 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="2-min">
 
-  <!-- Link External Stylesheet -->
   <link rel="stylesheet" href="styles.css">
-  
-  <!-- Web App Manifest for PWA Installation -->
   <link rel="manifest" href="manifest.json">
-
-  <!-- Confetti Utility Library for the Dopamine Reward Phase -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 <body>
 
-  <!-- Premium Native Audio Chime Hook -->
   <audio id="victory-chime" src="https://mixkit.co" preload="auto"></audio>
 
   <div class="app-container">
 
     <!-- SCREEN 1: ONBOARDING & EMAIL CAPTURE -->
-    <div id="screen-onboarding-1" class="screen active">
+    <div id="screen-onboarding-1" class="screen">
       <div style="margin: auto 0; width: 100%;">
         <h1 class="title-large">2-min</h1>
         <p class="body-text">The behavioral circuit breaker. Interrupt screen addiction and task paralysis instantly in exactly 120 seconds.</p>
         
-        <div style="margin-top: 24px; text-align: left;">
-          <label style="font-size: 12px; font-weight: 700; color: #7A7571; text-transform: uppercase; letter-spacing: 0.5px;">Enter Your Account Email</label>
-          <input type="email" id="user-email-input" placeholder="name@example.com" style="width: 100%; padding: 16px; border: 2px solid #EAE3D9; border-radius: 16px; margin-top: 6px; font-size: 15px; outline: none; background: #FAF7F2; color: var(--text-color);">
-          <p id="email-error-msg" style="color: #D94E3D; font-size: 12px; margin-top: 6px; display: none;">Please enter a valid email address to continue.</p>
+        <!-- PWA SETUP GUIDE FOR NEW USERS -->
+        <div id="pwa-setup-card" style="background: #FFFFFF; border: 1px dashed var(--accent-color); border-radius: 16px; padding: 16px; text-align: left; margin: 20px 0;">
+          <div style="font-size: 14px; font-weight: 800; color: var(--text-color); margin-bottom: 8px;">⚡ Quick App Setup</div>
+          <div style="font-size: 13px; color: #6E6A67; line-height: 1.5;">
+            1. <b>Add Shortcut:</b> Tap Share / Menu & select <b>"Add to Home Screen"</b>.<br>
+            2. <b>Enable Reminders:</b> Allow notification alerts to trigger circuit breakers.
+          </div>
+          <button id="pwa-install-btn" class="btn-small-install" style="margin-top: 12px; width: 100%; padding: 10px; font-size: 13px;">Enable Alerts & Install</button>
+        </div>
+
+        <div style="margin-top: 16px; text-align: left;">
+          <label style="font-size: 12px; font-weight: 700; color: #7A7571; text-transform: uppercase; letter-spacing: 0.5px;">Account Email</label>
+          <input type="email" id="user-email-input" placeholder="name@example.com" style="width: 100%; padding: 16px; border: 2px solid #EAE3D9; border-radius: 16px; margin-top: 6px; font-size: 15px; outline: none; background: #FFFFFF; color: var(--text-color);">
+          <p id="email-error-msg" style="color: #D94E3D; font-size: 12px; margin-top: 6px; display: none;">Please enter a valid email address.</p>
         </div>
       </div>
       <button class="btn-primary" onclick="submitEmailAndProceed()">Take Control</button>
@@ -43,9 +47,8 @@
 
     <!-- SCREEN 2: ONBOARDING PERSONALITY SELECTION -->
     <div id="screen-onboarding-2" class="screen">
-      <div style="width: 100%;">
-        <h2 class="title-large" style="font-size: 22px; margin-bottom: 6px;">Identify Your Friction Line</h2>
-        <p class="body-text" style="font-size: 14px; font-weight: 600; color: var(--accent-color); margin-bottom: 20px;">Tap your primary friction line below to calibrate instantly:</p>
+      <div style="width: 100%; margin: auto 0;">
+        <h2 class="title-large" style="font-size: 24px; margin-bottom: 24px;">Identify Your Friction Line</h2>
         
         <div class="onboarding-options">
           <div class="option-card selected" onclick="selectOption(this, 'scroll')">
@@ -67,7 +70,8 @@
     <!-- SCREEN 3: DASHBOARD MENU (TARGET FOCUS PAGE) -->
     <div id="screen-dashboard" class="screen">
       <div style="width: 100%;">
-        <div class="metric-ribbon">
+        
+        <div class="metric-ribbon" style="margin-bottom: 16px;">
           <div class="metric-block">
             <span class="metric-num" id="stat-streaks">0</span>
             <span class="metric-lbl">Total Wins</span>
@@ -78,21 +82,8 @@
           </div>
         </div>
 
-        <!-- FIRST TIME PWA SETUP GUIDE -->
-        <div id="pwa-setup-card" style="background: #FAF7F2; border: 1px dashed var(--accent-color); border-radius: 16px; padding: 14px; text-align: left; margin: 12px 0;">
-          <div style="font-size: 13px; font-weight: 800; color: var(--text-color); margin-bottom: 6px;">⚡ Quick PWA Setup Guide</div>
-          <div style="font-size: 12px; color: #6E6A67; line-height: 1.4;">
-            1. <b>Add Shortcut:</b> Tap Share / Menu & select <b>"Add to Home Screen"</b>.<br>
-            2. <b>Enable Reminders:</b> Allow notification alerts to trigger circuit breakers.
-          </div>
-          <button id="pwa-install-btn" class="btn-small-install" style="margin-top: 10px; width: 100%;">Install App & Enable Alerts</button>
-        </div>
-
-        <div style="display: flex; justify-content: space-between; align-items: center; margin: 16px 4px 8px 4px;">
-          <div>
-            <h2 class="title-large" style="font-size: 18px; letter-spacing: -0.3px; margin: 0;">Target Focus Area</h2>
-            <p style="font-size: 12px; color: var(--accent-color); font-weight: 700; margin-top: 2px;">Tap a deck below to launch interception:</p>
-          </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 0 4px 8px 4px;">
+          <h2 class="title-large" style="font-size: 18px; margin: 0;">Target Focus Area</h2>
           <button class="btn-text-nav" onclick="switchScreen('screen-onboarding-2')">🔄 Change Issue</button>
         </div>
 
@@ -118,6 +109,36 @@
             <div class="deck-desc">Shatters decision stress down to one simple, non-negotiable directive.</div>
           </div>
         </div>
+
+        <!-- NEW: DAILY INTERCEPTS SECTION -->
+        <div style="margin-top: 24px; text-align: left;">
+          <h2 class="title-large" style="font-size: 18px; margin-bottom: 12px; margin-left: 4px;">Daily Intercepts</h2>
+          <div class="lifeline-list" id="lifeline-container">
+            <!-- Static Baseline Anchors -->
+            <div class="lifeline-item">
+              <div><div style="font-weight: 800; font-size: 14px; color: var(--text-color);">08:15 AM</div><div style="font-size: 11px; color: #7A7571; font-weight: 600;">Morning Bed-Lock</div></div>
+              <label class="toggle-switch"><input type="checkbox" checked disabled><span class="slider"></span></label>
+            </div>
+            <div class="lifeline-item">
+              <div><div style="font-weight: 800; font-size: 14px; color: var(--text-color);">09:45 AM</div><div style="font-size: 11px; color: #7A7571; font-weight: 600;">Workspace Inertia</div></div>
+              <label class="toggle-switch"><input type="checkbox" checked disabled><span class="slider"></span></label>
+            </div>
+            <div class="lifeline-item">
+              <div><div style="font-weight: 800; font-size: 14px; color: var(--text-color);">03:45 PM</div><div style="font-size: 11px; color: #7A7571; font-weight: 600;">Willpower Exhaustion</div></div>
+              <label class="toggle-switch"><input type="checkbox" checked disabled><span class="slider"></span></label>
+            </div>
+            <div class="lifeline-item">
+              <div><div style="font-weight: 800; font-size: 14px; color: var(--text-color);">11:15 PM</div><div style="font-size: 11px; color: #7A7571; font-weight: 600;">Bedtime Loop</div></div>
+              <label class="toggle-switch"><input type="checkbox" checked disabled><span class="slider"></span></label>
+            </div>
+            
+            <!-- Injection Target for User's Custom Arrays -->
+            <div id="custom-lifelines-injection-point"></div>
+
+            <button class="btn-bypass" style="width: 100%; border: 2px dashed #EAE3D9; padding: 14px; border-radius: 14px; margin-top: 4px; font-weight: 700;" onclick="openCustomLifelineModal()">+ Add Custom Lifeline Intercept</button>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -167,13 +188,13 @@
     <!-- PREMIUM PAYWALL OVERLAY -->
     <div id="paywall-overlay" class="paywall-modal">
       <div>
-        <h2 class="title-large" style="color: var(--premium-color); text-align: left; font-size: 24px;">Break Free From the Loops</h2>
-        <p class="body-text" style="font-size: 14px; text-align: left; margin-bottom: 20px;">Unlock behavioral overrides modeled on top neural productivity systems.</p>
+        <h2 id="paywall-title" class="title-large" style="color: var(--premium-color); text-align: left; font-size: 24px;">Break Free From the Loops</h2>
+        <p id="paywall-desc" class="body-text" style="font-size: 14px; text-align: left; margin-bottom: 20px;">Unlock behavioral overrides modeled on top neural productivity systems.</p>
         
         <div class="paywall-features">
           <div class="feature-item"><span>⚡</span> <div><b>The Dopamine Swap:</b> Intercepts short-form screen addictions instantly.</div></div>
           <div class="feature-item"><span>🧠</span> <div><b>The Anti-Overwhelm Protocol:</b> Permanently bypasses decision-making paralysis.</div></div>
-          <div class="feature-item"><span>📈</span> <div><b>Progress Matrix:</b> Real-time visualization tracking metrics and time claimed back.</div></div>
+          <div class="feature-item"><span>📈</span> <div><b>Custom Time Anchors:</b> Set specific hour intercepts mapped to your exact behavioral slumps.</div></div>
         </div>
 
         <div class="tier-box selected" onclick="selectTier(this)">
@@ -194,45 +215,71 @@
       </div>
     </div>
 
+    <!-- PREMIUM CUSTOM LIFELINE CREATION MODAL -->
+    <div id="custom-lifeline-modal" class="paywall-modal">
+      <div style="text-align: left;">
+        <h2 class="title-large" style="font-size: 22px; color: var(--text-color);">Create Custom Lifeline</h2>
+        <p class="body-text" style="font-size: 13px; margin-bottom: 20px;">Deploy an exact interception anchor to shatter your specific daily slump.</p>
+        
+        <div style="margin-bottom: 16px;">
+          <label style="font-size: 11px; font-weight: 700; color: #9C8E80; text-transform: uppercase; letter-spacing: 0.5px;">⏱️ Target Intercept Time</label>
+          <input type="time" id="custom-time-input" style="width:100%; padding: 14px; border: 2px solid #EAE3D9; border-radius: 12px; margin-top: 6px; font-size: 16px; font-weight: 600; outline: none;">
+        </div>
+        
+        <div style="margin-bottom: 16px;">
+          <label style="font-size: 11px; font-weight: 700; color: #9C8E80; text-transform: uppercase; letter-spacing: 0.5px;">🧠 What usually traps you?</label>
+          <select id="custom-friction-input" style="width:100%; padding: 14px; border: 2px solid #EAE3D9; border-radius: 12px; margin-top: 6px; font-size: 15px; outline: none; background: #FFFFFF; font-weight: 500;">
+            <option value="Mindless Scrolling">Mindless Scrolling</option>
+            <option value="Task Paralysis">Task Paralysis</option>
+            <option value="Low Presence">Low Physical Presence</option>
+          </select>
+        </div>
+        
+        <div style="margin-bottom: 16px;">
+          <label style="font-size: 11px; font-weight: 700; color: #9C8E80; text-transform: uppercase; letter-spacing: 0.5px;">🎴 Launch Which Deck?</label>
+          <select id="custom-deck-input" style="width:100%; padding: 14px; border: 2px solid #EAE3D9; border-radius: 12px; margin-top: 6px; font-size: 15px; outline: none; background: #FFFFFF; font-weight: 500;">
+            <option value="The Anti-Overwhelm Deck">The Anti-Overwhelm Deck</option>
+            <option value="The Dopamine Swap Deck">The Dopamine Swap Deck</option>
+            <option value="The Quiet Wealth Deck">The Quiet Wealth Deck</option>
+            <option value="The Charisma Deck">The Charisma Deck</option>
+          </select>
+        </div>
+      </div>
+      <div style="width: 100%;">
+        <button class="btn-primary" onclick="saveCustomLifeline()">Save Intercept</button>
+        <button class="btn-bypass" style="display: block; margin: 12px auto 0 auto;" onclick="closeCustomLifelineModal()">Cancel</button>
+      </div>
+    </div>
+
   </div>
 
-  <!-- Link External Logic Script -->
   <script src="app.js"></script>
 
-  <!-- Clean, Error-Free PWA Device Installation Script Layer -->
   <script>
     let deferredPrompt;
     
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
-          .then(reg => console.log('SW Registered successfully:', reg.scope))
-          .catch(err => console.error('SW Registration encountered an error:', err));
+          .then(reg => console.log('SW Registered successfully'))
+          .catch(err => console.error('SW Registration error:', err));
       });
     }
     
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      const setupCard = document.getElementById('pwa-setup-card');
-      if (setupCard) setupCard.style.display = 'block';
     });
 
     const installBtn = document.getElementById('pwa-install-btn');
     if (installBtn) {
       installBtn.addEventListener('click', async () => {
-        // Request Notification Permissions
         if ('Notification' in window) {
-          Notification.requestPermission().then(permission => {
-            console.log("Notification permission result:", permission);
-          });
+          await Notification.requestPermission();
         }
-        
-        // Trigger PWA Installation Prompt
         if (deferredPrompt) {
           deferredPrompt.prompt();
-          const { outcome } = await deferredPrompt.userChoice;
-          console.log("User choice outcome: " + outcome);
+          await deferredPrompt.userChoice;
           deferredPrompt = null;
         }
       });
