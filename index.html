@@ -16,7 +16,7 @@
   <link rel="manifest" href="manifest.json">
 
   <!-- Confetti Utility Library for the Dopamine Reward Phase -->
-  <script src="https://jsdelivr.net"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 <body>
 
@@ -190,28 +190,31 @@
   <script>
     let deferredPrompt;
     
-if ('serviceWorker' in navigator) {
-window.addEventListener('load', () => {
-navigator.serviceWorker.register('/sw.js')
-.then(reg => console.log('SW Registered successfully:', reg.scope))
-.catch(err => console.error('SW Registration encountered an error:', err));
-});
-}
-window.addEventListener('beforeinstallprompt', (e) => {
-e.preventDefault();
-deferredPrompt = e;
-const banner = document.getElementById('pwa-install-banner');
-if (banner) banner.style.display = 'flex';
-});
-const installBtn = document.getElementById('pwa-install-btn');
-if (installBtn) {
-installBtn.addEventListener('click', async () => {
-if (deferredPrompt) {
-deferredPrompt.prompt();
-const { outcome } = await deferredPrompt.userChoice;
-console.log("User choice outcome: " + outcome);
-deferredPrompt = null;
-document.getElementById('pwa-install-banner').style.display = 'none';
-}
-});
-}
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('SW Registered successfully:', reg.scope))
+          .catch(err => console.error('SW Registration encountered an error:', err));
+      });
+    }
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const banner = document.getElementById('pwa-install-banner');
+      if (banner) banner.style.display = 'flex';
+    });
+    const installBtn = document.getElementById('pwa-install-btn');
+    if (installBtn) {
+      installBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          console.log("User choice outcome: " + outcome);
+          deferredPrompt = null;
+          document.getElementById('pwa-install-banner').style.display = 'none';
+        }
+      });
+    }
+  </script>
+</body>
+</html>
