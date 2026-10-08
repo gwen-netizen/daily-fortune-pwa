@@ -1,6 +1,6 @@
 // api/create-checkout-session.js
-const SECRET_KEY = process.env.STRIPE_SECRET_KEY || 'sk_test_51TOUTdG617eW830niaazl8hSkOdgDJggsK3CuIjIs146xxqL7vgCKBVZhc3cCwGVc6jWzC9sutoHYzJMUQ2n7aqV00pmPlhq3B';
-const stripe = require('stripe')(SECRET_KEY);
+// Dynamically reads your secure private tokens from your Vercel Dashboard parameters
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -13,12 +13,12 @@ export default async function handler(req, res) {
     let priceId = '';
     let billingMode = 'payment';
 
-    // Fixed absolute typography strings aligning to your dashboard products
+    // AUTOMATED FILTER ENGINE: Swaps your price strings dynamically depending on your active key environment type
     if (planType === 'lifetime') {
-      priceId = 'price_1UNu40G617eW830nMFL57rdH'; 
+      priceId = process.env.STRIPE_PRICE_LIFETIME; 
       billingMode = 'payment';
     } else {
-      priceId = 'price_1UNu38G617eW830nFFJbEoWY'; 
+      priceId = process.env.STRIPE_PRICE_MONTHLY; 
       billingMode = 'subscription';
     }
 
