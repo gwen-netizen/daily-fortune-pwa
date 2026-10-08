@@ -46,12 +46,24 @@ module.exports = async function handler(req, res) {
       }
       
       if (action === 'verify_otp') {
-        const { data: authData, error: authErr } = await supabase.auth.verifyOtp({
+        // FIXED: Changed 'magiclink' to 'email' to match Supabase OTP tokens
+        let { data: authData, error: authErr } = await supabase.auth.verifyOtp({
           email: lowerEmail,
           token: token,
-          type: 'magiclink'
+          type: 'email'
         });
         
+        // Backup verification check for new signups
+        if (authErr) {
+          const fallback = await supabase.auth.verifyOtp({
+            email: lowerEmail,
+            token: token,
+            type: 'signup'
+          });
+          authData = fallback.data;
+          authErr = fallback.error;
+        }
+
         if (authErr) return res.status(401).json({ error: "Invalid or expired code." });
 
         const { data: profileData } = await supabase
