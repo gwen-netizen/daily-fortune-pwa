@@ -88,7 +88,6 @@ function submitEmailAndProceed() {
   if (errorMsg) errorMsg.style.display = 'none';
   localStorage.setItem('nudge_user_email', emailVal);
   
-  // Ask for notification permission after email submit as a fallback
   if ('Notification' in window) Notification.requestPermission();
   
   switchScreen('screen-onboarding-2');
@@ -199,7 +198,6 @@ function closePaywall() {
 function openCustomLifelineModal() {
   const isUserPremium = localStorage.getItem('nudge_premium_user') === 'true';
   if (!isUserPremium) {
-    // Modify Paywall for Contextual Up-sell
     const paywallTitle = document.getElementById('paywall-title');
     const paywallDesc = document.getElementById('paywall-desc');
     if(paywallTitle) paywallTitle.innerText = "Build Custom Anchors";
@@ -241,11 +239,10 @@ function renderCustomLifelines() {
   const injectionPoint = document.getElementById('custom-lifelines-injection-point');
   if (!injectionPoint) return;
   
-  injectionPoint.innerHTML = ''; // Clear out old renders
+  injectionPoint.innerHTML = ''; 
   const customs = JSON.parse(localStorage.getItem('nudge_custom_lifelines') || '[]');
   
   customs.forEach(c => {
-    // Convert 24hr to 12hr visually
     const [hourStr, minStr] = c.time.split(':');
     let hour = parseInt(hourStr, 10);
     const ampm = hour >= 12 ? 'PM' : 'AM';
@@ -274,7 +271,6 @@ let lastFiredDate = null;
 function startClockTicker() {
   setInterval(() => {
     const now = new Date();
-    // 24-hour format string (e.g., "15:45") to match inputs and static keys
     const timeString = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
     checkAndFireNotification(timeString);
   }, 30000); // Check every 30 seconds
@@ -282,20 +278,17 @@ function startClockTicker() {
 
 function checkAndFireNotification(timeString) {
   const today = new Date().toDateString();
-  // Prevent firing multiple times in the same minute
   if (timeString === lastFiredTime && today === lastFiredDate) return;
 
   let pushBody = null;
   let pushTitle = "2-min Turnaround";
 
-  // Check Static Fixed Anchors
   if (staticLifelines[timeString]) {
     const options = staticLifelines[timeString];
     pushBody = options[Math.floor(Math.random() * options.length)];
     pushTitle = "Standard Slump Intercept";
   }
 
-  // Check Premium Custom Arrays
   const customs = JSON.parse(localStorage.getItem('nudge_custom_lifelines') || '[]');
   const matchedCustom = customs.find(c => c.time === timeString);
   
@@ -304,7 +297,6 @@ function checkAndFireNotification(timeString) {
     pushTitle = "Custom Lifeline Trigger";
   }
 
-  // Instruct Service Worker to Fire
   if (pushBody) {
     if ('serviceWorker' in navigator && Notification.permission === 'granted') {
       navigator.serviceWorker.ready.then(reg => {
@@ -331,16 +323,31 @@ function selectTier(el) {
 
 function applyPremiumUIVisuals() {
   const isUserPremium = localStorage.getItem('nudge_premium_user') === 'true';
+  
   if (isUserPremium) {
+    // 1. Upgrade the Standard Decks
     document.querySelectorAll('.deck-item').forEach(item => {
       const meta = item.querySelector('.deck-meta');
       const name = item.querySelector('.deck-name');
+      
       if (meta && meta.innerText.includes("PREMIUM UPGRADE")) {
         meta.innerText = "UNLOCKED PREMIUM AREA";
         meta.style.color = "var(--success-color)";
         if (name) name.innerText = name.innerText.replace('⚡ ', '✅ ').replace('🧠 ', '✅ ');
       }
     });
+
+    // 2. Upgrade the Custom Lifeline Button
+    const customMeta = document.getElementById('custom-lifeline-meta');
+    const customText = document.getElementById('custom-lifeline-text');
+    const customBtn = document.getElementById('custom-lifeline-add-btn');
+    
+    if (customMeta && customMeta.innerText.includes("PREMIUM UPGRADE")) {
+      customMeta.innerText = "UNLOCKED PREMIUM AREA";
+      customMeta.style.color = "var(--success-color)";
+      if (customBtn) customBtn.style.borderColor = "var(--success-color)";
+      if (customText) customText.innerText = customText.innerText.replace('⚡ ', '✅ ');
+    }
   }
 }
 
