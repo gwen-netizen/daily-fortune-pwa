@@ -213,7 +213,7 @@ function checkStripeRedirectStatus() {
 }
 
 /**
- * Variable Reward Core: Sends asynchronous tracking requests to fetch one task programmatically from the 400 matrix
+ * Variable Reward Core: Sends asynchronous tracking requests to fetch one task programmatically from the matrix
  */
 async function executeTurnaroundSpin() {
   const btn = document.querySelector('.big-red-btn');
@@ -233,95 +233,104 @@ async function executeTurnaroundSpin() {
   else if (activeDeckName.includes("dopamine")) categoryKey = 'dopamine';
   else if (activeDeckName.includes("overwhelm")) categoryKey = 'overwhelm';
 
+  let selectedTask = taskDatabase[Math.floor(Math.random() * taskDatabase.length)];
+
   try {
     const response = await fetch(`/api/get-task?category=${categoryKey}&friction=${mindFrictionStyle}`);
-    const data = await response.json();
+    if (response.ok) {
+      const data = await response.json();
+      if (data && data.task) {
+        selectedTask = data.task;
+      }
+    }
+  } catch (err) {
+    console.error("Task payload transport error:", err);
+  }
 
-    setTimeout(() => {
-      if (btn) {
-        btn.innerText = "START";
-        btn.style.opacity = "1";
-      }
-      
-      const taskDisplayEl = document.getElementById('target-task-text');
-      if (taskDisplayEl && data.task) {
-        taskDisplayEl.innerText = data.task;
-      } else {
-        taskDisplayEl.innerText = "Do the single task you have been avoiding for exactly two minutes. Move right now.";
-      }
-      
-      switchScreen('screen-countdown');
-      startActionTimer(120); 
-}, 1500);
-} catch (err) {
-console.error("Task payload transport error:", err);
-switchScreen('screen-dashboard');
+  setTimeout(() => {
+    if (btn) {
+      btn.innerText = "START";
+      btn.style.opacity = "1";
+    }
+    
+    const taskDisplayEl = document.getElementById('target-task-text');
+    if (taskDisplayEl) {
+      taskDisplayEl.innerText = selectedTask;
+    }
+    
+    switchScreen('screen-countdown');
+    startActionTimer(120); 
+  }, 1500);
 }
-}
+
 function startActionTimer(seconds) {
-const display = document.getElementById('timer-display');
-let timeLeft = seconds;
-clearInterval(countdownInterval);
-countdownInterval = setInterval(() => {
-let minutes = Math.floor(timeLeft / 60);
-let secs = timeLeft % 60;
-minutes = minutes < 10 ? "0" + minutes : minutes;
-secs = secs < 10 ? "0" + secs : secs;
-if (display) display.innerText = minutes + ":" + secs;
-if (--timeLeft < 0) {
-clearInterval(countdownInterval);
-triggerVictoryPhase(2.0);
+  const display = document.getElementById('timer-display');
+  let timeLeft = seconds;
+  clearInterval(countdownInterval);
+  countdownInterval = setInterval(() => {
+    let minutes = Math.floor(timeLeft / 60);
+    let secs = timeLeft % 60;
+    minutes = minutes < 10 ? "0" + minutes : minutes;
+    secs = secs < 10 ? "0" + secs : secs;
+    if (display) display.innerText = minutes + ":" + secs;
+    if (--timeLeft < 0) {
+      clearInterval(countdownInterval);
+      triggerVictoryPhase(2.0);
+    }
+  }, 1000);
 }
-}, 1000);
-}
+
 function finishEarly() {
-const displayEl = document.getElementById('timer-display');
-let elapsedMinutes = 2.0;
-if (displayEl) {
-const displayVal = displayEl.innerText;
-const parts = displayVal.split(':');
-if (parts.length === 2) {
-const currentMinutesVal = parseInt(parts[0], 10) || 0;
-const currentSecondsVal = parseInt(parts[1], 10) || 0;
-const elapsedSeconds = 120 - (currentMinutesVal * 60 + currentSecondsVal);
-elapsedMinutes = Math.max(0.2, elapsedSeconds / 60);
+  const displayEl = document.getElementById('timer-display');
+  let elapsedMinutes = 2.0;
+  if (displayEl) {
+    const displayVal = displayEl.innerText;
+    const parts = displayVal.split(':');
+    if (parts.length === 2) {
+      const currentMinutesVal = parseInt(parts[0], 10) || 0;
+      const currentSecondsVal = parseInt(parts[1], 10) || 0;
+      const elapsedSeconds = 120 - (currentMinutesVal * 60 + currentSecondsVal);
+      elapsedMinutes = Math.max(0.2, elapsedSeconds / 60);
+    }
+  }
+  clearInterval(countdownInterval);
+  triggerVictoryPhase(elapsedMinutes);
 }
-}
-clearInterval(countdownInterval);
-triggerVictoryPhase(elapsedMinutes);
-}
+
 function cancelTimer() {
-clearInterval(countdownInterval);
-updateMetricDashboard();
-switchScreen('screen-dashboard');
+  clearInterval(countdownInterval);
+  updateMetricDashboard();
+  switchScreen('screen-dashboard');
 }
+
 function triggerVictoryPhase(minutesEarned) {
-const copy = victoryValidationStrings[Math.floor(Math.random() * victoryValidationStrings.length)];
-const validationCopyEl = document.getElementById('victory-validation-copy');
-if (validationCopyEl) validationCopyEl.innerText = copy;
-totalWinsCount += 1;
-totalFocusReclaimed += minutesEarned;
-localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
-localStorage.setItem('nudge_minutes', totalFocusReclaimed.toString());
-try {
-const audioNode = document.getElementById('victory-chime');
-if (audioNode) {
-audioNode.currentTime = 0;
-audioNode.play().catch(err => console.log("Audio presentation skipped:", err));
+  const copy = victoryValidationStrings[Math.floor(Math.random() * victoryValidationStrings.length)];
+  const validationCopyEl = document.getElementById('victory-validation-copy');
+  if (validationCopyEl) validationCopyEl.innerText = copy;
+  totalWinsCount += 1;
+  totalFocusReclaimed += minutesEarned;
+  localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
+  localStorage.setItem('nudge_minutes', totalFocusReclaimed.toString());
+  try {
+    const audioNode = document.getElementById('victory-chime');
+    if (audioNode) {
+      audioNode.currentTime = 0;
+      audioNode.play().catch(err => console.log("Audio presentation skipped:", err));
+    }
+  } catch (audioError) {
+    console.warn("Audio catch execution layer bypassed:", audioError);
+  }
+  switchScreen('screen-victory');
+  try {
+    if (typeof confetti === 'function') {
+      confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#D4A373', '#4A7C59', '#2D2B2A'] });
+    }
+  } catch (e) {
+    console.log("Confetti library processing bypass:", e);
+  }
 }
-} catch (audioError) {
-console.warn("Audio catch execution layer bypassed:", audioError);
-}
-switchScreen('screen-victory');
-try {
-if (typeof confetti === 'function') {
-confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#D4A373', '#4A7C59', '#2D2B2A'] });
-}
-} catch (e) {
-console.log("Confetti library processing bypass:", e);
-}
-}
+
 function claimRewardStack() {
-updateMetricDashboard();
-switchScreen('screen-dashboard');
+  updateMetricDashboard();
+  switchScreen('screen-dashboard');
 }
