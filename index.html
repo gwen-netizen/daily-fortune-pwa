@@ -20,13 +20,12 @@
 
   <div class="app-container">
 
-    <!-- SCREEN 1: ONBOARDING & EMAIL CAPTURE -->
-    <div id="screen-onboarding-1" class="screen">
+    <!-- SCREEN 1: ONBOARDING & SECURE EMAIL ANCHOR -->
+    <div id="screen-onboarding-1" class="screen active">
       <div style="margin: auto 0; width: 100%;">
         <h1 class="title-large">2-min</h1>
         <p class="body-text">The behavioral circuit breaker. Interrupt screen addiction and task paralysis instantly in exactly 120 seconds.</p>
         
-        <!-- PWA SETUP GUIDE FOR NEW USERS -->
         <div id="pwa-setup-card" style="background: #FFFFFF; border: 1px dashed var(--accent-color); border-radius: 16px; padding: 16px; text-align: left; margin: 20px 0;">
           <div style="font-size: 14px; font-weight: 800; color: var(--text-color); margin-bottom: 8px;">⚡ Quick App Setup</div>
           <div style="font-size: 13px; color: #6E6A67; line-height: 1.5;">
@@ -36,13 +35,31 @@
           <button id="pwa-install-btn" class="btn-small-install" style="margin-top: 12px; width: 100%; padding: 10px; font-size: 13px;">Enable Alerts & Install</button>
         </div>
 
-        <div style="margin-top: 16px; text-align: left;">
-          <label style="font-size: 12px; font-weight: 700; color: #7A7571; text-transform: uppercase; letter-spacing: 0.5px;">Account Email</label>
-          <input type="email" id="user-email-input" placeholder="name@example.com" style="width: 100%; padding: 16px; border: 2px solid #EAE3D9; border-radius: 16px; margin-top: 6px; font-size: 15px; outline: none; background: #FFFFFF; color: var(--text-color);">
-          <p id="email-error-msg" style="color: #D94E3D; font-size: 12px; margin-top: 6px; display: none;">Please enter a valid email address.</p>
+        <div style="width: 100%; text-align: left; margin-bottom: 16px;">
+          <label style="font-size: 12px; font-weight: 700; color: var(--premium-color); letter-spacing: 0.5px; text-transform: uppercase;">Secure Focus Profile</label>
+          <p style="font-size: 11px; color: #7A7571; margin-top: 4px;">Enter your email to save lifetime progress or restore your premium account.</p>
+          <input type="email" id="user-auth-email" placeholder="name@example.com" 
+                 style="width: 100%; padding: 16px; border: 2px solid #EAE3D9; border-radius: 16px; font-size: 15px; margin-top: 8px; outline: none; background: #FAF7F2; color: var(--text-color);">
         </div>
       </div>
-      <button class="btn-primary" onclick="submitEmailAndProceed()">Take Control</button>
+      
+      <button class="btn-primary" onclick="initializeUserProfile()">Sync Profile</button>
+    </div>
+
+    <!-- SCREEN 1B: OTP VERIFICATION -->
+    <div id="screen-auth-verify" class="screen">
+      <div style="margin: auto 0; width: 100%;">
+        <h2 class="title-large" style="font-size: 24px; margin-bottom: 8px;">Check Your Inbox</h2>
+        <p class="body-text" style="margin-bottom: 24px;" id="verification-notice-text">We sent a secure 6-digit access code to your email.</p>
+        
+        <div style="width: 100%; text-align: left; margin-bottom: 16px;">
+          <label style="font-size: 12px; font-weight: 700; color: var(--premium-color); letter-spacing: 0.5px; text-transform: uppercase;">Enter Access Code</label>
+          <input type="number" id="user-otp-input" placeholder="000000" 
+                 style="width: 100%; padding: 16px; border: 2px solid #EAE3D9; border-radius: 16px; font-size: 24px; margin-top: 6px; outline: none; background: #FAF7F2; color: var(--text-color); letter-spacing: 8px; text-align: center;">
+        </div>
+      </div>
+      <button class="btn-primary" onclick="verifyOTP()">Verify Identity</button>
+      <button class="btn-bypass" style="margin-top: 12px;" onclick="switchScreen('screen-onboarding-1')">Change Email</button>
     </div>
 
     <!-- SCREEN 2: ONBOARDING PERSONALITY SELECTION -->
@@ -110,7 +127,6 @@
           </div>
         </div>
 
-        <!-- DAILY INTERCEPTS SECTION -->
         <div style="margin-top: 24px; text-align: left;">
           <h2 class="title-large" style="font-size: 18px; margin-bottom: 12px; margin-left: 4px;">Daily Intercepts</h2>
           <div class="lifeline-list" id="lifeline-container">
@@ -131,10 +147,8 @@
               <label class="toggle-switch"><input type="checkbox" checked disabled><span class="slider"></span></label>
             </div>
             
-            <!-- Injection Target for User's Custom Arrays -->
             <div id="custom-lifelines-injection-point"></div>
 
-            <!-- PREMIUM CUSTOM LIFELINE TRIGGER BUTTON -->
             <button id="custom-lifeline-add-btn" class="btn-bypass" style="width: 100%; border: 2px dashed var(--premium-color); padding: 14px; border-radius: 14px; margin-top: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; background: #FAF7F2;" onclick="openCustomLifelineModal()">
               <div id="custom-lifeline-meta" class="deck-meta premium" style="margin-bottom: 4px;">PREMIUM UPGRADE</div>
               <div id="custom-lifeline-text" style="font-weight: 800; font-size: 14px; color: var(--text-color);">⚡ + Add Custom Lifeline</div>
@@ -151,11 +165,9 @@
         <h2 class="title-deck" id="active-deck-title">The Charisma Deck</h2>
         <p class="body-text" style="font-size: 14px;" id="trigger-instructions">Take one slow, long breath before pushing.</p>
       </div>
-      
       <div class="spin-outer-ring">
         <button class="big-red-btn" onclick="executeTurnaroundSpin()">START</button>
       </div>
-      
       <div>
         <p class="italic-hint">Commit to the next 120 seconds completely.</p>
         <button class="btn-bypass" onclick="switchScreen('screen-dashboard')">Change Focus Area</button>
@@ -165,14 +177,11 @@
     <!-- SCREEN 5: LIVE COUNTDOWN TIMELINE -->
     <div id="screen-countdown" class="screen">
       <div class="title-deck" style="color: var(--timer-color); font-size: 14px; letter-spacing: 1px;">⚡ ACTIVE CONSTRAINTS IN EFFECT</div>
-      
       <div class="task-display-card">
         <p id="target-task-text" class="task-display-text">Loading baseline alignment task...</p>
       </div>
-
       <div style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 8px;">
         <div id="timer-display" class="timer-ring">02:00</div>
-        
         <button class="btn-primary btn-success-action" onclick="finishEarly()">Complete Early</button>
         <button class="btn-bypass" onclick="cancelTimer()">Abort Task</button>
       </div>
@@ -188,6 +197,9 @@
       <button class="btn-primary" style="background-color: var(--success-color);" onclick="claimRewardStack()">Claim Reward Stack</button>
     </div>
 
+    <!-- PAYWALL / MODALS (Kept exactly identical structurally) -->
+    <!-- ... Rest of Modals from previous steps ... -->
+    <!-- (Retain your #paywall-overlay and #custom-lifeline-modal divs exactly as they were in previous turn) -->
     <!-- PREMIUM PAYWALL OVERLAY -->
     <div id="paywall-overlay" class="paywall-modal">
       <div>
@@ -255,36 +267,6 @@
     </div>
 
   </div>
-
   <script src="app.js"></script>
-
-  <script>
-    let deferredPrompt;
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then(reg => console.log('SW Registered successfully'))
-          .catch(err => console.error('SW Registration error:', err));
-      });
-    }
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-    });
-
-    const installBtn = document.getElementById('pwa-install-btn');
-    if (installBtn) {
-      installBtn.addEventListener('click', async () => {
-        if ('Notification' in window) {
-          await Notification.requestPermission();
-        }
-        if (deferredPrompt) {
-          deferredPrompt.prompt();
-          await deferredPrompt.userChoice;
-          deferredPrompt = null;
-        }
-      });
-    }
-  </script>
 </body>
 </html>
