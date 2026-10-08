@@ -1,40 +1,40 @@
-// Neuro-calibrated text arrays mapping to the core problem solutions
-const taskDatabase = [
-  "Do the single task you have been avoiding for exactly two minutes. Move right now. No choices, just execution.",
-  "Roll your shoulders completely back, step away from the desk, and stand fully tall. Force a clean neurological change of state.",
-  "Invert your phone screen face down right now. Sit in continuous, total quiet breathing until the system chimes zero.",
-  "Locate one piece of physical friction or clutter in your visual field. Trash it or store it out of sight immediately.",
-  "Drink a full clean glass of water right now. Clear away physical systemic sludge and re-anchor attention fields.",
-  "Isolate one capability you brought to the table this week. Write it down or state it out loud without comparing it to anyone.",
-  "Take three deliberate, ultra-slow abdominal breaths. Lock focus onto the movement of your lungs. Clear the static."
-];
+let isPremiumSelected = false;
+let countdownInterval = null;
+let mindFrictionStyle = 'scroll'; // Tracks Screen 2 profile choices: 'scroll', 'paralysis', 'routine'
+
+// METRIC STATE FRAME: Tracks your new premium rebrand parameter values safely across reloads
+let totalWinsCount = parseInt(localStorage.getItem('nudge_total_wins') || '0');
+let totalFocusReclaimed = parseFloat(localStorage.getItem('nudge_focus_reclaimed') || '0.0');
 
 const victoryValidationStrings = [
-  "You chose active alignment while the rest of the world remained paralyzed on the couch scrolling algorithms. Momentum is yours.",
+  "You chose active alignment while the rest of the world remained paralyzed on the couch scrolling algorithms. Focus Reclaimed.",
   "Friction broken. By taking action for 120 seconds, you proved to your brain that execution is entirely safe.",
   "The dopamine loop has been successfully redirected. You are now running on true clean execution energy."
 ];
 
-let isPremiumSelected = false;
-let countdownInterval = null;
-
-// METRIC RETAINMENT LOAD: Shifted from single day-streaks to a cumulative Win Log ecosystem
-let totalWinsCount = parseInt(localStorage.getItem('nudge_total_wins') || '0');
-let totalMinutesSaved = parseFloat(localStorage.getItem('nudge_minutes') || '0.0');
-
-// High-reliability page setup engine load sequence
 document.addEventListener("DOMContentLoaded", () => {
   updateMetricDashboard();
   checkStripeRedirectStatus();
 });
 
+/**
+ * Metric Scaling Engine: Automatically scales presentation layout from 'min' to 'hr' based on volume milestones
+ */
 function updateMetricDashboard() {
   const streaksEl = document.getElementById('stat-streaks');
   const focusEl = document.getElementById('stat-focus');
   
   if (streaksEl && focusEl) {
     streaksEl.innerText = totalWinsCount;
-    focusEl.innerText = totalMinutesSaved.toFixed(1) + 'm';
+    
+    if (totalFocusReclaimed < 60) {
+      // Presentation under 1 hour baseline milestone metrics
+      focusEl.innerText = totalFocusReclaimed.toFixed(1) + ' min';
+    } else {
+      // Progressive presentation transformation to Hours metric frames
+      const hoursScaled = totalFocusReclaimed / 60;
+      focusEl.innerText = hoursScaled.toFixed(1) + ' hr';
+    }
   }
 }
 
@@ -53,9 +53,17 @@ function switchScreen(screenId) {
   }
 }
 
+/**
+ * Maps Screen 2 selection metrics cleanly down to behavioral engine context labels
+ */
 function selectOption(el) {
   document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
+  
+  const textContent = el.querySelector('.option-title').innerText;
+  if (textContent.includes("Scrolling")) mindFrictionStyle = 'scroll';
+  else if (textContent.includes("Paralysis")) mindFrictionStyle = 'paralysis';
+  else mindFrictionStyle = 'routine';
 }
 
 function selectDeck(el, isPremium) {
@@ -89,9 +97,6 @@ function selectTier(el) {
   el.classList.add('selected');
 }
 
-/**
- * Functional Route Engine linking the frontend Paywall Selection seamlessly to Stripe Checkout
- */
 async function simulatePurchase() {
   const selectedTierBox = document.querySelector('.tier-box.selected');
   if (!selectedTierBox) {
@@ -137,9 +142,6 @@ async function simulatePurchase() {
   }
 }
 
-/**
- * Handles validation status parameter checks when landing back from Stripe domains
- */
 function checkStripeRedirectStatus() {
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('session') === 'success') {
@@ -150,7 +152,10 @@ function checkStripeRedirectStatus() {
   }
 }
 
-function executeTurnaroundSpin() {
+/**
+ * Variable Reward Core: Sends asynchronous tracking requests to fetch one task programmatically from the 400 matrix
+ */
+async function executeTurnaroundSpin() {
   const btn = document.querySelector('.big-red-btn');
   const instruction = document.getElementById('trigger-instructions');
   
@@ -161,20 +166,40 @@ function executeTurnaroundSpin() {
   if (instruction) {
     instruction.innerText = "Exhale slowly... allowing your focus to narrow down completely.";
   }
-  
-  setTimeout(() => {
-    if (btn) {
-      btn.innerText = "START";
-      btn.style.opacity = "1";
-    }
-    
-    const randomTask = taskDatabase[Math.floor(Math.random() * taskDatabase.length)];
-    const taskDisplayEl = document.getElementById('target-task-text');
-    if (taskDisplayEl) taskDisplayEl.innerText = randomTask;
-    
-    switchScreen('screen-countdown');
-    startActionTimer(120); 
-  }, 1500);
+
+  // Detect which active structural category label to stream from the serverless database
+  const activeDeckName = document.getElementById('active-deck-title').innerText.toLowerCase();
+  let categoryKey = 'charisma';
+  if (activeDeckName.includes("wealth")) categoryKey = 'wealth';
+  else if (activeDeckName.includes("dopamine")) categoryKey = 'dopamine';
+  else if (activeDeckName.includes("overwhelm")) categoryKey = 'overwhelm';
+
+  try {
+    // Queries the backend API streaming router endpoint
+    const response = await fetch(`/api/get-task?category=${categoryKey}&friction=${mindFrictionStyle}`);
+    const data = await response.json();
+
+    setTimeout(() => {
+      if (btn) {
+        btn.innerText = "START";
+        btn.style.opacity = "1";
+      }
+      
+      const taskDisplayEl = document.getElementById('target-task-text');
+      if (taskDisplayEl && data.task) {
+        taskDisplayEl.innerText = data.task;
+      } else {
+        taskDisplayEl.innerText = "Do the single task you have been avoiding for exactly two minutes. Move right now.";
+      }
+      
+      switchScreen('screen-countdown');
+      startActionTimer(120); 
+    }, 1500); // 1.5s intentional grounding latency delay loop to stop impulsive triggers
+
+  } catch (err) {
+    console.error("Task payload transport error:", err);
+    switchScreen('screen-dashboard');
+  }
 }
 
 function startActionTimer(seconds) {
@@ -207,7 +232,7 @@ function finishEarly() {
     const displayVal = displayEl.innerText;
     const parts = displayVal.split(':');
     if (parts.length === 2) {
-      // FIXED PARSING ENGINE: Tracks accurate array indices mapping separately to minutes and seconds parameters
+      // FIXED MATHEMATICAL PARSING LOGIC: Safely pulls explicit array positions for minutes [0] and seconds [1]
       const currentMinutesVal = parseInt(parts[0], 10) || 0;
       const currentSecondsVal = parseInt(parts[1], 10) || 0;
       const elapsedSeconds = 120 - (currentMinutesVal * 60 + currentSecondsVal);
@@ -231,16 +256,16 @@ function triggerVictoryPhase(minutesEarned) {
   if (validationCopyEl) validationCopyEl.innerText = copy;
   
   totalWinsCount += 1;
-  totalMinutesSaved += minutesEarned;
+  totalFocusReclaimed += minutesEarned;
   
   localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
-  localStorage.setItem('nudge_minutes', totalMinutesSaved.toString());
+  localStorage.setItem('nudge_minutes', totalFocusReclaimed.toString());
   
   try {
     const audioNode = document.getElementById('victory-chime');
     if (audioNode) {
       audioNode.currentTime = 0;
-      audioNode.play().catch(err => console.log("Audio skipped:", err));
+      audioNode.play().catch(err => console.log("Audio presentation skipped:", err));
     }
   } catch (audioError) {
     console.warn("Audio catch execution layer bypassed:", audioError);
@@ -253,7 +278,7 @@ function triggerVictoryPhase(minutesEarned) {
       confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#D4A373', '#4A7C59', '#2D2B2A'] });
     }
   } catch (e) {
-    console.log("Confetti library processing bypass:", e);
+    console.log("Confetti canvas failure:", e);
   }
 }
 
