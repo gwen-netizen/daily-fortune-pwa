@@ -27,6 +27,7 @@ let totalFocusReclaimed = parseFloat(localStorage.getItem('nudge_minutes') || '0
 document.addEventListener("DOMContentLoaded", () => {
   updateMetricDashboard();
   checkStripeRedirectStatus();
+  applyPremiumUIVisuals(); // Checks authorization and handles menu aesthetics instantly
 });
 
 /**
@@ -90,11 +91,19 @@ function selectDeck(el, isPremium) {
   }
 }
 
+/**
+ * Intercepts deck routing selection and verifies active subscription access authorizations
+ */
 function startTriggerPhase() {
-  if (isPremiumSelected) {
+  // HIGH-RELIABILITY AUTH ENGINE: Checks browser local storage token values
+  const isUserPremium = localStorage.getItem('nudge_premium_user') === 'true';
+
+  if (isPremiumSelected && !isUserPremium) {
+    // If the tier is premium and user has NOT paid, activate lock paywall overlay view frame
     const paywall = document.getElementById('paywall-overlay');
     if (paywall) paywall.classList.add('active');
   } else {
+    // Standard bypass loop: If it's a free tier OR paid user is active, forward cleanly onto the spin wheel
     switchScreen('screen-trigger');
   }
 }
@@ -107,6 +116,29 @@ function closePaywall() {
 function selectTier(el) {
   document.querySelectorAll('.tier-box').forEach(b => b.classList.remove('selected'));
   el.classList.add('selected');
+}
+
+/**
+ * Strips lock emoji design components if user is authorized inside local profile cache logs
+ */
+function applyPremiumUIVisuals() {
+  const isUserPremium = localStorage.getItem('nudge_premium_user') === 'true';
+  
+  if (isUserPremium) {
+    document.querySelectorAll('.deck-item').forEach(item => {
+      const meta = item.querySelector('.deck-meta');
+      const name = item.querySelector('.deck-name');
+      
+      if (meta && meta.innerText.includes("PREMIUM UPGRADE")) {
+        meta.innerText = "UNLOCKED PREMIUM AREA";
+        meta.style.color = "var(--success-color)";
+        // Strips out text lock string glyph markers smoothly into success checkmarks
+        if (name) {
+          name.innerText = name.innerText.replace('⚡ ', '✅ ').replace('🧠 ', '✅ ');
+        }
+      }
+    });
+  }
 }
 
 /**
@@ -139,7 +171,6 @@ async function simulatePurchase() {
       })
     });
 
-    // DIAGNOSTIC CHECK: Read explicit HTTP server status failures directly to browser logs
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`SERVER LOG INFRASTRUCTURE ERROR [Status ${response.status}]:`, errorText);
@@ -155,7 +186,6 @@ async function simulatePurchase() {
     }
   } catch (paymentError) {
     console.error("Stripe Checkout Session routing failure details:", paymentError);
-    // Dynamic error popup alerting you of the exact network status code returned by Vercel
     alert(`Gateway Error: ${paymentError.message}. Open browser inspect console for full stack trace parameters.`);
     
     if (paywallBtn) {
@@ -173,6 +203,10 @@ function checkStripeRedirectStatus() {
   if (urlParams.get('session') === 'success') {
     localStorage.setItem('nudge_premium_user', 'true');
     alert("Premium Portfolio Active! Algorithmic intercepts completely unlocked.");
+    
+    // Dynamically updates UI without requiring a hard window reload routine
+    applyPremiumUIVisuals();
+    
     window.history.replaceState({}, document.title, window.location.pathname);
     switchScreen('screen-dashboard');
   }
@@ -193,7 +227,6 @@ async function executeTurnaroundSpin() {
     instruction.innerText = "Exhale slowly... allowing your focus to narrow down completely.";
   }
 
-  // Detect which active structural category label to stream from the serverless database
   const activeDeckName = document.getElementById('active-deck-title').innerText.toLowerCase();
   let categoryKey = 'charisma';
   if (activeDeckName.includes("wealth")) categoryKey = 'wealth';
@@ -201,7 +234,6 @@ async function executeTurnaroundSpin() {
   else if (activeDeckName.includes("overwhelm")) categoryKey = 'overwhelm';
 
   try {
-    // Queries the backend API streaming router endpoint
     const response = await fetch(`/api/get-task?category=${categoryKey}&friction=${mindFrictionStyle}`);
     const data = await response.json();
 
@@ -220,45 +252,35 @@ async function executeTurnaroundSpin() {
       
       switchScreen('screen-countdown');
       startActionTimer(120); 
-    }, 1500); // 1.5s intentional grounding latency delay loop to stop impulsive triggers
-
-  } catch (err) {
-    console.error("Task payload transport error:", err);
-    switchScreen('screen-dashboard');
-  }
+}, 1500);
+} catch (err) {
+console.error("Task payload transport error:", err);
+switchScreen('screen-dashboard');
 }
-
+}
 function startActionTimer(seconds) {
-  const display = document.getElementById('timer-display');
-  let timeLeft = seconds;
-
-  clearInterval(countdownInterval);
-  
-  countdownInterval = setInterval(() => {
-    let minutes = Math.floor(timeLeft / 60);
-    let secs = timeLeft % 60;
-
-    minutes = minutes < 10 ? "0" + minutes : minutes;
-    secs = secs < 10 ? "0" + secs : secs;
-
-    if (display) display.innerText = minutes + ":" + secs;
-
-    if (--timeLeft < 0) {
-      clearInterval(countdownInterval);
-      triggerVictoryPhase(2.0); 
-    }
-  }, 1000);
+const display = document.getElementById('timer-display');
+let timeLeft = seconds;
+clearInterval(countdownInterval);
+countdownInterval = setInterval(() => {
+let minutes = Math.floor(timeLeft / 60);
+let secs = timeLeft % 60;
+minutes = minutes < 10 ? "0" + minutes : minutes;
+secs = secs < 10 ? "0" + secs : secs;
+if (display) display.innerText = minutes + ":" + secs;
+if (--timeLeft < 0) {
+clearInterval(countdownInterval);
+triggerVictoryPhase(2.0);
 }
-
+}, 1000);
+}
 function finishEarly() {
-  const displayEl = document.getElementById('timer-display');
-  let elapsedMinutes = 2.0;
-
-  if (displayEl) {
-    const displayVal = displayEl.innerText;
-    const parts = displayVal.split(':');
-    if (parts.length === 2) {
-      // FIXED PARSING ENGINE: Tracks accurate array indices mapping separately to minutes and seconds parameters
+const displayEl = document.getElementById('timer-display');
+let elapsedMinutes = 2.0;
+if (displayEl) {
+const displayVal = displayEl.innerText;
+const parts = displayVal.split(':');
+if (parts.length === 2) {
 const currentMinutesVal = parseInt(parts[0], 10) || 0;
 const currentSecondsVal = parseInt(parts[1], 10) || 0;
 const elapsedSeconds = 120 - (currentMinutesVal * 60 + currentSecondsVal);
