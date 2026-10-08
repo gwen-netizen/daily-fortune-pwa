@@ -28,11 +28,9 @@ module.exports = async function handler(req, res) {
       return res.status(404).json({ error: `Category '${categoryKey}' mapping not found in task matrix.` });
     }
 
-    // Pick strictly from the requested category array
     const randomIndex = Math.floor(Math.random() * targetPool.length);
     let selectedTask = targetPool[randomIndex];
 
-    // Apply Screen 2 behavioral friction prefixes dynamically
     if (friction === 'scroll') {
       selectedTask = "⚡ INTERCEPTION: " + selectedTask;
     } else if (friction === 'paralysis') {
