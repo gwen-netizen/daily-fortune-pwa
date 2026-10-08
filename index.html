@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>2 Min Turnaround</title>
+  <title>2-min</title>
   
   <meta name="theme-color" content="#FAF7F2">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="2-min">
 
   <!-- Link External Stylesheet -->
   <link rel="stylesheet" href="styles.css">
@@ -25,37 +26,42 @@
 
   <div class="app-container">
 
-    <!-- SCREEN 1: ONBOARDING HOOK -->
+    <!-- SCREEN 1: ONBOARDING & EMAIL CAPTURE -->
     <div id="screen-onboarding-1" class="screen active">
       <div style="margin: auto 0; width: 100%;">
-        <h1 class="title-large">2 Min<br>Turnaround</h1>
+        <h1 class="title-large">2-min</h1>
         <p class="body-text">The behavioral circuit breaker. Interrupt screen addiction and task paralysis instantly in exactly 120 seconds.</p>
+        
+        <div style="margin-top: 24px; text-align: left;">
+          <label style="font-size: 12px; font-weight: 700; color: #7A7571; text-transform: uppercase; letter-spacing: 0.5px;">Enter Your Account Email</label>
+          <input type="email" id="user-email-input" placeholder="name@example.com" style="width: 100%; padding: 16px; border: 2px solid #EAE3D9; border-radius: 16px; margin-top: 6px; font-size: 15px; outline: none; background: #FAF7F2; color: var(--text-color);">
+          <p id="email-error-msg" style="color: #D94E3D; font-size: 12px; margin-top: 6px; display: none;">Please enter a valid email address to continue.</p>
+        </div>
       </div>
-      <button class="btn-primary" onclick="switchScreen('screen-onboarding-2')">Take Control</button>
+      <button class="btn-primary" onclick="submitEmailAndProceed()">Take Control</button>
     </div>
 
     <!-- SCREEN 2: ONBOARDING PERSONALITY SELECTION -->
     <div id="screen-onboarding-2" class="screen">
       <div style="width: 100%;">
         <h2 class="title-large" style="font-size: 22px; margin-bottom: 6px;">Identify Your Friction Line</h2>
-        <p class="body-text" style="font-size: 14px; margin-bottom: 20px;">We program your dynamic loops based on how your brain loses focus.</p>
+        <p class="body-text" style="font-size: 14px; font-weight: 600; color: var(--accent-color); margin-bottom: 20px;">Tap your primary friction line below to calibrate instantly:</p>
         
         <div class="onboarding-options">
-          <div class="option-card selected" onclick="selectOption(this)">
+          <div class="option-card selected" onclick="selectOption(this, 'scroll')">
             <div class="option-title">⚡ Mindless Loop Scrolling</div>
             <div class="option-desc">For the Dopamine-Starved Avoider trapped in systemic social video algorithms.</div>
           </div>
-          <div class="option-card" onclick="selectOption(this)">
+          <div class="option-card" onclick="selectOption(this, 'paralysis')">
             <div class="option-title">🧠 Intimidating Task Paralysis</div>
             <div class="option-desc">For the Overwhelmed Procrastinator frozen by complex, multi-step actions.</div>
           </div>
-          <div class="option-card" onclick="selectOption(this)">
+          <div class="option-card" onclick="selectOption(this, 'routine')">
             <div class="option-title">🌱 Low Physical Presence</div>
             <div class="option-desc">For building subtle structural charisma, hydration habits, and physical presence.</div>
           </div>
         </div>
       </div>
-      <button class="btn-primary" onclick="switchScreen('screen-dashboard')">Calibrate Behavioral Deck</button>
     </div>
 
     <!-- SCREEN 3: DASHBOARD MENU (TARGET FOCUS PAGE) -->
@@ -68,18 +74,26 @@
           </div>
           <div class="metric-block">
             <span class="metric-num" id="stat-focus">0.0m</span>
-            <span class="metric-lbl">Friction Saved</span>
+            <span class="metric-lbl">Focus Reclaimed</span>
           </div>
         </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin: 16px 4px 8px 4px;">
-          <h2 class="title-large" style="font-size: 18px; letter-spacing: -0.3px; margin: 0;">Target Focus Area</h2>
-          <button class="btn-text-nav" onclick="switchScreen('screen-onboarding-2')">🔄 Change Issue</button>
+        <!-- FIRST TIME PWA SETUP GUIDE -->
+        <div id="pwa-setup-card" style="background: #FAF7F2; border: 1px dashed var(--accent-color); border-radius: 16px; padding: 14px; text-align: left; margin: 12px 0;">
+          <div style="font-size: 13px; font-weight: 800; color: var(--text-color); margin-bottom: 6px;">⚡ Quick PWA Setup Guide</div>
+          <div style="font-size: 12px; color: #6E6A67; line-height: 1.4;">
+            1. <b>Add Shortcut:</b> Tap Share / Menu & select <b>"Add to Home Screen"</b>.<br>
+            2. <b>Enable Reminders:</b> Allow notification alerts to trigger circuit breakers.
+          </div>
+          <button id="pwa-install-btn" class="btn-small-install" style="margin-top: 10px; width: 100%;">Install App & Enable Alerts</button>
         </div>
 
-        <div id="pwa-install-banner" class="install-banner" style="display: none;">
-          <div style="font-size: 13px; font-weight: 600; color: var(--premium-color);">⚡ Install App to Home Screen</div>
-          <button class="btn-small-install" id="pwa-install-btn">Add Now</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 16px 4px 8px 4px;">
+          <div>
+            <h2 class="title-large" style="font-size: 18px; letter-spacing: -0.3px; margin: 0;">Target Focus Area</h2>
+            <p style="font-size: 12px; color: var(--accent-color); font-weight: 700; margin-top: 2px;">Tap a deck below to launch interception:</p>
+          </div>
+          <button class="btn-text-nav" onclick="switchScreen('screen-onboarding-2')">🔄 Change Issue</button>
         </div>
 
         <div class="deck-list">
@@ -105,7 +119,6 @@
           </div>
         </div>
       </div>
-      <button class="btn-primary" style="margin-top: 12px;" onclick="startTriggerPhase()">Configure Interception</button>
     </div>
 
     <!-- SCREEN 4: THE TRIGGER (SPIN BUTTON) -->
@@ -197,21 +210,30 @@
           .catch(err => console.error('SW Registration encountered an error:', err));
       });
     }
+    
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      const banner = document.getElementById('pwa-install-banner');
-      if (banner) banner.style.display = 'flex';
+      const setupCard = document.getElementById('pwa-setup-card');
+      if (setupCard) setupCard.style.display = 'block';
     });
+
     const installBtn = document.getElementById('pwa-install-btn');
     if (installBtn) {
       installBtn.addEventListener('click', async () => {
+        // Request Notification Permissions
+        if ('Notification' in window) {
+          Notification.requestPermission().then(permission => {
+            console.log("Notification permission result:", permission);
+          });
+        }
+        
+        // Trigger PWA Installation Prompt
         if (deferredPrompt) {
           deferredPrompt.prompt();
           const { outcome } = await deferredPrompt.userChoice;
           console.log("User choice outcome: " + outcome);
           deferredPrompt = null;
-          document.getElementById('pwa-install-banner').style.display = 'none';
         }
       });
     }
