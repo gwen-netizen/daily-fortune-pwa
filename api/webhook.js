@@ -21,7 +21,7 @@ async function handler(req, res) {
   const deletedSecret = isLive ? process.env.STRIPE_LIVE_WEBHOOK_SECRET_DELETED : process.env.STRIPE_TEST_WEBHOOK_SECRET_DELETED;
 
   const stripeClient = stripe(secretKey);
-  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
   const rawBody = await getRawBody(req);
   const signature = req.headers['stripe-signature'];
