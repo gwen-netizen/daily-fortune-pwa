@@ -91,7 +91,12 @@
     <!-- SCREEN 3: DASHBOARD MENU -->
     <div id="screen-dashboard" class="screen">
       <div style="width: 100%;">
-        
+
+        <!-- Native Audio Toggle Controller Layer -->
+<div style="width: 100%; display: flex; justify-content: flex-end; margin-bottom: -10px; padding-right: 4px;">
+  <button id="audio-mute-toggle" class="btn-text-nav" onclick="toggleAudioMuteSystem()" style="font-size: 16px; background: none; border: none; cursor: pointer;">🔊 Sound On</button>
+</div>
+
         <div class="metric-ribbon" style="margin-bottom: 16px;">
           <div class="metric-block">
             <span class="metric-num" id="stat-streaks">0</span>
