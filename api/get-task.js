@@ -2,6 +2,7 @@
 const taskMatrix = require('./tasks.json');
 
 module.exports = async function handler(req, res) {
+  // Enforce CORS cross-origin security rules
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
