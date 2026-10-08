@@ -19,7 +19,7 @@ self.addEventListener('push', function(event) {
     body: data.body || "Tap to smash the button and shatter your current procrastination loop.",
     icon: data.icon || "https://flaticon.com",
     badge: data.badge || "https://flaticon.com", 
-    vibrate:, 
+    vibrate: [100, 50, 100], 
     data: {
       url: (data.data && data.data.url) ? data.data.url : "/"
     }
