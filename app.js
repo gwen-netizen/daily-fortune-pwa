@@ -52,11 +52,9 @@ const victoryValidationStrings = [
 let isPremiumSelected = false;
 let countdownInterval = null;
 
-// Initialize state from sessionStorage if available, otherwise default
 let mindFrictionStyle = sessionStorage.getItem('nudge_friction') || 'scroll'; 
 let selectedCategory = sessionStorage.getItem('nudge_category') || 'charisma'; 
 
-// Initialize metrics from localStorage
 let totalWinsCount = parseInt(localStorage.getItem('nudge_total_wins') || '0');
 let totalFocusReclaimed = parseFloat(localStorage.getItem('nudge_minutes') || '0.0');
 
@@ -67,12 +65,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const savedEmail = localStorage.getItem('nudge_user_email');
   
   if (savedEmail) {
-    // Existing User: Bypass Auth, load directly into Dashboard
     restoreStateFromSession();
     updateMetricDashboard();
     switchScreen('screen-onboarding-2');
   } else {
-    // New User: Require email registration
     switchScreen('screen-onboarding-1');
   }
   
@@ -96,42 +92,57 @@ function switchScreen(screenId) {
 }
 
 /* ========================================================
-   3. AUTHENTICATION (SUPABASE MAGIC LINKS)
+   3. AUTHENTICATION & TRIAL ROUTING (SCREEN 1 FIX)
 ======================================================== */
 async function initializeUserProfile() {
   const emailInput = document.getElementById('user-auth-email');
-  if (!emailInput || !emailInput.value.includes('@')) {
+  const emailVal = emailInput ? emailInput.value.trim().toLowerCase() : '';
+  
+  if (!emailVal || !emailVal.includes('@')) {
     alert("Please enter a valid email address to protect your focus milestones.");
     return;
   }
 
-  const userEmail = emailInput.value.trim().toLowerCase();
-  localStorage.setItem('nudge_user_email', userEmail);
+  localStorage.setItem('nudge_user_email', emailVal);
 
-  const loginBtn = document.querySelector('#screen-onboarding-1 .btn-primary');
-  const originalText = loginBtn.innerText;
-  loginBtn.innerText = "SENDING ACCESS CODE...";
-  loginBtn.style.opacity = "0.7";
+  const loginBtn = document.getElementById('btn-take-control');
+  const originalText = loginBtn ? loginBtn.innerText : "Take Control";
+  if (loginBtn) {
+    loginBtn.innerText = "SYNCHRONIZING...";
+    loginBtn.style.opacity = "0.7";
+  }
 
   try {
-    const response = await fetch(`/api/sync-user?email=${userEmail}&action=request_otp`);
+    const response = await fetch(`/api/sync-user?email=${encodeURIComponent(emailVal)}&action=request_otp`);
     const data = await response.json();
     
-    if (data.sent) {
+    if (data && data.sent) {
       const noticeEl = document.getElementById('verification-notice-text');
-      if (noticeEl) noticeEl.innerText = `We sent a secure 6-digit access code to ${userEmail}.`;
+      if (noticeEl) noticeEl.innerText = `We sent a secure 6-digit access code to ${emailVal}.`;
       switchScreen('screen-auth-verify');
-    } else {
-      throw new Error("OTP Dispatch Failed");
+      return;
     }
   } catch (error) {
-    console.warn("Auth system unavailable. Entering offline sandbox mode.", error);
-    // Graceful offline fallback: allow users into the app even if network drops
-    switchScreen('screen-onboarding-2'); 
+    console.warn("Auth sync network issue; routing to local sandbox trial mode:", error);
   } finally {
-    loginBtn.innerText = originalText;
-    loginBtn.style.opacity = "1";
+    if (loginBtn) {
+      loginBtn.innerText = originalText;
+      loginBtn.style.opacity = "1";
+    }
   }
+
+  // FAILSAFE: Always allow trial access if OTP request fails or is skipped
+  bypassToDiagnostic();
+}
+
+function bypassToDiagnostic() {
+  const emailInput = document.getElementById('user-auth-email');
+  if (emailInput && emailInput.value.includes('@')) {
+    localStorage.setItem('nudge_user_email', emailInput.value.trim().toLowerCase());
+  }
+  updateMetricDashboard();
+  applyPremiumUIVisuals();
+  switchScreen('screen-onboarding-2');
 }
 
 async function verifyOTP() {
@@ -144,50 +155,54 @@ async function verifyOTP() {
 
   const token = otpInput.value.trim();
   const verifyBtn = document.querySelector('#screen-auth-verify .btn-primary');
-  const originalText = verifyBtn.innerText;
-  verifyBtn.innerText = "VERIFYING IDENTITY...";
-  verifyBtn.style.opacity = "0.7";
+  const originalText = verifyBtn ? verifyBtn.innerText : "Verify Identity";
+  if (verifyBtn) {
+    verifyBtn.innerText = "VERIFYING IDENTITY...";
+    verifyBtn.style.opacity = "0.7";
+  }
   
   try {
-    const response = await fetch(`/api/sync-user?email=${userEmail}&action=verify_otp&token=${token}`);
+    const response = await fetch(`/api/sync-user?email=${encodeURIComponent(userEmail)}&action=verify_otp&token=${encodeURIComponent(token)}`);
     const data = await response.json();
     
     if (data.success) {
-      // Re-hydrate local device state with historical cloud data (if returning user)
-      totalWinsCount = data.profile.total_wins || 0;
-      totalFocusReclaimed = data.profile.focus_reclaimed || 0.0;
-      localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
-      localStorage.setItem('nudge_minutes', totalFocusReclaimed.toString());
-      
-      if (data.profile.premium_user) {
-        localStorage.setItem('nudge_premium_user', 'true');
-        applyPremiumUIVisuals();
+      if (data.profile) {
+        totalWinsCount = data.profile.total_wins || 0;
+        totalFocusReclaimed = data.profile.focus_reclaimed || 0.0;
+        localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
+        localStorage.setItem('nudge_minutes', totalFocusReclaimed.toString());
+        
+        if (data.profile.premium_user) {
+          localStorage.setItem('nudge_premium_user', 'true');
+          applyPremiumUIVisuals();
+        }
       }
       
-      // Request notification permissions once they are securely logged in
       if ('Notification' in window) Notification.requestPermission();
       
       updateMetricDashboard();
       switchScreen('screen-onboarding-2');
     } else {
-      alert("Invalid or expired code. Please check your email and try again.");
-      verifyBtn.innerText = originalText;
-      verifyBtn.style.opacity = "1";
+      alert("Invalid or expired code. Please check your email or proceed with trial mode.");
+      if (verifyBtn) {
+        verifyBtn.innerText = originalText;
+        verifyBtn.style.opacity = "1";
+      }
     }
   } catch (err) {
-    alert("Network error verifying code. You will be routed in offline mode.");
-    switchScreen('screen-onboarding-2');
+    alert("Network error. Entering trial mode.");
+    bypassToDiagnostic();
   }
 }
 
 /* ========================================================
-   4. CLOUD SYNCHRONIZATION (BACKUPS)
+   4. CLOUD BACKUPS & SYNC
 ======================================================== */
 async function syncLifetimeProgressToCloud() {
   const userEmail = localStorage.getItem('nudge_user_email');
   const isPremium = localStorage.getItem('nudge_premium_user') === 'true';
   
-  if (!userEmail) return; // Skip sync if profile configuration hasn't run
+  if (!userEmail) return;
 
   try {
     await fetch('/api/sync-user', {
@@ -201,12 +216,12 @@ async function syncLifetimeProgressToCloud() {
       })
     });
   } catch (err) {
-    console.warn("Cloud persistence layer buffered data for next sync cycle:", err);
+    console.warn("Cloud persistence buffered data:", err);
   }
 }
 
 /* ========================================================
-   5. UI STATE & DASHBOARD LOGIC
+   5. DASHBOARD & UI STATE
 ======================================================== */
 function restoreStateFromSession() {
   const optionCards = document.querySelectorAll('.option-card');
@@ -275,7 +290,7 @@ function selectDeck(el, isPremium, categoryKey) {
 }
 
 /* ========================================================
-   6. PREMIUM PAYWALL & STRIPE INTEGRATION
+   6. PAYWALL & STRIPE CHECKOUT
 ======================================================== */
 function startTriggerPhase() {
   const isUserPremium = localStorage.getItem('nudge_premium_user') === 'true';
@@ -306,7 +321,6 @@ function applyPremiumUIVisuals() {
   const isUserPremium = localStorage.getItem('nudge_premium_user') === 'true';
   
   if (isUserPremium) {
-    // 1. Upgrade the Standard Decks
     document.querySelectorAll('.deck-item').forEach(item => {
       const meta = item.querySelector('.deck-meta');
       const name = item.querySelector('.deck-name');
@@ -317,7 +331,6 @@ function applyPremiumUIVisuals() {
       }
     });
 
-    // 2. Upgrade the Custom Lifeline Button
     const customMeta = document.getElementById('custom-lifeline-meta');
     const customText = document.getElementById('custom-lifeline-text');
     const customBtn = document.getElementById('custom-lifeline-add-btn');
@@ -338,6 +351,7 @@ async function simulatePurchase() {
   const isLifetime = selectedTierBox.innerText.includes("Lifetime");
   const paywallBtn = document.querySelector('.paywall-modal .btn-primary');
   const originalText = paywallBtn ? paywallBtn.innerText : "Upgrade Mindset Portfolio";
+  const userEmail = localStorage.getItem('nudge_user_email');
   
   if (paywallBtn) {
     paywallBtn.innerText = "INITIALIZING SECURE GATEWAY...";
@@ -350,6 +364,7 @@ async function simulatePurchase() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         planType: isLifetime ? 'lifetime' : 'monthly',
+        email: userEmail,
         successUrl: window.location.origin + '/?session=success',
         cancelUrl: window.location.origin
       })
@@ -366,19 +381,37 @@ async function simulatePurchase() {
   }
 }
 
-function checkStripeRedirectStatus() {
+async function checkStripeRedirectStatus() {
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('session') === 'success') {
+    const userEmail = localStorage.getItem('nudge_user_email');
+    
+    // Grant immediate optimism state
     localStorage.setItem('nudge_premium_user', 'true');
-    alert("Premium Portfolio Active! Algorithmic intercepts completely unlocked.");
     applyPremiumUIVisuals();
+
+    if (userEmail) {
+      try {
+        await new Promise(resolve => setTimeout(resolve, 1500)); 
+        const response = await fetch(`/api/sync-user?email=${encodeURIComponent(userEmail)}&action=get_profile`);
+        const data = await response.json();
+        
+        if (data.profile && data.profile.premium_user === true) {
+          localStorage.setItem('nudge_premium_user', 'true');
+        }
+      } catch (e) {
+        console.error("Verification delay:", e);
+      }
+    }
+    
+    alert("Premium Access Active! All algorithmic decks and custom lifelines unlocked.");
     window.history.replaceState({}, document.title, window.location.pathname);
     switchScreen('screen-dashboard');
   }
 }
 
 /* ========================================================
-   7. CUSTOM LIFELINES ENGINE (PREMIUM)
+   7. CUSTOM LIFELINES ENGINE
 ======================================================== */
 function openCustomLifelineModal() {
   const isUserPremium = localStorage.getItem('nudge_premium_user') === 'true';
@@ -448,7 +481,7 @@ function renderCustomLifelines() {
 }
 
 /* ========================================================
-   8. LOCAL PUSH NOTIFICATION TICKER
+   8. PUSH TICKER ENGINE
 ======================================================== */
 let lastFiredTime = null;
 let lastFiredDate = null;
@@ -458,7 +491,7 @@ function startClockTicker() {
     const now = new Date();
     const timeString = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
     checkAndFireNotification(timeString);
-  }, 30000); // Check every 30 seconds
+  }, 30000);
 }
 
 function checkAndFireNotification(timeString) {
@@ -468,14 +501,12 @@ function checkAndFireNotification(timeString) {
   let pushBody = null;
   let pushTitle = "2-min Turnaround";
 
-  // Check Static Fixed Anchors
   if (staticLifelines[timeString]) {
     const options = staticLifelines[timeString];
     pushBody = options[Math.floor(Math.random() * options.length)];
     pushTitle = "Standard Slump Intercept";
   }
 
-  // Check Premium Custom Arrays
   const customs = JSON.parse(localStorage.getItem('nudge_custom_lifelines') || '[]');
   const matchedCustom = customs.find(c => c.time === timeString);
   
@@ -484,7 +515,6 @@ function checkAndFireNotification(timeString) {
     pushTitle = "Custom Lifeline Trigger";
   }
 
-  // Fire Web Push via Service Worker
   if (pushBody) {
     if ('serviceWorker' in navigator && Notification.permission === 'granted') {
       navigator.serviceWorker.ready.then(reg => {
@@ -502,7 +532,7 @@ function checkAndFireNotification(timeString) {
 }
 
 /* ========================================================
-   9. EXECUTION & COUNTDOWN PHASE
+   9. EXECUTION & TIMER PHASE
 ======================================================== */
 async function executeTurnaroundSpin() {
   const btn = document.querySelector('.big-red-btn');
@@ -524,7 +554,6 @@ async function executeTurnaroundSpin() {
     console.error("Task payload transport error:", err);
   }
 
-  // Ensures specific prefix styling persists on offline fallbacks
   if (!selectedTask.startsWith('⚡') && !selectedTask.startsWith('🧠') && !selectedTask.startsWith('🌱')) {
     if (mindFrictionStyle === 'scroll') selectedTask = "⚡ INTERCEPTION: " + selectedTask;
     else if (mindFrictionStyle === 'paralysis') selectedTask = "🧠 BREAK OUT: " + selectedTask;
@@ -602,9 +631,6 @@ function triggerVictoryPhase(minutesEarned) {
 
 function claimRewardStack() {
   updateMetricDashboard();
-  
-  // SECURE BACKUP: Pushes metrics up to Supabase seamlessly in the background
   syncLifetimeProgressToCloud(); 
-  
   switchScreen('screen-dashboard');
 }
