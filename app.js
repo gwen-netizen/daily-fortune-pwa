@@ -1,10 +1,13 @@
-let isPremiumSelected = false;
-let countdownInterval = null;
-let mindFrictionStyle = 'scroll'; // Tracks Screen 2 profile choices: 'scroll', 'paralysis', 'routine'
-
-// METRIC STATE FRAME: Tracks your new premium rebrand parameter values safely across reloads
-let totalWinsCount = parseInt(localStorage.getItem('nudge_total_wins') || '0');
-let totalFocusReclaimed = parseFloat(localStorage.getItem('nudge_focus_reclaimed') || '0.0');
+// Neuro-calibrated text arrays mapping to the core problem solutions
+const taskDatabase = [
+  "Do the single task you have been avoiding for exactly two minutes. Move right now. No choices, just execution.",
+  "Roll your shoulders completely back, step away from the desk, and stand fully tall. Force a clean neurological change of state.",
+  "Invert your phone screen face down right now. Sit in continuous, total quiet breathing until the system chimes zero.",
+  "Locate one piece of physical friction or clutter in your visual field. Trash it or store it out of sight immediately.",
+  "Drink a full clean glass of water right now. Clear away physical systemic sludge and re-anchor attention fields.",
+  "Isolate one capability you brought to the table this week. Write it down or state it out loud without comparing it to anyone.",
+  "Take three deliberate, ultra-slow abdominal breaths. Lock focus onto the movement of your lungs. Clear the static."
+];
 
 const victoryValidationStrings = [
   "You chose active alignment while the rest of the world remained paralyzed on the couch scrolling algorithms. Focus Reclaimed.",
@@ -12,6 +15,15 @@ const victoryValidationStrings = [
   "The dopamine loop has been successfully redirected. You are now running on true clean execution energy."
 ];
 
+let isPremiumSelected = false;
+let countdownInterval = null;
+let mindFrictionStyle = 'scroll'; // Tracks Screen 2 profile choices: 'scroll', 'paralysis', 'routine'
+
+// METRIC STATE FRAME: Tracks your new premium rebrand parameter values safely across reloads
+let totalWinsCount = parseInt(localStorage.getItem('nudge_total_wins') || '0');
+let totalFocusReclaimed = parseFloat(localStorage.getItem('nudge_minutes') || '0.0');
+
+// High-reliability page setup engine load sequence
 document.addEventListener("DOMContentLoaded", () => {
   updateMetricDashboard();
   checkStripeRedirectStatus();
@@ -97,6 +109,9 @@ function selectTier(el) {
   el.classList.add('selected');
 }
 
+/**
+ * Functional Route Engine linking the frontend Paywall Selection seamlessly to Stripe Checkout
+ */
 async function simulatePurchase() {
   const selectedTierBox = document.querySelector('.tier-box.selected');
   if (!selectedTierBox) {
@@ -124,6 +139,13 @@ async function simulatePurchase() {
       })
     });
 
+    // DIAGNOSTIC CHECK: Read explicit HTTP server status failures directly to browser logs
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`SERVER LOG INFRASTRUCTURE ERROR [Status ${response.status}]:`, errorText);
+      throw new Error(`Server returned status ${response.status}: ${errorText}`);
+    }
+
     const session = await response.json();
 
     if (session.url) {
@@ -132,8 +154,9 @@ async function simulatePurchase() {
       throw new Error(session.error || "Failed to generate dynamic session payload.");
     }
   } catch (paymentError) {
-    console.error("Stripe Checkout Session routing failure:", paymentError);
-    alert("Could not initialize Stripe Session. Please ensure backend parameters are configured.");
+    console.error("Stripe Checkout Session routing failure details:", paymentError);
+    // Dynamic error popup alerting you of the exact network status code returned by Vercel
+    alert(`Gateway Error: ${paymentError.message}. Open browser inspect console for full stack trace parameters.`);
     
     if (paywallBtn) {
       paywallBtn.innerText = originalText;
@@ -142,6 +165,9 @@ async function simulatePurchase() {
   }
 }
 
+/**
+ * Handles validation status parameter checks when landing back from Stripe domains
+ */
 function checkStripeRedirectStatus() {
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('session') === 'success') {
@@ -215,7 +241,7 @@ function startActionTimer(seconds) {
     minutes = minutes < 10 ? "0" + minutes : minutes;
     secs = secs < 10 ? "0" + secs : secs;
 
-    if (display) display.innerText = `${minutes}:${secs}`;
+    if (display) display.innerText = minutes + ":" + secs;
 
     if (--timeLeft < 0) {
       clearInterval(countdownInterval);
@@ -232,57 +258,48 @@ function finishEarly() {
     const displayVal = displayEl.innerText;
     const parts = displayVal.split(':');
     if (parts.length === 2) {
-      // FIXED MATHEMATICAL PARSING LOGIC: Safely pulls explicit array positions for minutes [0] and seconds [1]
-      const currentMinutesVal = parseInt(parts[0], 10) || 0;
-      const currentSecondsVal = parseInt(parts[1], 10) || 0;
-      const elapsedSeconds = 120 - (currentMinutesVal * 60 + currentSecondsVal);
-      elapsedMinutes = Math.max(0.2, elapsedSeconds / 60);
-    }
-  }
-
-  clearInterval(countdownInterval);
-  triggerVictoryPhase(elapsedMinutes);
+      // FIXED PARSING ENGINE: Tracks accurate array indices mapping separately to minutes and seconds parameters
+const currentMinutesVal = parseInt(parts[0], 10) || 0;
+const currentSecondsVal = parseInt(parts[1], 10) || 0;
+const elapsedSeconds = 120 - (currentMinutesVal * 60 + currentSecondsVal);
+elapsedMinutes = Math.max(0.2, elapsedSeconds / 60);
 }
-
+}
+clearInterval(countdownInterval);
+triggerVictoryPhase(elapsedMinutes);
+}
 function cancelTimer() {
-  clearInterval(countdownInterval);
-  updateMetricDashboard();
-  switchScreen('screen-dashboard');
+clearInterval(countdownInterval);
+updateMetricDashboard();
+switchScreen('screen-dashboard');
 }
-
 function triggerVictoryPhase(minutesEarned) {
-  const copy = victoryValidationStrings[Math.floor(Math.random() * victoryValidationStrings.length)];
-  const validationCopyEl = document.getElementById('victory-validation-copy');
-  if (validationCopyEl) validationCopyEl.innerText = copy;
-  
-  totalWinsCount += 1;
-  totalFocusReclaimed += minutesEarned;
-  
-  localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
-  localStorage.setItem('nudge_minutes', totalFocusReclaimed.toString());
-  
-  try {
-    const audioNode = document.getElementById('victory-chime');
-    if (audioNode) {
-      audioNode.currentTime = 0;
-      audioNode.play().catch(err => console.log("Audio presentation skipped:", err));
-    }
-  } catch (audioError) {
-    console.warn("Audio catch execution layer bypassed:", audioError);
-  }
-
-  switchScreen('screen-victory');
-  
-  try {
-    if (typeof confetti === 'function') {
-      confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#D4A373', '#4A7C59', '#2D2B2A'] });
-    }
-  } catch (e) {
-    console.log("Confetti canvas failure:", e);
-  }
+const copy = victoryValidationStrings[Math.floor(Math.random() * victoryValidationStrings.length)];
+const validationCopyEl = document.getElementById('victory-validation-copy');
+if (validationCopyEl) validationCopyEl.innerText = copy;
+totalWinsCount += 1;
+totalFocusReclaimed += minutesEarned;
+localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
+localStorage.setItem('nudge_minutes', totalFocusReclaimed.toString());
+try {
+const audioNode = document.getElementById('victory-chime');
+if (audioNode) {
+audioNode.currentTime = 0;
+audioNode.play().catch(err => console.log("Audio presentation skipped:", err));
 }
-
+} catch (audioError) {
+console.warn("Audio catch execution layer bypassed:", audioError);
+}
+switchScreen('screen-victory');
+try {
+if (typeof confetti === 'function') {
+confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#D4A373', '#4A7C59', '#2D2B2A'] });
+}
+} catch (e) {
+console.log("Confetti library processing bypass:", e);
+}
+}
 function claimRewardStack() {
-  updateMetricDashboard();
-  switchScreen('screen-dashboard');
+updateMetricDashboard();
+switchScreen('screen-dashboard');
 }
