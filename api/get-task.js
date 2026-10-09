@@ -24,17 +24,19 @@ export default async function handler(req, res) {
     const isPremiumDeck = (lowerCategory === 'dopamine' || lowerCategory === 'overwhelm');
 
     let userProfile = null;
-    if (email && email !== 'anonymous_tester') {
+    const cleanEmail = email ? email.trim().toLowerCase() : '';
+
+    if (cleanEmail && cleanEmail !== 'anonymous_tester') {
       const { data } = await supabase
         .from('user_profiles')
         .select('premium_user, seen_task_history, active_device_id')
-        .eq('email', email.toLowerCase())
+        .eq('email', cleanEmail)
         .maybeSingle();
       
       userProfile = data;
     }
 
-    // Verify Single Active Device
+    // Single Active Device Verification
     if (userProfile && userProfile.active_device_id && device_id && userProfile.active_device_id !== device_id) {
       return res.status(409).json({ 
         error: "Session Expired: Your account was accessed on another device.",
@@ -76,11 +78,11 @@ export default async function handler(req, res) {
 
     historyMap[lowerCategory].push(targetTaskIndex);
 
-    if (userProfile && email && email !== 'anonymous_tester') {
+    if (userProfile && cleanEmail && cleanEmail !== 'anonymous_tester') {
       await supabase
         .from('user_profiles')
         .update({ seen_task_history: historyMap })
-        .eq('email', email.toLowerCase());
+        .eq('email', cleanEmail);
     }
 
     let finalTaskText = selectedTaskData.text;
