@@ -1,21 +1,23 @@
 {
-  "name": "2-min",
+  "name": "2-min Turnaround",
   "short_name": "2-min",
-  "description": "The 120-second behavioral circuit breaker",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#FAF7F2",
   "theme_color": "#FAF7F2",
+  "orientation": "portrait",
   "icons": [
     {
-      "src": "https://flaticon.com",
+      "src": "/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "https://flaticon.com",
+      "src": "/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
