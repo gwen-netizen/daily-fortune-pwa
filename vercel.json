@@ -8,11 +8,15 @@
     { "src": "sw.js", "use": "@vercel/static" },
     { "src": "manifest.json", "use": "@vercel/static" },
     { "src": "api/create-checkout-session.js", "use": "@vercel/node" },
-    { "src": "api/get-task.js", "use": "@vercel/node" }
+    { "src": "api/get-task.js", "use": "@vercel/node" },
+    { "src": "api/sync-user.js", "use": "@vercel/node" },
+    { "src": "api/webhook.js", "use": "@vercel/node" }
   ],
   "routes": [
     { "src": "/api/create-checkout-session", "dest": "/api/create-checkout-session.js" },
     { "src": "/api/get-task", "dest": "/api/get-task.js" },
+    { "src": "/api/sync-user", "dest": "/api/sync-user.js" },
+    { "src": "/api/webhook", "dest": "/api/webhook.js" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
