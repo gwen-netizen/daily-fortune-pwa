@@ -1,6 +1,5 @@
-import fs from 'fs';
-import path from 'path';
 import { createClient } from '@supabase/supabase-js';
+import taskMatrix from './tasks.js';
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY; 
@@ -48,10 +47,6 @@ export default async function handler(req, res) {
     if (isPremiumDeck && !isPremiumUser) {
       return res.status(402).json({ error: "Premium subscription validation required to view this focus deck." });
     }
-
-    const jsonPath = path.join(process.cwd(), 'api', 'tasks.json');
-    const fileContents = fs.readFileSync(jsonPath, 'utf8');
-    const taskMatrix = JSON.parse(fileContents);
 
     const targetPool = taskMatrix[lowerCategory];
     if (!targetPool || targetPool.length === 0) {
