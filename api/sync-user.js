@@ -10,28 +10,38 @@ module.exports = async function handler(req, res) {
 
   const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
+  // ----------------------------------------------------
+  // 1. CLOUD PROGRESS BACKUP (POST)
+  // ----------------------------------------------------
   if (req.method === 'POST') {
     try {
       const { email, total_wins, focus_reclaimed, premium_user } = req.body;
       if (!email) return res.status(400).json({ error: "Email is required" });
 
+      const lowerEmail = email.toLowerCase();
+
       const { data, error } = await supabase
         .from('user_profiles')
         .upsert({ 
-          email: email.toLowerCase(), 
+          email: lowerEmail, 
           total_wins: total_wins || 0, 
           focus_reclaimed: focus_reclaimed || 0.0, 
           premium_user: premium_user || false 
-        }, { onConflict: 'email' });
+        }, { onConflict: 'email' })
+        .select()
+        .single();
 
       if (error) throw error;
-      return res.status(200).json({ success: true });
+      return res.status(200).json({ success: true, profile: data });
     } catch (err) {
       console.error("Supabase Write Error:", err);
       return res.status(500).json({ error: err.message });
     }
   }
 
+  // ----------------------------------------------------
+  // 2. AUTHENTICATION & PROFILE RETRIEVAL (GET)
+  // ----------------------------------------------------
   if (req.method === 'GET') {
     const { email, action, token } = req.query;
     if (!email) return res.status(400).json({ error: "Email parameter missing" });
@@ -39,6 +49,7 @@ module.exports = async function handler(req, res) {
     const lowerEmail = email.toLowerCase();
     
     try {
+      // Action A: Request 6-digit OTP Code
       if (action === 'request_otp') {
         const { error } = await supabase.auth.signInWithOtp({ 
           email: lowerEmail,
@@ -47,9 +58,21 @@ module.exports = async function handler(req, res) {
           }
         });
         if (error) throw error;
+
+        // Auto-provision profile record in user_profiles upon initial OTP request
+        await supabase
+          .from('user_profiles')
+          .upsert({ 
+            email: lowerEmail,
+            total_wins: 0,
+            focus_reclaimed: 0.0,
+            premium_user: false
+          }, { onConflict: 'email', ignoreDuplicates: true });
+
         return res.status(200).json({ sent: true });
       }
       
+      // Action B: Verify 6-digit OTP Code
       if (action === 'verify_otp') {
         if (!token) return res.status(400).json({ error: "Token missing" });
 
@@ -76,11 +99,27 @@ module.exports = async function handler(req, res) {
           return res.status(401).json({ error: "Invalid or expired access code. Please try requesting a new one." });
         }
 
-        const { data: profileData } = await supabase
+        // Fetch or initialize profile record in user_profiles
+        let { data: profileData } = await supabase
           .from('user_profiles')
           .select('*')
           .eq('email', lowerEmail)
-          .single();
+          .maybeSingle();
+
+        if (!profileData) {
+          const { data: newProfile } = await supabase
+            .from('user_profiles')
+            .upsert({ 
+              email: lowerEmail, 
+              total_wins: 0, 
+              focus_reclaimed: 0.0, 
+              premium_user: false 
+            }, { onConflict: 'email' })
+            .select()
+            .single();
+
+          profileData = newProfile;
+        }
 
         return res.status(200).json({ 
           success: true, 
@@ -88,12 +127,13 @@ module.exports = async function handler(req, res) {
         });
       }
 
+      // Action C: Secure Premium Check after Payment
       if (action === 'get_profile') {
         const { data: profileData } = await supabase
           .from('user_profiles')
           .select('*')
           .eq('email', lowerEmail)
-          .single();
+          .maybeSingle();
           
         return res.status(200).json({ profile: profileData || { premium_user: false } });
       }
