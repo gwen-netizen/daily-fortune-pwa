@@ -15,19 +15,40 @@ module.exports = async function handler(req, res) {
   // ----------------------------------------------------
   if (req.method === 'POST') {
     try {
-      const { email, total_wins, focus_reclaimed, premium_user } = req.body;
+      const { email, total_wins, focus_reclaimed, premium_user, device_id } = req.body;
       if (!email) return res.status(400).json({ error: "Email is required" });
 
       const lowerEmail = email.toLowerCase();
 
+      if (device_id) {
+        const { data: currentProf } = await supabase
+          .from('user_profiles')
+          .select('active_device_id')
+          .eq('email', lowerEmail)
+          .maybeSingle();
+
+        if (currentProf && currentProf.active_device_id && currentProf.active_device_id !== device_id) {
+          return res.status(409).json({ 
+            error: "Device Session Conflict: Account is active on another device.",
+            code: "DEVICE_MISMATCH"
+          });
+        }
+      }
+
+      const updatePayload = { 
+        email: lowerEmail, 
+        total_wins: total_wins || 0, 
+        focus_reclaimed: focus_reclaimed || 0.0, 
+        premium_user: premium_user || false 
+      };
+
+      if (device_id) {
+        updatePayload.active_device_id = device_id;
+      }
+
       const { data, error } = await supabase
         .from('user_profiles')
-        .upsert({ 
-          email: lowerEmail, 
-          total_wins: total_wins || 0, 
-          focus_reclaimed: focus_reclaimed || 0.0, 
-          premium_user: premium_user || false 
-        }, { onConflict: 'email' })
+        .upsert(updatePayload, { onConflict: 'email' })
         .select()
         .single();
 
@@ -43,23 +64,19 @@ module.exports = async function handler(req, res) {
   // 2. AUTHENTICATION & PROFILE RETRIEVAL (GET)
   // ----------------------------------------------------
   if (req.method === 'GET') {
-    const { email, action, token } = req.query;
+    const { email, action, token, device_id } = req.query;
     if (!email) return res.status(400).json({ error: "Email parameter missing" });
 
     const lowerEmail = email.toLowerCase();
     
     try {
-      // Action A: Request 6-digit OTP Code
       if (action === 'request_otp') {
         const { error } = await supabase.auth.signInWithOtp({ 
           email: lowerEmail,
-          options: {
-            shouldCreateUser: true
-          }
+          options: { shouldCreateUser: true }
         });
         if (error) throw error;
 
-        // Auto-provision profile record in user_profiles upon initial OTP request
         await supabase
           .from('user_profiles')
           .upsert({ 
@@ -72,7 +89,6 @@ module.exports = async function handler(req, res) {
         return res.status(200).json({ sent: true });
       }
       
-      // Action B: Verify 6-digit OTP Code
       if (action === 'verify_otp') {
         if (!token) return res.status(400).json({ error: "Token missing" });
 
@@ -99,27 +115,15 @@ module.exports = async function handler(req, res) {
           return res.status(401).json({ error: "Invalid or expired access code. Please try requesting a new one." });
         }
 
-        // Fetch or initialize profile record in user_profiles
-        let { data: profileData } = await supabase
+        // Bind active_device_id to this newly verified device
+        const { data: profileData } = await supabase
           .from('user_profiles')
-          .select('*')
-          .eq('email', lowerEmail)
-          .maybeSingle();
-
-        if (!profileData) {
-          const { data: newProfile } = await supabase
-            .from('user_profiles')
-            .upsert({ 
-              email: lowerEmail, 
-              total_wins: 0, 
-              focus_reclaimed: 0.0, 
-              premium_user: false 
-            }, { onConflict: 'email' })
-            .select()
-            .single();
-
-          profileData = newProfile;
-        }
+          .upsert({ 
+            email: lowerEmail, 
+            active_device_id: device_id || null
+          }, { onConflict: 'email' })
+          .select()
+          .single();
 
         return res.status(200).json({ 
           success: true, 
@@ -127,13 +131,19 @@ module.exports = async function handler(req, res) {
         });
       }
 
-      // Action C: Secure Premium Check after Payment
       if (action === 'get_profile') {
         const { data: profileData } = await supabase
           .from('user_profiles')
           .select('*')
           .eq('email', lowerEmail)
           .maybeSingle();
+
+        if (profileData && profileData.active_device_id && device_id && profileData.active_device_id !== device_id) {
+          return res.status(409).json({ 
+            error: "Session Conflict: Account is logged in on another device.",
+            code: "DEVICE_MISMATCH"
+          });
+        }
           
         return res.status(200).json({ profile: profileData || { premium_user: false } });
       }
