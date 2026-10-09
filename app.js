@@ -48,6 +48,9 @@ function switchScreen(screenId) {
   }
 }
 
+/* ========================================================
+   1. AUTHENTICATION & OTP FLOW (FAILSAFE REMOVED)
+======================================================== */
 async function initializeUserProfile() {
   const emailInput = document.getElementById('user-auth-email');
   if (!emailInput || !emailInput.value.includes('@')) {
@@ -58,24 +61,88 @@ async function initializeUserProfile() {
   const userEmail = emailInput.value.trim().toLowerCase();
   localStorage.setItem('nudge_user_email', userEmail);
 
-  const loginBtn = document.querySelector('#screen-onboarding-1 .btn-primary');
+  const loginBtn = document.getElementById('btn-take-control');
+  const originalText = loginBtn ? loginBtn.innerText : "Take Control";
+  
   if (loginBtn) {
-    loginBtn.innerText = "SYNCHRONIZING ACCOUNT...";
+    loginBtn.innerText = "REQUESTING ACCESS CODE...";
     loginBtn.style.opacity = "0.7";
+    loginBtn.disabled = true;
   }
 
   try {
-    const response = await fetch(`/api/sync-user?email=${userEmail}&action=request_otp`);
+    // Corrected action query parameter to match api/sync-user.js
+    const response = await fetch(`/api/sync-user?email=${encodeURIComponent(userEmail)}&action=request_otp`);
     const data = await response.json();
 
-    if (data.sent) {
+    if (response.ok && data.sent) {
+      const noticeEl = document.getElementById('verification-notice-text');
+      if (noticeEl) noticeEl.innerText = `We sent a secure 6-digit access code to ${userEmail}.`;
       switchScreen('screen-auth-verify');
     } else {
-      bypassToDiagnostic();
+      // SILENT BYPASS REMOVED: Show exact error so problems are caught instantly
+      alert(`OTP Request Failed: ${data.error || "Unable to dispatch verification code via Supabase."}`);
     }
   } catch (error) {
-    console.error(error);
-    bypassToDiagnostic();
+    alert(`Network Error: ${error.message}`);
+  } finally {
+    if (loginBtn) {
+      loginBtn.innerText = originalText;
+      loginBtn.style.opacity = "1";
+      loginBtn.disabled = false;
+    }
+  }
+}
+
+async function verifyOTP() {
+  const userEmail = localStorage.getItem('nudge_user_email');
+  const otpInput = document.getElementById('user-otp-input');
+  
+  if (!otpInput || otpInput.value.trim().length < 6) {
+    alert("Please enter the full 6-digit access code sent to your email.");
+    return;
+  }
+
+  const token = otpInput.value.trim();
+  const verifyBtn = document.querySelector('#screen-auth-verify .btn-primary');
+  const originalText = verifyBtn ? verifyBtn.innerText : "Verify Identity";
+  
+  if (verifyBtn) {
+    verifyBtn.innerText = "VERIFYING CODE...";
+    verifyBtn.style.opacity = "0.7";
+    verifyBtn.disabled = true;
+  }
+
+  try {
+    const response = await fetch(`/api/sync-user?email=${encodeURIComponent(userEmail)}&action=verify_otp&token=${encodeURIComponent(token)}`);
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+      if (data.profile) {
+        totalWinsCount = data.profile.total_wins || 0;
+        totalFocusReclaimed = data.profile.focus_reclaimed || 0.0;
+        localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
+        localStorage.setItem('nudge_minutes', totalFocusReclaimed.toString());
+
+        if (data.profile.premium_user) {
+          localStorage.setItem('nudge_premium_user', 'true');
+          applyPremiumUIVisuals();
+        }
+      }
+
+      updateMetricDashboard();
+      switchScreen('screen-onboarding-2');
+    } else {
+      alert(`Verification Error: ${data.error || "Invalid or expired access code."}`);
+    }
+  } catch (err) {
+    alert(`Network Error: ${err.message}`);
+  } finally {
+    if (verifyBtn) {
+      verifyBtn.innerText = originalText;
+      verifyBtn.style.opacity = "1";
+      verifyBtn.disabled = false;
+    }
   }
 }
 
@@ -110,6 +177,9 @@ async function syncLifetimeProgressToCloud() {
   }
 }
 
+/* ========================================================
+   2. DASHBOARD & UI SELECTIONS
+======================================================== */
 function selectOption(el, frictionKey) {
   document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
@@ -177,6 +247,9 @@ function applyPremiumUIVisuals() {
   }
 }
 
+/* ========================================================
+   3. STRIPE PAYWALL GATEWAY
+======================================================== */
 async function simulatePurchase() {
   const selectedTierBox = document.querySelector('.tier-box.selected');
   if (!selectedTierBox) { alert("Please select a tracking tier to continue."); return; }
@@ -225,9 +298,9 @@ function checkStripeRedirectStatus() {
   }
 }
 
-/**
- * MOD 3: Programmatic Yellow Stars Formatter Node
- */
+/* ========================================================
+   4. TASK EXECUTION & METRICS ENGINE
+======================================================== */
 function renderSingleChallengeRating(label, ratingScore) {
   const labelNode = document.getElementById('target-metric-label');
   const starsNode = document.getElementById('target-metric-stars');
@@ -244,9 +317,6 @@ function renderSingleChallengeRating(label, ratingScore) {
   }
 }
 
-/**
- * MOD 3: Updated executeTurnaroundSpin logic to render task text & stars
- */
 async function executeTurnaroundSpin() {
   const btn = document.querySelector('.big-red-btn');
   const instruction = document.getElementById('trigger-instructions');
@@ -275,9 +345,7 @@ async function executeTurnaroundSpin() {
       
       const taskDisplayEl = document.getElementById('target-task-text');
       if (taskDisplayEl && data.task) {
-        // Render objective copy string
         taskDisplayEl.innerText = data.task.text;
-        // Mount yellow star system metadata variables dynamically
         renderSingleChallengeRating(data.task.metricLabel, data.task.rating);
       }
       
@@ -365,7 +433,7 @@ function claimRewardStack() {
 }
 
 /* ========================================================
-   CUSTOM LIFELINES ENGINE
+   5. CUSTOM LIFELINES ENGINE
 ======================================================== */
 function openCustomLifelineModal() {
   const isUserPremium = localStorage.getItem('nudge_premium_user') === 'true';
