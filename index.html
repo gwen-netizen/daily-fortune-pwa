@@ -24,21 +24,29 @@
     <div id="screen-onboarding-1" class="screen">
       <div style="margin: auto 0; width: 100%;">
         <h1 class="title-large">2-min<br>Turnaround</h1>
-        <p class="body-text" style="margin-bottom: 20px;">The behavioral circuit breaker. Interrupt screen addiction and task paralysis instantly in exactly 120 seconds.</p>
+        <p class="body-text" style="margin-bottom: 16px;">The behavioral circuit breaker. Interrupt screen addiction and task paralysis instantly in exactly 120 seconds.</p>
         
-        <div id="pwa-setup-card" style="background: #FFFFFF; border: 1px dashed var(--accent-color); border-radius: 16px; padding: 14px; text-align: left; margin: 16px 0;">
-          <div style="font-size: 13px; font-weight: 800; color: var(--text-color); margin-bottom: 6px;">⚡ Quick App Setup</div>
+        <div id="pwa-setup-card" style="background: #FFFFFF; border: 1px dashed var(--accent-color); border-radius: 16px; padding: 12px 14px; text-align: left; margin: 12px 0;">
+          <div style="font-size: 13px; font-weight: 800; color: var(--text-color); margin-bottom: 4px;">⚡ Quick App Setup</div>
           <div style="font-size: 12px; color: #6E6A67; line-height: 1.4;">
             1. <b>Add Shortcut:</b> Tap Share / Menu & select <b>"Add to Home Screen"</b>.<br>
             2. <b>Enable Reminders:</b> Allow notification alerts to trigger circuit breakers.
           </div>
-          <button id="pwa-install-btn" class="btn-small-install" style="margin-top: 10px; width: 100%; padding: 8px; font-size: 12px;">Enable Alerts & Install</button>
+          <button id="pwa-install-btn" class="btn-small-install" style="margin-top: 8px; width: 100%; padding: 8px; font-size: 12px;">Enable Alerts & Install</button>
         </div>
 
-        <div style="width: 100%; text-align: left; margin-bottom: 12px;">
+        <div style="width: 100%; text-align: left; margin-bottom: 10px;">
           <label style="font-size: 11px; font-weight: 700; color: var(--premium-color); letter-spacing: 0.5px; text-transform: uppercase;">Secure Focus Profile</label>
           <input type="email" id="user-auth-email" placeholder="name@example.com" 
-                 style="width: 100%; padding: 14px; border: 2px solid #EAE3D9; border-radius: 14px; font-size: 15px; margin-top: 6px; outline: none; background: #FAF7F2; color: var(--text-color);">
+                 style="width: 100%; padding: 14px; border: 2px solid #EAE3D9; border-radius: 14px; font-size: 15px; margin-top: 4px; outline: none; background: #FAF7F2; color: var(--text-color);">
+        </div>
+
+        <!-- Promo Access Code Input -->
+        <div style="width: 100%; text-align: left; margin-bottom: 16px;">
+          <label style="font-size: 11px; font-weight: 700; color: #9C8E80; letter-spacing: 0.5px; text-transform: uppercase;">Promotional Access Code (Optional)</label>
+          <input type="text" id="user-promo-code" placeholder="e.g. PREMIUM99" oninput="this.value = this.value.toUpperCase();"
+                 style="width: 100%; padding: 12px 14px; border: 2px dashed #EAE3D9; border-radius: 14px; font-size: 14px; margin-top: 4px; outline: none; background: #FFFFFF; color: var(--text-color); text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">
+          <div style="font-size: 11px; color: #7A7571; margin-top: 4px; line-height: 1.3;">Enter code to unlock 48-Hour Free Premium Access. Valid for new users only.</div>
         </div>
       </div>
       
@@ -103,7 +111,6 @@
         <!-- Live Countdown / Tier Banner -->
         <div id="screen3-status-banner" style="width: 100%; padding: 10px 14px; border-radius: 12px; font-size: 12px; margin-bottom: 14px; border: 1px solid #EAE3D9; text-align: center;"></div>
 
-        <!-- Updated 3-Block Metric Ribbon -->
         <div class="metric-ribbon" style="margin-bottom: 16px;">
           <div class="metric-block">
             <span class="metric-num" id="stat-streaks">0</span>
@@ -223,7 +230,6 @@
       <div style="width: 100%;">
         <button class="btn-primary" style="background-color: var(--success-color);" onclick="claimRewardStack()">Claim Reward Stack</button>
         
-        <!-- Discreet Bottom Right Manage Subscription Link -->
         <div style="width: 100%; text-align: right; margin-top: 12px; padding-right: 2px;">
           <button id="btn-victory-manage-subscription" onclick="openCustomerPortal()" style="display: none; background: none; border: none; color: #A8A29E; font-size: 11px; font-weight: 500; text-decoration: underline; cursor: pointer; opacity: 0.6;">Manage Subscription</button>
         </div>
@@ -242,37 +248,23 @@
           <div class="feature-item"><span>📈</span> <div><b>Custom Time Anchors:</b> Set specific hour intercepts for daily slumps.</div></div>
         </div>
 
-        <!-- Tier 1: 2-Day Pass ($0.99) -->
         <div class="tier-box selected" data-plan="pass" onclick="selectTier(this)">
           <span style="float: right; font-weight: 800; color: var(--success-color);">$0.99</span>
           <div style="font-weight: 700; font-size: 15px;">2-Day Unlimited Pass</div>
           <div style="font-size: 12px; color: #7A7571; margin-top: 2px;">48 hours of unrestricted intercepts & all premium decks.</div>
         </div>
 
-        <!-- Tier 2: Lifetime Freedom Access ($14.99) -->
         <div class="tier-box" data-plan="lifetime" onclick="selectTier(this)">
           <span style="float: right; font-weight: 800; color: var(--premium-color);">$14.99</span>
           <div style="font-weight: 700; font-size: 15px;">Lifetime Freedom Access</div>
           <div style="font-size: 12px; color: #7A7571; margin-top: 2px;">One-time payment. Permanent access forever.</div>
         </div>
 
-        <!-- Tier 3: Continuous Monthly ($2.99/mo) -->
         <div class="tier-box" data-plan="monthly" onclick="selectTier(this)">
           <span style="float: right; font-weight: 800;">$2.99/mo</span>
           <div style="font-weight: 700; font-size: 15px;">Continuous Momentum Plan</div>
           <div style="font-size: 12px; color: #7A7571; margin-top: 2px;">Billed monthly. Cancel anytime with zero friction.</div>
         </div>
-
-        <!-- Promotional Coupon Box -->
-        <div style="margin-top: 14px; text-align: left;">
-          <label style="font-size: 11px; font-weight: 700; color: #9C8E80; text-transform: uppercase;">🎟️ Promotional Coupon</label>
-          <div style="display: flex; gap: 8px; margin-top: 4px;">
-            <input type="text" id="paywall-promo-input" placeholder="e.g. WELCOME99" style="flex: 1; padding: 10px 14px; border: 1px solid #EAE3D9; border-radius: 12px; font-size: 13px; text-transform: uppercase; outline: none; background: #FFFFFF;">
-            <button id="paywall-promo-btn" onclick="applyPromoCode()" style="padding: 10px 16px; background: var(--text-color); color: #FFF; border: none; border-radius: 12px; font-size: 12px; font-weight: 700; cursor: pointer;">Apply</button>
-          </div>
-          <div id="paywall-promo-msg" style="font-size: 11px; margin-top: 4px; font-weight: 600;"></div>
-        </div>
-
       </div>
 
       <div style="width: 100%; margin-top: 16px;">
