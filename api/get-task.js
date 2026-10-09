@@ -27,11 +27,15 @@ export default async function handler(req, res) {
     const cleanEmail = email ? email.trim().toLowerCase() : '';
 
     if (cleanEmail && cleanEmail !== 'anonymous_tester') {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('user_profiles')
-        .select('premium_user, seen_task_history, active_device_id')
+        .select('premium_user, active_device_id')
         .eq('email', cleanEmail)
         .maybeSingle();
+
+      if (error) {
+        console.error("Supabase Profile Query Error in get-task:", error);
+      }
       
       userProfile = data;
     }
@@ -44,7 +48,7 @@ export default async function handler(req, res) {
       });
     }
 
-    const isPremiumUser = userProfile ? userProfile.premium_user : false;
+    const isPremiumUser = Boolean(userProfile && userProfile.premium_user);
 
     if (isPremiumDeck && !isPremiumUser) {
       return res.status(402).json({ error: "Premium subscription validation required to view this focus deck." });
@@ -55,35 +59,8 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "Focus Area pool mapping mismatch." });
     }
 
-    let historyMap = (userProfile && userProfile.seen_task_history) ? userProfile.seen_task_history : {};
-    if (!historyMap[lowerCategory]) {
-      historyMap[lowerCategory] = [];
-    }
-
-    let availableIndices = [];
-    for (let i = 0; i < targetPool.length; i++) {
-      if (!historyMap[lowerCategory].includes(i)) {
-        availableIndices.push(i);
-      }
-    }
-
-    if (availableIndices.length === 0 || historyMap[lowerCategory].length >= 100) {
-      historyMap[lowerCategory] = [];
-      availableIndices = Array.from({ length: targetPool.length }, (_, i) => i);
-    }
-
-    const randomPoolIndex = Math.floor(Math.random() * availableIndices.length);
-    const targetTaskIndex = availableIndices[randomPoolIndex];
-    let selectedTaskData = targetPool[targetTaskIndex];
-
-    historyMap[lowerCategory].push(targetTaskIndex);
-
-    if (userProfile && cleanEmail && cleanEmail !== 'anonymous_tester') {
-      await supabase
-        .from('user_profiles')
-        .update({ seen_task_history: historyMap })
-        .eq('email', cleanEmail);
-    }
+    const randomTaskIndex = Math.floor(Math.random() * targetPool.length);
+    let selectedTaskData = targetPool[randomTaskIndex];
 
     let finalTaskText = selectedTaskData.text;
     if (friction === 'scroll' && lowerCategory === 'charisma') {
@@ -100,6 +77,7 @@ export default async function handler(req, res) {
       }
     });
   } catch (error) {
+    console.error("Task Engine Failure:", error);
     return res.status(500).json({ error: "Internal processing pipeline failure.", details: error.message });
   }
 }
