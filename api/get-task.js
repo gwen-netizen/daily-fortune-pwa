@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
-    const { category, friction, email } = req.query;
+    const { category, friction, email, device_id } = req.query;
     
     if (!category) {
       return res.status(400).json({ error: "Missing required category parameter." });
@@ -28,11 +28,19 @@ export default async function handler(req, res) {
     if (email && email !== 'anonymous_tester') {
       const { data } = await supabase
         .from('user_profiles')
-        .select('premium_user, seen_task_history')
+        .select('premium_user, seen_task_history, active_device_id')
         .eq('email', email.toLowerCase())
         .maybeSingle();
       
       userProfile = data;
+    }
+
+    // Verify Single Active Device
+    if (userProfile && userProfile.active_device_id && device_id && userProfile.active_device_id !== device_id) {
+      return res.status(409).json({ 
+        error: "Session Expired: Your account was accessed on another device.",
+        code: "DEVICE_MISMATCH"
+      });
     }
 
     const isPremiumUser = userProfile ? userProfile.premium_user : false;
