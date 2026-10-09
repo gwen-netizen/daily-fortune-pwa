@@ -27,6 +27,14 @@ document.addEventListener("DOMContentLoaded", () => {
   applyPremiumUIVisuals(); 
   initializeMuteUISystem(); 
   renderCustomLifelines();
+
+  // Persistent Session Guard: Prevent OTP trigger on page refresh if already logged in
+  const savedEmail = localStorage.getItem('nudge_user_email');
+  if (savedEmail && savedEmail.includes('@')) {
+    switchScreen('screen-dashboard');
+  } else {
+    switchScreen('screen-onboarding-1');
+  }
 });
 
 function updateMetricDashboard() {
@@ -55,6 +63,22 @@ function switchScreen(screenId) {
     if (instructions) instructions.innerText = "Take one slow, long breath before pushing.";
     if (spinBtn) spinBtn.innerText = "START";
   }
+
+  if (screenId === 'screen-dashboard') {
+    applyPremiumUIVisuals();
+    renderCustomLifelines();
+  }
+}
+
+function userLogout() {
+  localStorage.removeItem('nudge_user_email');
+  localStorage.removeItem('nudge_premium_user');
+  localStorage.removeItem('nudge_total_wins');
+  localStorage.removeItem('nudge_minutes');
+  totalWinsCount = 0;
+  totalFocusReclaimed = 0.0;
+  updateMetricDashboard();
+  switchScreen('screen-onboarding-1');
 }
 
 /* ========================================================
@@ -244,41 +268,45 @@ function toggleAudioMuteSystem() {
 function applyPremiumUIVisuals() {
   const isUserPremium = localStorage.getItem('nudge_premium_user') === 'true';
   if (isUserPremium) {
-    // 1. Update Premium Deck Cards
-    document.querySelectorAll('.deck-item').forEach(item => {
-      const category = item.getAttribute('data-category');
-      const meta = item.querySelector('.deck-meta');
-      const name = item.querySelector('.deck-name');
-
-      if (category === 'dopamine' || category === 'overwhelm') {
-        if (meta) {
-          meta.innerText = "UNLOCKED PREMIUM AREA";
-          meta.classList.remove('premium');
-          meta.classList.add('free');
-          meta.style.color = "var(--success-color)";
-        }
-        if (name) {
-          name.innerText = name.innerText.replace('⚡ ', '✅ ').replace('🧠 ', '✅ ');
-        }
+    // 1. Dopamine Deck Card
+    const dopamineDeck = document.querySelector('.deck-item[data-category="dopamine"]');
+    if (dopamineDeck) {
+      const meta = dopamineDeck.querySelector('.deck-meta');
+      const name = dopamineDeck.querySelector('.deck-name');
+      if (meta) {
+        meta.innerText = "UNLOCKED PREMIUM AREA";
+        meta.className = "deck-meta free";
+        meta.style.color = "var(--success-color)";
       }
-    });
+      if (name) name.innerHTML = "✅ The Dopamine Swap Deck";
+    }
 
-    // 2. Update Premium Custom Lifelines Button
+    // 2. Overwhelm Deck Card
+    const overwhelmDeck = document.querySelector('.deck-item[data-category="overwhelm"]');
+    if (overwhelmDeck) {
+      const meta = overwhelmDeck.querySelector('.deck-meta');
+      const name = overwhelmDeck.querySelector('.deck-name');
+      if (meta) {
+        meta.innerText = "UNLOCKED PREMIUM AREA";
+        meta.className = "deck-meta free";
+        meta.style.color = "var(--success-color)";
+      }
+      if (name) name.innerHTML = "✅ The Anti-Overwhelm Deck";
+    }
+
+    // 3. Custom Lifelines Button
     const customMeta = document.getElementById('custom-lifeline-meta');
     const customText = document.getElementById('custom-lifeline-text');
-
     if (customMeta) {
       customMeta.innerText = "UNLOCKED PREMIUM AREA";
-      customMeta.classList.remove('premium');
-      customMeta.classList.add('free');
+      customMeta.className = "deck-meta free";
       customMeta.style.color = "var(--success-color)";
     }
-
     if (customText) {
-      customText.innerText = customText.innerText.replace('⚡ ', '✅ ');
+      customText.innerHTML = "✅ + Add Custom Lifeline";
     }
 
-    // 3. Reveal In-App Manage Subscription Button
+    // 4. Reveal In-App Manage Subscription Button
     const manageBtn = document.getElementById('btn-manage-subscription');
     if (manageBtn) {
       manageBtn.style.display = 'block';
@@ -554,6 +582,13 @@ function saveCustomLifeline() {
   renderCustomLifelines();
 }
 
+function deleteCustomLifeline(index) {
+  let customs = JSON.parse(localStorage.getItem('nudge_custom_lifelines') || '[]');
+  customs.splice(index, 1);
+  localStorage.setItem('nudge_custom_lifelines', JSON.stringify(customs));
+  renderCustomLifelines();
+}
+
 function renderCustomLifelines() {
   const injectionPoint = document.getElementById('custom-lifelines-injection-point');
   if (!injectionPoint) return;
@@ -561,20 +596,25 @@ function renderCustomLifelines() {
   injectionPoint.innerHTML = ''; 
   const customs = JSON.parse(localStorage.getItem('nudge_custom_lifelines') || '[]');
   
-  customs.forEach(c => {
-    const [hourStr, minStr] = c.time.split(':');
-    let hour = parseInt(hourStr, 10);
+  customs.forEach((c, index) => {
+    if (!c.time) return;
+    const parts = c.time.split(':');
+    let hour = parseInt(parts[0], 10) || 0;
+    let min = parts[1] || '00';
     const ampm = hour >= 12 ? 'PM' : 'AM';
     hour = hour % 12 || 12;
-    const formattedTime = `${hour}:${minStr} ${ampm}`;
+    const formattedTime = `${hour}:${min} ${ampm}`;
 
     const html = `
-      <div class="lifeline-item" style="border-color: var(--accent-color);">
+      <div class="lifeline-item" style="border-color: var(--accent-color); margin-bottom: 8px;">
         <div>
           <div style="font-weight: 800; font-size: 14px; color: var(--premium-color);">${formattedTime}</div>
-          <div style="font-size: 11px; color: #7A7571; font-weight: 600;">Custom: ${c.friction}</div>
+          <div style="font-size: 11px; color: #7A7571; font-weight: 600;">Custom: ${c.friction || 'Intercept'}</div>
         </div>
-        <label class="toggle-switch"><input type="checkbox" checked disabled><span class="slider"></span></label>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <label class="toggle-switch"><input type="checkbox" checked><span class="slider"></span></label>
+          <button onclick="deleteCustomLifeline(${index})" style="background:none; border:none; color:#A8A29E; cursor:pointer; font-size:14px; padding:2px 6px;">✕</button>
+        </div>
       </div>
     `;
     injectionPoint.insertAdjacentHTML('beforeend', html);
