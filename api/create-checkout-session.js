@@ -13,11 +13,10 @@ module.exports = async function handler(req, res) {
 
   const stripeClient = stripe(secretKey);
 
-  // Price ID Configuration
   const prices = {
     test: { 
-      lifetime: process.env.STRIPE_TEST_LIFETIME_PRICE_ID || 'price_1UO7PUG617eW830nZMDod1D8', // Locked-in Lifetime Test Price ID
-      monthly: 'price_1UO7QCG617eW830n2gCXVDmY' // Locked-in Monthly Test Price ID
+      lifetime: process.env.STRIPE_TEST_LIFETIME_PRICE_ID || 'price_1UO7PUG617eW830nZMDod1D8',
+      monthly: 'price_1UO7QCG617eW830n2gCXVDmY'
     },
     live: { 
       lifetime: process.env.STRIPE_LIVE_LIFETIME_PRICE_ID || 'price_YOUR_LIVE_LIFETIME_ID', 
@@ -30,14 +29,19 @@ module.exports = async function handler(req, res) {
     const activePrices = isLive ? prices.live : prices.test;
     const targetPriceId = planType === 'lifetime' ? activePrices.lifetime : activePrices.monthly;
 
+    const cleanEmail = email ? email.trim().toLowerCase() : '';
+    const finalSuccessUrl = successUrl.includes('?') 
+      ? `${successUrl}&email=${encodeURIComponent(cleanEmail)}` 
+      : `${successUrl}?session=success&email=${encodeURIComponent(cleanEmail)}`;
+
     const session = await stripeClient.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: planType === 'lifetime' ? 'payment' : 'subscription',
       line_items: [{ price: targetPriceId, quantity: 1 }],
-      success_url: successUrl,
+      success_url: finalSuccessUrl,
       cancel_url: cancelUrl,
-      client_reference_id: email,
-      customer_email: email || undefined
+      client_reference_id: cleanEmail,
+      customer_email: cleanEmail || undefined
     });
 
     res.status(200).json({ url: session.url });
