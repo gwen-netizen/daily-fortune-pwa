@@ -350,6 +350,11 @@ function applyPremiumUIVisuals() {
     if (manageBtn) {
       manageBtn.style.display = 'inline-block';
     }
+
+    const victoryManageBtn = document.getElementById('btn-victory-manage-subscription');
+    if (victoryManageBtn) {
+      victoryManageBtn.style.display = 'inline-block';
+    }
   }
 }
 
@@ -403,7 +408,6 @@ async function checkStripeRedirectStatus() {
       const cleanEmail = returnedEmail.trim().toLowerCase();
       localStorage.setItem('nudge_user_email', cleanEmail);
 
-      // Verify payment with server directly rather than trusting client URL
       try {
         const endpoint = getApiUrl(`/api/sync-user?email=${encodeURIComponent(cleanEmail)}&action=get_profile&device_id=${encodeURIComponent(deviceId)}`);
         const res = await fetch(endpoint);
@@ -414,7 +418,6 @@ async function checkStripeRedirectStatus() {
           applyPremiumUIVisuals();
           alert("🎉 Premium Area is Now Unlocked!");
         } else {
-          // If webhook is delayed by a second, check again after short sync
           localStorage.setItem('nudge_premium_user', 'true');
           applyPremiumUIVisuals();
           alert("🎉 Premium Area is Now Unlocked!");
@@ -438,12 +441,10 @@ async function openCustomerPortal() {
   }
 
   const portalBtn = document.getElementById('btn-manage-subscription');
-  const originalText = portalBtn ? portalBtn.innerText : "Manage Subscription";
+  const victoryPortalBtn = document.getElementById('btn-victory-manage-subscription');
   
-  if (portalBtn) {
-    portalBtn.innerText = "Loading Billing Portal...";
-    portalBtn.style.opacity = "0.5";
-  }
+  if (portalBtn) { portalBtn.innerText = "Loading Billing Portal..."; portalBtn.style.opacity = "0.5"; }
+  if (victoryPortalBtn) { victoryPortalBtn.innerText = "Loading Portal..."; victoryPortalBtn.style.opacity = "0.4"; }
 
   try {
     const response = await fetch(getApiUrl('/api/create-portal-session'), {
@@ -465,10 +466,8 @@ async function openCustomerPortal() {
   } catch (err) {
     alert(`Network Error: ${err.message}`);
   } finally {
-    if (portalBtn) {
-      portalBtn.innerText = originalText;
-      portalBtn.style.opacity = "0.7";
-    }
+    if (portalBtn) { portalBtn.innerText = "Manage Subscription"; portalBtn.style.opacity = "0.6"; }
+    if (victoryPortalBtn) { victoryPortalBtn.innerText = "Manage Subscription"; victoryPortalBtn.style.opacity = "0.6"; }
   }
 }
 
