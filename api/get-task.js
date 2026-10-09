@@ -27,20 +27,16 @@ export default async function handler(req, res) {
     const cleanEmail = email ? email.trim().toLowerCase() : '';
 
     if (cleanEmail && cleanEmail !== 'anonymous_tester') {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('user_profiles')
         .select('premium_user, active_device_id, pass_expires_at')
         .eq('email', cleanEmail)
         .maybeSingle();
-
-      if (error) {
-        console.error("Supabase Profile Query Error in get-task:", error);
-      }
       
       userProfile = data;
     }
 
-    // Single Active Device Verification
+    // Verify Single Active Device
     if (userProfile && userProfile.active_device_id && device_id && userProfile.active_device_id !== device_id) {
       return res.status(409).json({ 
         error: "Session Expired: Your account was accessed on another device.",
@@ -48,21 +44,21 @@ export default async function handler(req, res) {
       });
     }
 
-    let isPremiumUser = Boolean(userProfile && userProfile.premium_user);
-
-    // SERVER-SIDE HARDCODED PASS EXPIRATION RESET
+    // Supabase 48-Hour Pass Expiration Verification
     if (userProfile && userProfile.pass_expires_at) {
       const expiresAt = new Date(userProfile.pass_expires_at).getTime();
-      if (Date.now() > expiresAt) {
-        // Expiration met: Hardcode mutate Supabase table to set premium_user = false
+      if (Date.now() >= expiresAt) {
         await supabase
           .from('user_profiles')
           .update({ premium_user: false, pass_expires_at: null })
           .eq('email', cleanEmail);
 
-        isPremiumUser = false;
+        userProfile.premium_user = false;
+        userProfile.pass_expires_at = null;
       }
     }
+
+    const isPremiumUser = Boolean(userProfile && userProfile.premium_user);
 
     if (isPremiumDeck && !isPremiumUser) {
       return res.status(402).json({ error: "Premium subscription validation required to view this focus deck." });
