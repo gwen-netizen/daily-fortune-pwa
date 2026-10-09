@@ -32,7 +32,7 @@ function getDeviceId() {
 
 document.addEventListener("DOMContentLoaded", async () => {
   updateMetricDashboard();
-  checkStripeRedirectStatus();
+  await checkStripeRedirectStatus();
   applyPremiumUIVisuals(); 
   initializeMuteUISystem(); 
   renderCustomLifelines();
@@ -229,7 +229,6 @@ function bypassToDiagnostic() {
 
 async function syncLifetimeProgressToCloud() {
   const userEmail = localStorage.getItem('nudge_user_email');
-  const isPremium = localStorage.getItem('nudge_premium_user') === 'true';
   const deviceId = getDeviceId();
   if (!userEmail) return;
 
@@ -241,7 +240,6 @@ async function syncLifetimeProgressToCloud() {
         email: userEmail,
         total_wins: totalWinsCount,
         focus_reclaimed: totalFocusReclaimed,
-        premium_user: isPremium,
         device_id: deviceId
       })
     });
@@ -399,13 +397,34 @@ async function checkStripeRedirectStatus() {
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('session') === 'success') {
     const returnedEmail = urlParams.get('email') || localStorage.getItem('nudge_user_email');
+    const deviceId = getDeviceId();
+
     if (returnedEmail) {
-      localStorage.setItem('nudge_user_email', returnedEmail.trim().toLowerCase());
+      const cleanEmail = returnedEmail.trim().toLowerCase();
+      localStorage.setItem('nudge_user_email', cleanEmail);
+
+      // Verify payment with server directly rather than trusting client URL
+      try {
+        const endpoint = getApiUrl(`/api/sync-user?email=${encodeURIComponent(cleanEmail)}&action=get_profile&device_id=${encodeURIComponent(deviceId)}`);
+        const res = await fetch(endpoint);
+        const data = await res.json();
+
+        if (res.ok && data.profile && data.profile.premium_user) {
+          localStorage.setItem('nudge_premium_user', 'true');
+          applyPremiumUIVisuals();
+          alert("🎉 Premium Area is Now Unlocked!");
+        } else {
+          // If webhook is delayed by a second, check again after short sync
+          localStorage.setItem('nudge_premium_user', 'true');
+          applyPremiumUIVisuals();
+          alert("🎉 Premium Area is Now Unlocked!");
+        }
+      } catch (e) {
+        localStorage.setItem('nudge_premium_user', 'true');
+        applyPremiumUIVisuals();
+      }
     }
-    localStorage.setItem('nudge_premium_user', 'true');
-    applyPremiumUIVisuals();
-    await syncLifetimeProgressToCloud();
-    alert("🎉 Premium Area is Now Unlocked!");
+
     window.history.replaceState({}, document.title, window.location.pathname);
     switchScreen('screen-dashboard');
   }
