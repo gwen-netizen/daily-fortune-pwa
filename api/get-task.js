@@ -29,7 +29,7 @@ export default async function handler(req, res) {
     if (cleanEmail && cleanEmail !== 'anonymous_tester') {
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('premium_user, active_device_id')
+        .select('premium_user, active_device_id, pass_expires_at')
         .eq('email', cleanEmail)
         .maybeSingle();
 
@@ -48,7 +48,21 @@ export default async function handler(req, res) {
       });
     }
 
-    const isPremiumUser = Boolean(userProfile && userProfile.premium_user);
+    let isPremiumUser = Boolean(userProfile && userProfile.premium_user);
+
+    // SERVER-SIDE HARDCODED PASS EXPIRATION RESET
+    if (userProfile && userProfile.pass_expires_at) {
+      const expiresAt = new Date(userProfile.pass_expires_at).getTime();
+      if (Date.now() > expiresAt) {
+        // Expiration met: Hardcode mutate Supabase table to set premium_user = false
+        await supabase
+          .from('user_profiles')
+          .update({ premium_user: false, pass_expires_at: null })
+          .eq('email', cleanEmail);
+
+        isPremiumUser = false;
+      }
+    }
 
     if (isPremiumDeck && !isPremiumUser) {
       return res.status(402).json({ error: "Premium subscription validation required to view this focus deck." });
