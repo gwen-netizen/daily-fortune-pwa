@@ -21,7 +21,7 @@
   <div class="app-container">
 
     <!-- SCREEN 1: ONBOARDING & ACCOUNT ANCHOR -->
-    <div id="screen-onboarding-1" class="screen active">
+    <div id="screen-onboarding-1" class="screen">
       <div style="margin: auto 0; width: 100%;">
         <h1 class="title-large">2-min<br>Turnaround</h1>
         <p class="body-text" style="margin-bottom: 20px;">The behavioral circuit breaker. Interrupt screen addiction and task paralysis instantly in exactly 120 seconds.</p>
@@ -92,11 +92,12 @@
     <div id="screen-dashboard" class="screen">
       <div style="width: 100%;">
 
-        <div style="width: 100%; display: flex; justify-content: flex-end; margin-bottom: -10px; padding-right: 4px;">
+        <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: -10px; padding: 0 4px;">
+          <button class="btn-text-nav" onclick="userLogout()" style="font-size: 11px; color: #A8A29E;">🚪 Log Out</button>
           <button id="audio-mute-toggle" class="btn-text-nav" onclick="toggleAudioMuteSystem()" style="font-size: 16px; background: none; border: none; cursor: pointer;">🔊 Sound On</button>
         </div>
 
-        <div class="metric-ribbon" style="margin-bottom: 16px;">
+        <div class="metric-ribbon" style="margin-bottom: 16px; margin-top: 12px;">
           <div class="metric-block">
             <span class="metric-num" id="stat-streaks">0</span>
             <span class="metric-lbl">Total Wins</span>
@@ -164,7 +165,6 @@
           </div>
         </div>
 
-        <!-- In-App Customer Billing Portal Button -->
         <button id="btn-manage-subscription" class="btn-text-nav" style="display: none; width: 100%; margin-top: 20px; border: 1px solid #EAE3D9; padding: 14px; border-radius: 14px; color: var(--text-color); font-weight: 700; text-align: center; background: #FFFFFF; font-size: 13px;" onclick="openCustomerPortal()">⚙️ Manage / Cancel Subscription</button>
 
       </div>
