@@ -1,317 +1,503 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>2-min Turnaround</title>
+// app.js - Full Core Application Controller Engine
+let isPremiumSelected = false;
+let countdownInterval = null;
+let mindFrictionStyle = 'scroll'; 
+let isAppMuted = localStorage.getItem('nudge_app_muted') === 'true'; 
+
+let totalWinsCount = parseInt(localStorage.getItem('nudge_total_wins') || '0');
+let totalFocusReclaimed = parseFloat(localStorage.getItem('nudge_minutes') || '0.0');
+
+const victoryValidationStrings = [
+  "You chose active alignment while the rest of the world remained paralyzed on the couch scrolling algorithms. Focus Reclaimed.",
+  "Friction broken. By taking action for 120 seconds, you proved to your brain that execution is entirely safe.",
+  "The dopamine loop has been successfully redirected. You are now running on true clean execution energy."
+];
+
+document.addEventListener("DOMContentLoaded", () => {
+  updateMetricDashboard();
+  checkStripeRedirectStatus();
+  applyPremiumUIVisuals(); 
+  initializeMuteUISystem(); 
+  renderCustomLifelines();
+});
+
+function updateMetricDashboard() {
+  const streaksEl = document.getElementById('stat-streaks');
+  const focusEl = document.getElementById('stat-focus');
   
-  <meta name="theme-color" content="#FAF7F2">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="2-min">
+  if (streaksEl && focusEl) {
+    streaksEl.innerText = totalWinsCount;
+    if (totalFocusReclaimed < 60) {
+      focusEl.innerText = totalFocusReclaimed.toFixed(1) + ' min';
+    } else {
+      const hoursScaled = totalFocusReclaimed / 60;
+      focusEl.innerText = hoursScaled.toFixed(1) + ' hr';
+    }
+  }
+}
 
-  <link rel="stylesheet" href="styles.css">
-  <link rel="manifest" href="manifest.json">
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-</head>
-<body>
+function switchScreen(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const targetScreen = document.getElementById(screenId);
+  if (targetScreen) targetScreen.classList.add('active');
+  
+  if (screenId === 'screen-trigger') {
+    const instructions = document.getElementById('trigger-instructions');
+    const spinBtn = document.querySelector('.big-red-btn');
+    if (instructions) instructions.innerText = "Take one slow, long breath before pushing.";
+    if (spinBtn) spinBtn.innerText = "START";
+  }
+}
 
-  <audio id="victory-chime" src="https://mixkit.co" preload="auto"></audio>
+/* ========================================================
+   1. AUTHENTICATION & OTP FLOW (ABSOLUTE URL FIX)
+======================================================== */
+async function initializeUserProfile() {
+  const emailInput = document.getElementById('user-auth-email');
+  if (!emailInput || !emailInput.value.includes('@')) {
+    alert("Please enter a valid email address to protect your focus milestones.");
+    return;
+  }
 
-  <div class="app-container">
+  const userEmail = emailInput.value.trim().toLowerCase();
+  localStorage.setItem('nudge_user_email', userEmail);
 
-    <!-- SCREEN 1: ONBOARDING & ACCOUNT ANCHOR -->
-    <div id="screen-onboarding-1" class="screen active">
-      <div style="margin: auto 0; width: 100%;">
-        <h1 class="title-large">2-min<br>Turnaround</h1>
-        <p class="body-text" style="margin-bottom: 20px;">The behavioral circuit breaker. Interrupt screen addiction and task paralysis instantly in exactly 120 seconds.</p>
-        
-        <div id="pwa-setup-card" style="background: #FFFFFF; border: 1px dashed var(--accent-color); border-radius: 16px; padding: 14px; text-align: left; margin: 16px 0;">
-          <div style="font-size: 13px; font-weight: 800; color: var(--text-color); margin-bottom: 6px;">⚡ Quick App Setup</div>
-          <div style="font-size: 12px; color: #6E6A67; line-height: 1.4;">
-            1. <b>Add Shortcut:</b> Tap Share / Menu & select <b>"Add to Home Screen"</b>.<br>
-            2. <b>Enable Reminders:</b> Allow notification alerts to trigger circuit breakers.
-          </div>
-          <button id="pwa-install-btn" class="btn-small-install" style="margin-top: 10px; width: 100%; padding: 8px; font-size: 12px;">Enable Alerts & Install</button>
-        </div>
+  const loginBtn = document.getElementById('btn-take-control');
+  const originalText = loginBtn ? loginBtn.innerText : "Take Control";
+  
+  if (loginBtn) {
+    loginBtn.innerText = "REQUESTING ACCESS CODE...";
+    loginBtn.style.opacity = "0.7";
+    loginBtn.disabled = true;
+  }
 
-        <div style="width: 100%; text-align: left; margin-bottom: 12px;">
-          <label style="font-size: 11px; font-weight: 700; color: var(--premium-color); letter-spacing: 0.5px; text-transform: uppercase;">Secure Focus Profile</label>
-          <input type="email" id="user-auth-email" placeholder="name@example.com" 
-                 style="width: 100%; padding: 14px; border: 2px solid #EAE3D9; border-radius: 14px; font-size: 15px; margin-top: 6px; outline: none; background: #FAF7F2; color: var(--text-color);">
-        </div>
-      </div>
-      
-      <div style="width: 100%;">
-        <button class="btn-primary" id="btn-take-control" onclick="initializeUserProfile()">Take Control</button>
-        <button class="btn-bypass" style="margin-top: 10px; font-size: 12px;" onclick="bypassToDiagnostic()">Continue as Guest Trial</button>
-      </div>
-    </div>
+  try {
+    // Explicit origin prefix prevents WebKit / PWA relative URL pattern errors
+    const endpoint = `${window.location.origin}/api/sync-user?email=${encodeURIComponent(userEmail)}&action=request_otp`;
+    const response = await fetch(endpoint);
+    const data = await response.json();
 
-    <!-- SCREEN 1B: OTP VERIFICATION -->
-    <div id="screen-auth-verify" class="screen">
-      <div style="margin: auto 0; width: 100%;">
-        <h2 class="title-large" style="font-size: 24px; margin-bottom: 8px;">Check Your Inbox</h2>
-        <p class="body-text" style="margin-bottom: 24px;" id="verification-notice-text">We sent a secure 6-digit access code to your email.</p>
-        
-        <div style="width: 100%; text-align: left; margin-bottom: 16px;">
-          <label style="font-size: 12px; font-weight: 700; color: var(--premium-color); letter-spacing: 0.5px; text-transform: uppercase;">Enter Access Code</label>
-          <input type="number" id="user-otp-input" placeholder="000000" 
-                 style="width: 100%; padding: 16px; border: 2px solid #EAE3D9; border-radius: 16px; font-size: 24px; margin-top: 6px; outline: none; background: #FAF7F2; color: var(--text-color); letter-spacing: 8px; text-align: center;">
-        </div>
-      </div>
-      <div style="width: 100%;">
-        <button class="btn-primary" onclick="verifyOTP()">Verify Identity</button>
-        <button class="btn-bypass" style="margin-top: 12px;" onclick="bypassToDiagnostic()">Skip Verification for Now</button>
-      </div>
-    </div>
+    if (response.ok && data.sent) {
+      const noticeEl = document.getElementById('verification-notice-text');
+      if (noticeEl) noticeEl.innerText = `We sent a secure 6-digit access code to ${userEmail}.`;
+      switchScreen('screen-auth-verify');
+    } else {
+      alert(`OTP Request Failed: ${data.error || "Unable to dispatch verification code via Supabase."}`);
+    }
+  } catch (error) {
+    alert(`Network Error: ${error.message}`);
+  } finally {
+    if (loginBtn) {
+      loginBtn.innerText = originalText;
+      loginBtn.style.opacity = "1";
+      loginBtn.disabled = false;
+    }
+  }
+}
 
-    <!-- SCREEN 2: ONBOARDING PERSONALITY SELECTION -->
-    <div id="screen-onboarding-2" class="screen">
-      <div style="width: 100%; margin: auto 0;">
-        <h2 class="title-large" style="font-size: 24px; margin-bottom: 24px;">Identify Your Friction Line</h2>
-        
-        <div class="onboarding-options">
-          <div class="option-card selected" onclick="selectOption(this, 'scroll')">
-            <div class="option-title">⚡ Mindless Loop Scrolling</div>
-            <div class="option-desc">For the Dopamine-Starved Avoider trapped in systemic social video algorithms.</div>
-          </div>
-          <div class="option-card" onclick="selectOption(this, 'paralysis')">
-            <div class="option-title">🧠 Intimidating Task Paralysis</div>
-            <div class="option-desc">For the Overwhelmed Procrastinator frozen by complex, multi-step actions.</div>
-          </div>
-          <div class="option-card" onclick="selectOption(this, 'routine')">
-            <div class="option-title">🌱 Low Physical Presence</div>
-            <div class="option-desc">For building subtle structural charisma, hydration habits, and physical presence.</div>
-          </div>
-        </div>
-      </div>
-    </div>
+async function verifyOTP() {
+  const userEmail = localStorage.getItem('nudge_user_email');
+  const otpInput = document.getElementById('user-otp-input');
+  
+  if (!otpInput || otpInput.value.trim().length < 6) {
+    alert("Please enter the full 6-digit access code sent to your email.");
+    return;
+  }
 
-    <!-- SCREEN 3: DASHBOARD MENU -->
-    <div id="screen-dashboard" class="screen">
-      <div style="width: 100%;">
+  const token = otpInput.value.trim();
+  const verifyBtn = document.querySelector('#screen-auth-verify .btn-primary');
+  const originalText = verifyBtn ? verifyBtn.innerText : "Verify Identity";
+  
+  if (verifyBtn) {
+    verifyBtn.innerText = "VERIFYING CODE...";
+    verifyBtn.style.opacity = "0.7";
+    verifyBtn.disabled = true;
+  }
 
-        <!-- Native Audio Toggle Controller Layer -->
-        <div style="width: 100%; display: flex; justify-content: flex-end; margin-bottom: -10px; padding-right: 4px;">
-          <button id="audio-mute-toggle" class="btn-text-nav" onclick="toggleAudioMuteSystem()" style="font-size: 16px; background: none; border: none; cursor: pointer;">🔊 Sound On</button>
-        </div>
+  try {
+    // Explicit origin prefix prevents WebKit / PWA relative URL pattern errors
+    const endpoint = `${window.location.origin}/api/sync-user?email=${encodeURIComponent(userEmail)}&action=verify_otp&token=${encodeURIComponent(token)}`;
+    const response = await fetch(endpoint);
+    const data = await response.json();
 
-        <div class="metric-ribbon" style="margin-bottom: 16px;">
-          <div class="metric-block">
-            <span class="metric-num" id="stat-streaks">0</span>
-            <span class="metric-lbl">Total Wins</span>
-          </div>
-          <div class="metric-block">
-            <span class="metric-num" id="stat-focus">0.0m</span>
-            <span class="metric-lbl">Focus Reclaimed</span>
-          </div>
-        </div>
+    if (response.ok && data.success) {
+      if (data.profile) {
+        totalWinsCount = data.profile.total_wins || 0;
+        totalFocusReclaimed = data.profile.focus_reclaimed || 0.0;
+        localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
+        localStorage.setItem('nudge_minutes', totalFocusReclaimed.toString());
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin: 0 4px 8px 4px;">
-          <h2 class="title-large" style="font-size: 18px; margin: 0;">Target Focus Area</h2>
-          <button class="btn-text-nav" onclick="switchScreen('screen-onboarding-2')">🔄 Change Issue</button>
-        </div>
+        if (data.profile.premium_user) {
+          localStorage.setItem('nudge_premium_user', 'true');
+          applyPremiumUIVisuals();
+        }
+      }
 
-        <div class="deck-list">
-          <div class="deck-item selected" data-category="charisma" onclick="selectDeck(this, false, 'charisma')">
-            <div class="deck-meta free">CORE ENGINE</div>
-            <div class="deck-name">The Charisma Deck</div>
-            <div class="deck-desc">Micro-actions to build instant physical stance, posture, and vocal confidence.</div>
-          </div>
-          <div class="deck-item" data-category="wealth" onclick="selectDeck(this, false, 'wealth')">
-            <div class="deck-meta free">CORE ENGINE</div>
-            <div class="deck-name">The Quiet Wealth Deck</div>
-            <div class="deck-desc">Re-wire your perspective on immediate financial opportunity awareness.</div>
-          </div>
-          <div class="deck-item" data-category="dopamine" onclick="selectDeck(this, true, 'dopamine')">
-            <div class="deck-meta premium">PREMIUM UPGRADE</div>
-            <div class="deck-name">⚡ The Dopamine Swap Deck</div>
-            <div class="deck-desc">Intercepts hyper-stimulating phone apps to route focus to real wins.</div>
-          </div>
-          <div class="deck-item" data-category="overwhelm" onclick="selectDeck(this, true, 'overwhelm')">
-            <div class="deck-meta premium">PREMIUM UPGRADE</div>
-            <div class="deck-name">🧠 The Anti-Overwhelm Deck</div>
-            <div class="deck-desc">Shatters decision stress down to one simple, non-negotiable directive.</div>
-          </div>
-        </div>
+      updateMetricDashboard();
+      switchScreen('screen-onboarding-2');
+    } else {
+      alert(`Verification Error: ${data.error || "Invalid or expired access code."}`);
+    }
+  } catch (err) {
+    alert(`Network Error: ${err.message}`);
+  } finally {
+    if (verifyBtn) {
+      verifyBtn.innerText = originalText;
+      verifyBtn.style.opacity = "1";
+      verifyBtn.disabled = false;
+    }
+  }
+}
 
-        <div style="margin-top: 24px; text-align: left;">
-          <h2 class="title-large" style="font-size: 18px; margin-bottom: 12px; margin-left: 4px;">Daily Intercepts</h2>
-          <div class="lifeline-list" id="lifeline-container">
-            <div class="lifeline-item">
-              <div><div style="font-weight: 800; font-size: 14px; color: var(--text-color);">08:15 AM</div><div style="font-size: 11px; color: #7A7571; font-weight: 600;">Morning Bed-Lock</div></div>
-              <label class="toggle-switch"><input type="checkbox" checked disabled><span class="slider"></span></label>
-            </div>
-            <div class="lifeline-item">
-              <div><div style="font-weight: 800; font-size: 14px; color: var(--text-color);">09:45 AM</div><div style="font-size: 11px; color: #7A7571; font-weight: 600;">Workspace Inertia</div></div>
-              <label class="toggle-switch"><input type="checkbox" checked disabled><span class="slider"></span></label>
-            </div>
-            <div class="lifeline-item">
-              <div><div style="font-weight: 800; font-size: 14px; color: var(--text-color);">03:45 PM</div><div style="font-size: 11px; color: #7A7571; font-weight: 600;">Willpower Exhaustion</div></div>
-              <label class="toggle-switch"><input type="checkbox" checked disabled><span class="slider"></span></label>
-            </div>
-            <div class="lifeline-item">
-              <div><div style="font-weight: 800; font-size: 14px; color: var(--text-color);">11:15 PM</div><div style="font-size: 11px; color: #7A7571; font-weight: 600;">Bedtime Loop</div></div>
-              <label class="toggle-switch"><input type="checkbox" checked disabled><span class="slider"></span></label>
-            </div>
-            
-            <div id="custom-lifelines-injection-point"></div>
+function bypassToDiagnostic() {
+  const emailInput = document.getElementById('user-auth-email');
+  if (emailInput && emailInput.value.includes('@')) {
+    localStorage.setItem('nudge_user_email', emailInput.value.trim().toLowerCase());
+  }
+  updateMetricDashboard();
+  applyPremiumUIVisuals();
+  switchScreen('screen-onboarding-2');
+}
 
-            <button id="custom-lifeline-add-btn" class="btn-bypass" style="width: 100%; border: 2px dashed var(--premium-color); padding: 14px; border-radius: 14px; margin-top: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; background: #FAF7F2;" onclick="openCustomLifelineModal()">
-              <div id="custom-lifeline-meta" class="deck-meta premium" style="margin-bottom: 4px;">PREMIUM UPGRADE</div>
-              <div id="custom-lifeline-text" style="font-weight: 800; font-size: 14px; color: var(--text-color);">⚡ + Add Custom Lifeline</div>
-            </button>
-          </div>
-        </div>
+async function syncLifetimeProgressToCloud() {
+  const userEmail = localStorage.getItem('nudge_user_email');
+  const isPremium = localStorage.getItem('nudge_premium_user') === 'true';
+  if (!userEmail) return;
 
-      </div>
-    </div>
+  try {
+    await fetch(`${window.location.origin}/api/sync-user`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: userEmail,
+        total_wins: totalWinsCount,
+        focus_reclaimed: totalFocusReclaimed,
+        premium_user: isPremium
+      })
+    });
+  } catch (err) {
+    console.warn(err);
+  }
+}
 
-    <!-- SCREEN 4: TRIGGER -->
-    <div id="screen-trigger" class="screen">
-      <div style="margin-top: 10px;">
-        <h2 class="title-deck" id="active-deck-title">The Charisma Deck</h2>
-        <p class="body-text" style="font-size: 14px;" id="trigger-instructions">Take one slow, long breath before pushing.</p>
-      </div>
-      <div class="spin-outer-ring">
-        <button class="big-red-btn" onclick="executeTurnaroundSpin()">START</button>
-      </div>
-      <div>
-        <p class="italic-hint">Commit to the next 120 seconds completely.</p>
-        <button class="btn-bypass" onclick="switchScreen('screen-dashboard')">Change Focus Area</button>
-      </div>
-    </div>
+/* ========================================================
+   2. DASHBOARD & UI SELECTIONS
+======================================================== */
+function selectOption(el, frictionKey) {
+  document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  mindFrictionStyle = frictionKey || 'scroll';
+  switchScreen('screen-dashboard');
+}
 
-    <!-- SCREEN 5: COUNTDOWN -->
-    <div id="screen-countdown" class="screen">
-      <div class="title-deck" style="color: var(--timer-color); font-size: 14px; letter-spacing: 1px;">⚡ ACTIVE CONSTRAINTS IN EFFECT</div>
-      <div class="task-display-card">
-        <p id="target-task-text" class="task-display-text">Loading baseline alignment task...</p>
-        
-        <!-- Mod 1: Gamified Single Feeling Challenge Metrics Block -->
-        <div id="single-metric-holder" style="margin-top: 20px; display: flex; justify-content: center; align-items: center; gap: 8px; padding-top: 14px; border-top: 1px dashed #EAE3D9;">
-          <span id="target-metric-label" style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: #555250; letter-spacing: 0.5px;"></span>
-          <span id="target-metric-stars" style="color: #FFD166; font-size: 14px; font-weight: 800; letter-spacing: 1px;"></span>
-        </div>
-      </div>
-      <div style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 8px;">
-        <div id="timer-display" class="timer-ring">02:00</div>
-        <button class="btn-primary btn-success-action" onclick="finishEarly()">Complete Early</button>
-        <button class="btn-bypass" onclick="cancelTimer()">Abort Task</button>
-      </div>
-    </div>
+function selectDeck(el, isPremium, categoryKey) {
+  document.querySelectorAll('.deck-item').forEach(d => d.classList.remove('selected'));
+  el.classList.add('selected');
+  isPremiumSelected = isPremium;
+  const deckTitleEl = document.getElementById('active-deck-title');
+  if (deckTitleEl) deckTitleEl.innerText = el.querySelector('.deck-name').innerText;
+  startTriggerPhase();
+}
 
-    <!-- SCREEN 6: VICTORY -->
-    <div id="screen-victory" class="screen">
-      <div style="margin: auto 0; width: 100%;">
-        <div class="victory-crown">🏆</div>
-        <h2 class="title-large" style="color: var(--success-color); margin-bottom: 8px;">Identity Calibrated.</h2>
-        <p class="body-text" style="margin-top: 8px;" id="victory-validation-copy">You chose action while the world chose mindless distraction. Your forward momentum is locked in.</p>
-      </div>
-      <button class="btn-primary" style="background-color: var(--success-color);" onclick="claimRewardStack()">Claim Reward Stack</button>
-    </div>
+function startTriggerPhase() {
+  const isUserPremium = localStorage.getItem('nudge_premium_user') === 'true';
+  if (isPremiumSelected && !isUserPremium) {
+    const paywall = document.getElementById('paywall-overlay');
+    if (paywall) paywall.classList.add('active');
+  } else {
+    switchScreen('screen-trigger');
+  }
+}
 
-    <!-- PREMIUM PAYWALL OVERLAY -->
-    <div id="paywall-overlay" class="paywall-modal">
-      <div>
-        <h2 id="paywall-title" class="title-large" style="color: var(--premium-color); text-align: left; font-size: 24px;">Break Free From the Loops</h2>
-        <p id="paywall-desc" class="body-text" style="font-size: 14px; text-align: left; margin-bottom: 20px;">Unlock behavioral overrides modeled on top neural productivity systems.</p>
-        
-        <div class="paywall-features">
-          <div class="feature-item"><span>⚡</span> <div><b>The Dopamine Swap:</b> Intercepts short-form screen addictions instantly.</div></div>
-          <div class="feature-item"><span>🧠</span> <div><b>The Anti-Overwhelm Protocol:</b> Permanently bypasses decision-making paralysis.</div></div>
-          <div class="feature-item"><span>📈</span> <div><b>Custom Time Anchors:</b> Set specific hour intercepts mapped to your exact behavioral slumps.</div></div>
-        </div>
+function closePaywall() {
+  const paywall = document.getElementById('paywall-overlay');
+  if (paywall) paywall.classList.remove('active');
+}
 
-        <div class="tier-box selected" onclick="selectTier(this)">
-          <span style="float: right; font-weight: 800; color: var(--premium-color);">$14.99</span>
-          <div style="font-weight: 700; font-size: 15px;">Lifetime Freedom Access</div>
-          <div style="font-size: 12px; color: #7A7571; margin-top: 2px;">One-time transaction. No lingering payment stress.</div>
-        </div>
-        <div class="tier-box" onclick="selectTier(this)">
-          <span style="float: right; font-weight: 800;">$2.99/mo</span>
-          <div style="font-weight: 700; font-size: 15px;">Continuous Momentum Plan</div>
-          <div style="font-size: 12px; color: #7A7571; margin-top: 2px;">Billed monthly. Cancel instantly with zero friction hooks.</div>
-        </div>
-      </div>
+function selectTier(el) {
+  document.querySelectorAll('.tier-box').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
 
-      <div style="width: 100%;">
-        <button class="btn-primary" style="background: var(--text-color);" onclick="simulatePurchase()">Upgrade Mindset Portfolio</button>
-        <button class="btn-bypass" style="display: block; margin: 12px auto 0 auto;" onclick="closePaywall()">Continue with Limitations</button>
-      </div>
-    </div>
+function initializeMuteUISystem() {
+  const muteBtn = document.getElementById('audio-mute-toggle');
+  if (muteBtn) {
+    muteBtn.innerText = isAppMuted ? "🔇 Muted" : "🔊 Sound On";
+  }
+}
 
-    <!-- PREMIUM CUSTOM LIFELINE CREATION MODAL -->
-    <div id="custom-lifeline-modal" class="paywall-modal">
-      <div style="text-align: left;">
-        <h2 class="title-large" style="font-size: 22px; color: var(--text-color);">Create Custom Lifeline</h2>
-        <p class="body-text" style="font-size: 13px; margin-bottom: 20px;">Deploy an exact interception anchor to shatter your specific daily slump.</p>
-        
-        <div style="margin-bottom: 16px;">
-          <label style="font-size: 11px; font-weight: 700; color: #9C8E80; text-transform: uppercase; letter-spacing: 0.5px;">⏱️ Target Intercept Time</label>
-          <input type="time" id="custom-time-input" style="width:100%; padding: 14px; border: 2px solid #EAE3D9; border-radius: 12px; margin-top: 6px; font-size: 16px; font-weight: 600; outline: none;">
-        </div>
-        
-        <div style="margin-bottom: 16px;">
-          <label style="font-size: 11px; font-weight: 700; color: #9C8E80; text-transform: uppercase; letter-spacing: 0.5px;">🧠 What usually traps you?</label>
-          <select id="custom-friction-input" style="width:100%; padding: 14px; border: 2px solid #EAE3D9; border-radius: 12px; margin-top: 6px; font-size: 15px; outline: none; background: #FFFFFF; font-weight: 500;">
-            <option value="Mindless Scrolling">Mindless Scrolling</option>
-            <option value="Task Paralysis">Task Paralysis</option>
-            <option value="Low Presence">Low Physical Presence</option>
-          </select>
-        </div>
-        
-        <div style="margin-bottom: 16px;">
-          <label style="font-size: 11px; font-weight: 700; color: #9C8E80; text-transform: uppercase; letter-spacing: 0.5px;">🎴 Launch Which Deck?</label>
-          <select id="custom-deck-input" style="width:100%; padding: 14px; border: 2px solid #EAE3D9; border-radius: 12px; margin-top: 6px; font-size: 15px; outline: none; background: #FFFFFF; font-weight: 500;">
-            <option value="The Anti-Overwhelm Deck">The Anti-Overwhelm Deck</option>
-            <option value="The Dopamine Swap Deck">The Dopamine Swap Deck</option>
-            <option value="The Quiet Wealth Deck">The Quiet Wealth Deck</option>
-            <option value="The Charisma Deck">The Charisma Deck</option>
-          </select>
-        </div>
-      </div>
-      <div style="width: 100%;">
-        <button class="btn-primary" onclick="saveCustomLifeline()">Save Intercept</button>
-        <button class="btn-bypass" style="display: block; margin: 12px auto 0 auto;" onclick="closeCustomLifelineModal()">Cancel</button>
-      </div>
-    </div>
+function toggleAudioMuteSystem() {
+  isAppMuted = !isAppMuted;
+  localStorage.setItem('nudge_app_muted', isAppMuted.toString());
+  const muteBtn = document.getElementById('audio-mute-toggle');
+  if (muteBtn) {
+    muteBtn.innerText = isAppMuted ? "🔇 Muted" : "🔊 Sound On";
+  }
+}
 
-  </div>
+function applyPremiumUIVisuals() {
+  const isUserPremium = localStorage.getItem('nudge_premium_user') === 'true';
+  if (isUserPremium) {
+    document.querySelectorAll('.deck-item').forEach(item => {
+      const meta = item.querySelector('.deck-meta');
+      const name = item.querySelector('.deck-name');
+      if (meta && meta.innerText.includes("PREMIUM UPGRADE")) {
+        meta.innerText = "UNLOCKED PREMIUM AREA";
+        meta.style.color = "var(--success-color)";
+        if (name) name.innerText = name.innerText.replace('⚡ ', '✅ ').replace('🧠 ', '✅ ');
+      }
+    });
+  }
+}
 
-  <script src="app.js"></script>
+/* ========================================================
+   3. STRIPE PAYWALL GATEWAY (ABSOLUTE URL FIX)
+======================================================== */
+async function simulatePurchase() {
+  const selectedTierBox = document.querySelector('.tier-box.selected');
+  if (!selectedTierBox) { alert("Please select a tracking tier to continue."); return; }
 
-  <!-- Mod 2: The Broken Installation Script Patch -->
-  <script>
-    let deferredPrompt;
-    const installBtn = document.getElementById('pwa-install-btn');
+  const isLifetime = selectedTierBox.innerText.includes("Lifetime");
+  const paywallBtn = document.querySelector('.paywall-modal .btn-primary');
+  const originalText = paywallBtn ? paywallBtn.innerText : "Upgrade Mindset Portfolio";
+  const userEmail = localStorage.getItem('nudge_user_email') || '';
 
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      if (installBtn) installBtn.style.display = 'block';
+  if (paywallBtn) { paywallBtn.innerText = "INITIALIZING GATEWAY..."; paywallBtn.style.opacity = "0.7"; }
+
+  try {
+    const response = await fetch(`${window.location.origin}/api/create-checkout-session`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        planType: isLifetime ? 'lifetime' : 'monthly',
+        email: userEmail,
+        successUrl: window.location.origin + '/?session=success',
+        cancelUrl: window.location.origin
+      })
     });
 
-    if (installBtn) {
-      installBtn.addEventListener('click', async () => {
-        if ('Notification' in window) {
-          Notification.requestPermission();
-        }
-        if (deferredPrompt) {
-          deferredPrompt.prompt();
-          const { outcome } = await deferredPrompt.userChoice;
-          console.log("User choice outcome: " + outcome);
-          deferredPrompt = null;
-        }
-      });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Server status ${response.status}: ${errorText}`);
     }
 
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch(err => console.error("SW reg error:", err));
-      });
+    const session = await response.json();
+    if (session.url) window.location.href = session.url;
+    else throw new Error("Missing routing session parameters.");
+  } catch (paymentError) {
+    alert(`Gateway Error: ${paymentError.message}`);
+    if (paywallBtn) { paywallBtn.innerText = originalText; paywallBtn.style.opacity = "1"; }
+  }
+}
+
+function checkStripeRedirectStatus() {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('session') === 'success') {
+    localStorage.setItem('nudge_premium_user', 'true');
+    alert("Premium Portfolio Active! Algorithmic intercepts completely unlocked.");
+    applyPremiumUIVisuals();
+    window.history.replaceState({}, document.title, window.location.pathname);
+    switchScreen('screen-dashboard');
+  }
+}
+
+/* ========================================================
+   4. TASK EXECUTION & METRICS ENGINE (MOD 3)
+======================================================== */
+function renderSingleChallengeRating(label, ratingScore) {
+  const labelNode = document.getElementById('target-metric-label');
+  const starsNode = document.getElementById('target-metric-stars');
+  
+  if (labelNode && starsNode) {
+    labelNode.innerText = `${label || "Impact"}:`;
+    
+    let starString = '';
+    const cleanScore = parseInt(ratingScore, 10) || 3;
+    for (let i = 0; i < 5; i++) {
+      starString += i < cleanScore ? '★' : '☆';
     }
-  </script>
-</body>
-</html>
+    starsNode.innerText = starString;
+  }
+}
+
+async function executeTurnaroundSpin() {
+  const btn = document.querySelector('.big-red-btn');
+  const instruction = document.getElementById('trigger-instructions');
+  if (btn) { btn.innerText = "HOLD..."; btn.style.opacity = "0.6"; }
+  if (instruction) instruction.innerText = "Exhale slowly... allowing your focus to narrow down completely.";
+
+  const activeDeckName = document.getElementById('active-deck-title').innerText.toLowerCase();
+  let categoryKey = 'charisma';
+  if (activeDeckName.includes("wealth")) categoryKey = 'wealth';
+  else if (activeDeckName.includes("dopamine")) categoryKey = 'dopamine';
+  else if (activeDeckName.includes("overwhelm")) categoryKey = 'overwhelm';
+
+  const userEmail = localStorage.getItem('nudge_user_email') || 'anonymous_tester';
+
+  try {
+    const endpoint = `${window.location.origin}/api/get-task?category=${categoryKey}&friction=${mindFrictionStyle}&email=${encodeURIComponent(userEmail)}`;
+    const response = await fetch(endpoint);
+    
+    if (!response.ok) {
+      const serverErr = await response.json();
+      throw new Error(serverErr.error || "Server validation failure.");
+    }
+    
+    const data = await response.json();
+    
+    setTimeout(() => {
+      if (btn) { btn.innerText = "START"; btn.style.opacity = "1"; }
+      
+      const taskDisplayEl = document.getElementById('target-task-text');
+      if (taskDisplayEl && data.task) {
+        taskDisplayEl.innerText = data.task.text;
+        renderSingleChallengeRating(data.task.metricLabel, data.task.rating);
+      }
+      
+      switchScreen('screen-countdown');
+      startActionTimer(120);
+    }, 1500);
+  } catch (err) {
+    alert(`Focus Engine Response: ${err.message}`);
+    switchScreen('screen-dashboard');
+    if (btn) { btn.innerText = "START"; btn.style.opacity = "1"; }
+  }
+}
+
+function startActionTimer(seconds) {
+  const display = document.getElementById('timer-display');
+  let timeLeft = seconds;
+  clearInterval(countdownInterval);
+  
+  countdownInterval = setInterval(() => {
+    let minutes = Math.floor(timeLeft / 60);
+    let secs = timeLeft % 60;
+    minutes = minutes < 10 ? "0" + minutes : minutes;
+    secs = secs < 10 ? "0" + secs : secs;
+    if (display) display.innerText = minutes + ":" + secs;
+    if (--timeLeft < 0) { 
+      clearInterval(countdownInterval); 
+      triggerVictoryPhase(2.0); 
+    }
+  }, 1000);
+}
+
+function finishEarly() {
+  const displayEl = document.getElementById('timer-display');
+  let elapsedMinutes = 2.0;
+  if (displayEl) {
+    const displayVal = displayEl.innerText;
+    const parts = displayVal.split(':');
+    if (parts.length === 2) {
+      const currentMinutesVal = parseInt(parts[0], 10) || 0;
+      const currentSecondsVal = parseInt(parts[1], 10) || 0;
+      const elapsedSeconds = 120 - (currentMinutesVal * 60 + currentSecondsVal);
+      elapsedMinutes = Math.max(0.2, elapsedSeconds / 60);
+    }
+  }
+  clearInterval(countdownInterval);
+  triggerVictoryPhase(elapsedMinutes);
+}
+
+function cancelTimer() {
+  clearInterval(countdownInterval);
+  updateMetricDashboard();
+  switchScreen('screen-dashboard');
+}
+
+function triggerVictoryPhase(minutesEarned) {
+  const copy = victoryValidationStrings[Math.floor(Math.random() * victoryValidationStrings.length)];
+  const validationCopyEl = document.getElementById('victory-validation-copy');
+  if (validationCopyEl) validationCopyEl.innerText = copy;
+  
+  totalWinsCount += 1;
+  totalFocusReclaimed += minutesEarned;
+  localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
+  localStorage.setItem('nudge_minutes', totalFocusReclaimed.toString());
+  
+  try {
+    if (!isAppMuted) {
+      const audioNode = document.getElementById('victory-chime');
+      if (audioNode) { audioNode.currentTime = 0; audioNode.play().catch(e=>{}); }
+    }
+  } catch (e) { console.warn(e); }
+  
+  switchScreen('screen-victory');
+  
+  try {
+    if (typeof confetti === 'function') {
+      confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#D4A373', '#4A7C59', '#2D2B2A'] });
+    }
+  } catch (e) { console.log(e); }
+}
+
+function claimRewardStack() {
+  updateMetricDashboard();
+  syncLifetimeProgressToCloud();
+  switchScreen('screen-dashboard');
+}
+
+/* ========================================================
+   5. CUSTOM LIFELINES ENGINE
+======================================================== */
+function openCustomLifelineModal() {
+  const isUserPremium = localStorage.getItem('nudge_premium_user') === 'true';
+  if (!isUserPremium) {
+    const paywall = document.getElementById('paywall-overlay');
+    if (paywall) paywall.classList.add('active');
+  } else {
+    const modal = document.getElementById('custom-lifeline-modal');
+    if (modal) modal.classList.add('active');
+  }
+}
+
+function closeCustomLifelineModal() {
+  const modal = document.getElementById('custom-lifeline-modal');
+  if (modal) modal.classList.remove('active');
+}
+
+function saveCustomLifeline() {
+  const timeInput = document.getElementById('custom-time-input').value;
+  const frictionInput = document.getElementById('custom-friction-input').value;
+  const deckInput = document.getElementById('custom-deck-input').value;
+
+  if (!timeInput) {
+    alert("Please select a valid time.");
+    return;
+  }
+
+  const newCustom = { time: timeInput, friction: frictionInput, deck: deckInput };
+  let customs = JSON.parse(localStorage.getItem('nudge_custom_lifelines') || '[]');
+  customs.push(newCustom);
+  localStorage.setItem('nudge_custom_lifelines', JSON.stringify(customs));
+
+  closeCustomLifelineModal();
+  renderCustomLifelines();
+}
+
+function renderCustomLifelines() {
+  const injectionPoint = document.getElementById('custom-lifelines-injection-point');
+  if (!injectionPoint) return;
+  
+  injectionPoint.innerHTML = ''; 
+  const customs = JSON.parse(localStorage.getItem('nudge_custom_lifelines') || '[]');
+  
+  customs.forEach(c => {
+    const [hourStr, minStr] = c.time.split(':');
+    let hour = parseInt(hourStr, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    hour = hour % 12 || 12;
+    const formattedTime = `${hour}:${minStr} ${ampm}`;
+
+    const html = `
+      <div class="lifeline-item" style="border-color: var(--accent-color);">
+        <div>
+          <div style="font-weight: 800; font-size: 14px; color: var(--premium-color);">${formattedTime}</div>
+          <div style="font-size: 11px; color: #7A7571; font-weight: 600;">Custom: ${c.friction}</div>
+        </div>
+        <label class="toggle-switch"><input type="checkbox" checked disabled><span class="slider"></span></label>
+      </div>
+    `;
+    injectionPoint.insertAdjacentHTML('beforeend', html);
+  });
+}
