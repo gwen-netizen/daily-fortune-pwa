@@ -10,17 +10,38 @@ module.exports = async function handler(req, res) {
 
   const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
+  // Helper to enforce 48h pass expiration inside Supabase
+  async function sanitizePassStatus(profile) {
+    if (!profile) return profile;
+
+    if (profile.pass_expires_at) {
+      const expiresAt = new Date(profile.pass_expires_at).getTime();
+      const now = Date.now();
+
+      if (now >= expiresAt) {
+        // Hardcode Supabase update to set premium_user = false and pass_expires_at = null
+        await supabase
+          .from('user_profiles')
+          .update({ premium_user: false, pass_expires_at: null })
+          .eq('email', profile.email);
+
+        profile.premium_user = false;
+        profile.pass_expires_at = null;
+      }
+    }
+    return profile;
+  }
+
   // ----------------------------------------------------
-  // 1. CLOUD PROGRESS BACKUP (POST)
+  // 1. CLOUD PROGRESS BACKUP & PROMO SYNC (POST)
   // ----------------------------------------------------
   if (req.method === 'POST') {
     try {
-      const { email, total_wins, focus_reclaimed, device_id, pass_expires_at } = req.body;
+      const { email, total_wins, focus_reclaimed, device_id, promo_code } = req.body;
       if (!email) return res.status(400).json({ error: "Email is required" });
 
       const lowerEmail = email.trim().toLowerCase();
 
-      // Check for active single-device conflicts
       if (device_id) {
         const { data: currentProf } = await supabase
           .from('user_profiles')
@@ -42,39 +63,36 @@ module.exports = async function handler(req, res) {
         .eq('email', lowerEmail)
         .maybeSingle();
 
-      let targetPremium = existingProfile ? existingProfile.premium_user : false;
-      let targetPassExpires = existingProfile ? existingProfile.pass_expires_at : null;
+      let isPremium = existingProfile ? existingProfile.premium_user : false;
+      let passExpiry = existingProfile ? existingProfile.pass_expires_at : null;
 
-      if (pass_expires_at) {
-        targetPassExpires = pass_expires_at;
-        targetPremium = true;
-      }
-
-      // Check for expiration
-      if (targetPassExpires && new Date(targetPassExpires).getTime() < Date.now()) {
-        targetPremium = false;
-        targetPassExpires = null;
+      // Check for Promo Code PREMIUM99
+      if (promo_code === 'PREMIUM99') {
+        isPremium = true;
+        passExpiry = new Date(Date.now() + (48 * 3600 * 1000)).toISOString();
       }
 
       const updatePayload = { 
         email: lowerEmail, 
         total_wins: typeof total_wins === 'number' ? total_wins : (existingProfile?.total_wins || 0), 
         focus_reclaimed: typeof focus_reclaimed === 'number' ? focus_reclaimed : (existingProfile?.focus_reclaimed || 0.0),
-        premium_user: targetPremium,
-        pass_expires_at: targetPassExpires
+        premium_user: isPremium,
+        pass_expires_at: passExpiry
       };
 
       if (device_id) {
         updatePayload.active_device_id = device_id;
       }
 
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('user_profiles')
         .upsert(updatePayload, { onConflict: 'email' })
         .select()
         .single();
 
       if (error) throw error;
+      data = await sanitizePassStatus(data);
+
       return res.status(200).json({ success: true, profile: data });
     } catch (err) {
       console.error("Supabase Write Error:", err);
@@ -86,7 +104,7 @@ module.exports = async function handler(req, res) {
   // 2. AUTHENTICATION & PROFILE RETRIEVAL (GET)
   // ----------------------------------------------------
   if (req.method === 'GET') {
-    const { email, action, token, device_id } = req.query;
+    const { email, action, token, device_id, promo_code } = req.query;
     if (!email) return res.status(400).json({ error: "Email parameter missing" });
 
     const lowerEmail = email.trim().toLowerCase();
@@ -99,14 +117,22 @@ module.exports = async function handler(req, res) {
         });
         if (error) throw error;
 
+        let passExpiry = null;
+        let isPrem = false;
+        if (promo_code === 'PREMIUM99') {
+          isPrem = true;
+          passExpiry = new Date(Date.now() + (48 * 3600 * 1000)).toISOString();
+        }
+
         await supabase
           .from('user_profiles')
           .upsert({ 
             email: lowerEmail,
             total_wins: 0,
             focus_reclaimed: 0.0,
-            premium_user: false
-          }, { onConflict: 'email', ignoreDuplicates: true });
+            premium_user: isPrem,
+            pass_expires_at: passExpiry
+          }, { onConflict: 'email', ignoreDuplicates: !isPrem });
 
         return res.status(200).json({ sent: true });
       }
@@ -134,7 +160,7 @@ module.exports = async function handler(req, res) {
           return res.status(401).json({ error: "Invalid or expired access code. Please try requesting a new one." });
         }
 
-        const { data: profileData } = await supabase
+        let { data: profileData } = await supabase
           .from('user_profiles')
           .upsert({ 
             email: lowerEmail, 
@@ -142,6 +168,8 @@ module.exports = async function handler(req, res) {
           }, { onConflict: 'email' })
           .select()
           .single();
+
+        profileData = await sanitizePassStatus(profileData);
 
         return res.status(200).json({ 
           success: true, 
@@ -163,19 +191,8 @@ module.exports = async function handler(req, res) {
           });
         }
 
-        // Expiration check
-        if (profileData && profileData.pass_expires_at) {
-          if (new Date(profileData.pass_expires_at).getTime() < Date.now()) {
-            await supabase
-              .from('user_profiles')
-              .update({ premium_user: false, pass_expires_at: null })
-              .eq('email', lowerEmail);
-
-            profileData.premium_user = false;
-            profileData.pass_expires_at = null;
-          }
-        }
-
+        profileData = await sanitizePassStatus(profileData);
+          
         return res.status(200).json({ profile: profileData || { premium_user: false } });
       }
 
