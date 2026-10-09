@@ -165,7 +165,10 @@
           </div>
         </div>
 
-        <button id="btn-manage-subscription" class="btn-text-nav" style="display: none; width: 100%; margin-top: 20px; border: 1px solid #EAE3D9; padding: 14px; border-radius: 14px; color: var(--text-color); font-weight: 700; text-align: center; background: #FFFFFF; font-size: 13px;" onclick="openCustomerPortal()">⚙️ Manage / Cancel Subscription</button>
+        <!-- Subtle Dashboard Subscription Link -->
+        <div style="margin-top: 28px; text-align: center; padding-bottom: 8px;">
+          <button id="btn-manage-subscription" onclick="openCustomerPortal()" style="display: none; background: none; border: none; color: #A8A29E; font-size: 11px; font-weight: 500; text-decoration: underline; cursor: pointer; opacity: 0.6;">Manage Subscription</button>
+        </div>
 
       </div>
     </div>
@@ -210,7 +213,13 @@
         <h2 class="title-large" style="color: var(--success-color); margin-bottom: 8px;">Identity Calibrated.</h2>
         <p class="body-text" style="margin-top: 8px;" id="victory-validation-copy">You chose action while the world chose mindless distraction. Your forward momentum is locked in.</p>
       </div>
-      <button class="btn-primary" style="background-color: var(--success-color);" onclick="claimRewardStack()">Claim Reward Stack</button>
+      
+      <div style="width: 100%;">
+        <button class="btn-primary" style="background-color: var(--success-color);" onclick="claimRewardStack()">Claim Reward Stack</button>
+        <div style="width: 100%; text-align: right; margin-top: 12px; padding-right: 2px;">
+          <button id="btn-victory-manage-subscription" onclick="openCustomerPortal()" style="display: none; background: none; border: none; color: #A8A29E; font-size: 11px; font-weight: 500; text-decoration: underline; cursor: pointer; opacity: 0.6;">Manage Subscription</button>
+        </div>
+      </div>
     </div>
 
     <!-- PREMIUM PAYWALL OVERLAY -->
