@@ -1,4 +1,3 @@
-// api/get-task.js
 import fs from 'fs';
 import path from 'path';
 import { createClient } from '@supabase/supabase-js';
@@ -18,24 +17,27 @@ export default async function handler(req, res) {
   try {
     const { category, friction, email } = req.query;
     
-    if (!category || !email) {
-      return res.status(400).json({ error: "Missing required telemetry validation tokens." });
+    if (!category) {
+      return res.status(400).json({ error: "Missing required category parameter." });
     }
 
     const lowerCategory = category.toLowerCase();
     const isPremiumDeck = (lowerCategory === 'dopamine' || lowerCategory === 'overwhelm');
 
-    const { data: userProfile, error: dbError } = await supabase
-      .from('profiles')
-      .select('premium_user, seen_task_history')
-      .eq('email', email.toLowerCase())
-      .single();
-
-    if (dbError || !userProfile) {
-      return res.status(403).json({ error: "Unauthorized access path. Focus account profile registration not found." });
+    let userProfile = null;
+    if (email && email !== 'anonymous_tester') {
+      const { data } = await supabase
+        .from('user_profiles')
+        .select('premium_user, seen_task_history')
+        .eq('email', email.toLowerCase())
+        .maybeSingle();
+      
+      userProfile = data;
     }
 
-    if (isPremiumDeck && !userProfile.premium_user) {
+    const isPremiumUser = userProfile ? userProfile.premium_user : false;
+
+    if (isPremiumDeck && !isPremiumUser) {
       return res.status(402).json({ error: "Premium subscription validation required to view this focus deck." });
     }
 
@@ -48,7 +50,7 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "Focus Area pool mapping mismatch." });
     }
 
-    let historyMap = userProfile.seen_task_history || {};
+    let historyMap = (userProfile && userProfile.seen_task_history) ? userProfile.seen_task_history : {};
     if (!historyMap[lowerCategory]) {
       historyMap[lowerCategory] = [];
     }
@@ -71,12 +73,13 @@ export default async function handler(req, res) {
 
     historyMap[lowerCategory].push(targetTaskIndex);
 
-    await supabase
-      .from('profiles')
-      .update({ seen_task_history: historyMap })
-      .eq('email', email.toLowerCase());
+    if (userProfile && email && email !== 'anonymous_tester') {
+      await supabase
+        .from('user_profiles')
+        .update({ seen_task_history: historyMap })
+        .eq('email', email.toLowerCase());
+    }
 
-    // Inject contextual alert modifiers if required
     let finalTaskText = selectedTaskData.text;
     if (friction === 'scroll' && lowerCategory === 'charisma') {
       finalTaskText = "⚡ INTERCEPTION: " + finalTaskText + " Look up from the rectangle right now and engage your physical reality.";
@@ -87,8 +90,8 @@ export default async function handler(req, res) {
     return res.status(200).json({ 
       task: {
         text: finalTaskText,
-        metricLabel: selectedTaskData.metricLabel,
-        rating: selectedTaskData.rating
+        metricLabel: selectedTaskData.label || selectedTaskData.metricLabel || "Impact",
+        rating: selectedTaskData.rating || 3
       }
     });
   } catch (error) {
