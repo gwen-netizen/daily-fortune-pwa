@@ -57,6 +57,9 @@ function switchScreen(screenId) {
   }
 }
 
+/* ========================================================
+   1. AUTHENTICATION & OTP FLOW
+======================================================== */
 async function initializeUserProfile() {
   const emailInput = document.getElementById('user-auth-email');
   if (!emailInput || !emailInput.value.includes('@')) {
@@ -174,7 +177,7 @@ async function syncLifetimeProgressToCloud() {
       body: JSON.stringify({
         email: userEmail,
         total_wins: totalWinsCount,
-        focus_reclaimed: focus_reclaimed || totalFocusReclaimed,
+        focus_reclaimed: totalFocusReclaimed,
         premium_user: isPremium
       })
     });
@@ -183,6 +186,9 @@ async function syncLifetimeProgressToCloud() {
   }
 }
 
+/* ========================================================
+   2. DASHBOARD & UI SELECTIONS
+======================================================== */
 function selectOption(el, frictionKey) {
   document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
@@ -238,18 +244,45 @@ function toggleAudioMuteSystem() {
 function applyPremiumUIVisuals() {
   const isUserPremium = localStorage.getItem('nudge_premium_user') === 'true';
   if (isUserPremium) {
+    // 1. Update Premium Deck Cards
     document.querySelectorAll('.deck-item').forEach(item => {
+      const category = item.getAttribute('data-category');
       const meta = item.querySelector('.deck-meta');
       const name = item.querySelector('.deck-name');
-      if (meta && meta.innerText.includes("PREMIUM UPGRADE")) {
-        meta.innerText = "UNLOCKED PREMIUM AREA";
-        meta.style.color = "var(--success-color)";
-        if (name) name.innerText = name.innerText.replace('⚡ ', '✅ ').replace('🧠 ', '✅ ');
+
+      if (category === 'dopamine' || category === 'overwhelm') {
+        if (meta) {
+          meta.innerText = "UNLOCKED PREMIUM AREA";
+          meta.classList.remove('premium');
+          meta.classList.add('free');
+          meta.style.color = "var(--success-color)";
+        }
+        if (name) {
+          name.innerText = name.innerText.replace('⚡ ', '✅ ').replace('🧠 ', '✅ ');
+        }
       }
     });
+
+    // 2. Update Premium Custom Lifelines Button
+    const customMeta = document.getElementById('custom-lifeline-meta');
+    const customText = document.getElementById('custom-lifeline-text');
+
+    if (customMeta) {
+      customMeta.innerText = "UNLOCKED PREMIUM AREA";
+      customMeta.classList.remove('premium');
+      customMeta.classList.add('free');
+      customMeta.style.color = "var(--success-color)";
+    }
+
+    if (customText) {
+      customText.innerText = customText.innerText.replace('⚡ ', '✅ ');
+    }
   }
 }
 
+/* ========================================================
+   3. STRIPE PAYWALL GATEWAY
+======================================================== */
 async function simulatePurchase() {
   const selectedTierBox = document.querySelector('.tier-box.selected');
   if (!selectedTierBox) { alert("Please select a tracking tier to continue."); return; }
@@ -291,13 +324,17 @@ function checkStripeRedirectStatus() {
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('session') === 'success') {
     localStorage.setItem('nudge_premium_user', 'true');
-    alert("Premium Portfolio Active! Algorithmic intercepts completely unlocked.");
     applyPremiumUIVisuals();
+    syncLifetimeProgressToCloud();
+    alert("🎉 Premium Area is Now Unlocked!");
     window.history.replaceState({}, document.title, window.location.pathname);
     switchScreen('screen-dashboard');
   }
 }
 
+/* ========================================================
+   4. TASK EXECUTION & METRICS ENGINE
+======================================================== */
 function renderSingleChallengeRating(label, ratingScore) {
   const labelNode = document.getElementById('target-metric-label');
   const starsNode = document.getElementById('target-metric-stars');
@@ -431,6 +468,9 @@ function claimRewardStack() {
   switchScreen('screen-dashboard');
 }
 
+/* ========================================================
+   5. CUSTOM LIFELINES ENGINE
+======================================================== */
 function openCustomLifelineModal() {
   const isUserPremium = localStorage.getItem('nudge_premium_user') === 'true';
   if (!isUserPremium) {
