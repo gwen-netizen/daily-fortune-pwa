@@ -68,6 +68,21 @@ function isUserPremiumOrPass() {
   return isPrem || isPassActive();
 }
 
+function checkAndTriggerScreen1Promo() {
+  const promoInput = document.getElementById('user-promo-code');
+  if (!promoInput) return;
+
+  const code = promoInput.value.trim().toUpperCase();
+  const alreadyClaimed = localStorage.getItem('nudge_promo_claimed') === 'true';
+
+  if (code === 'PREMIUM99' && !alreadyClaimed) {
+    const expiry = Date.now() + (48 * 3600 * 1000);
+    localStorage.setItem('nudge_pass_expiry', expiry.toString());
+    localStorage.setItem('nudge_promo_claimed', 'true');
+    alert("🎉 Promotional Code Redeemed! 48-Hour Free Premium Pass Unlocked.");
+  }
+}
+
 function startPassTicker() {
   if (passTickerInterval) clearInterval(passTickerInterval);
   updatePassCountdown();
@@ -215,6 +230,7 @@ function userLogout() {
   localStorage.removeItem('nudge_user_email');
   localStorage.removeItem('nudge_premium_user');
   localStorage.removeItem('nudge_pass_expiry');
+  localStorage.removeItem('nudge_promo_claimed');
   localStorage.removeItem('nudge_total_wins');
   localStorage.removeItem('nudge_minutes');
   totalWinsCount = 0;
@@ -235,6 +251,7 @@ async function initializeUserProfile() {
 
   const userEmail = emailInput.value.trim().toLowerCase();
   localStorage.setItem('nudge_user_email', userEmail);
+  checkAndTriggerScreen1Promo();
 
   const loginBtn = document.getElementById('btn-take-control');
   const originalText = loginBtn ? loginBtn.innerText : "Take Control";
@@ -302,10 +319,10 @@ async function verifyOTP() {
 
         if (data.profile.premium_user) {
           localStorage.setItem('nudge_premium_user', 'true');
-          applyPremiumUIVisuals();
         }
       }
 
+      applyPremiumUIVisuals();
       updateMetricDashboard();
       switchScreen('screen-onboarding-2');
     } else {
@@ -327,6 +344,7 @@ function bypassToDiagnostic() {
   if (emailInput && emailInput.value.includes('@')) {
     localStorage.setItem('nudge_user_email', emailInput.value.trim().toLowerCase());
   }
+  checkAndTriggerScreen1Promo();
   updateMetricDashboard();
   applyPremiumUIVisuals();
   switchScreen('screen-onboarding-2');
@@ -463,32 +481,8 @@ function applyPremiumUIVisuals() {
 }
 
 /* ========================================================
-   3. STRIPE GATEWAY, PASS & PROMO CODES
+   3. STRIPE GATEWAY
 ======================================================== */
-function applyPromoCode() {
-  const inputEl = document.getElementById('paywall-promo-input');
-  const msgEl = document.getElementById('paywall-promo-msg');
-  if (!inputEl || !inputEl.value.trim()) return;
-
-  const code = inputEl.value.trim().toUpperCase();
-  const validCodes = ['WELCOME99', 'NUDGE99', 'PROMO99', 'LAUNCH99', 'SAVE99', 'TRY99'];
-
-  if (validCodes.includes(code)) {
-    if (msgEl) {
-      msgEl.style.color = 'var(--success-color)';
-      msgEl.innerText = '🎉 Promo Code Applied! 2-Day Pass unlocked for $0.99.';
-    }
-    // Automatically select the 2-Day Pass Tier
-    const passTier = document.querySelector('.tier-box[data-plan="pass"]');
-    if (passTier) selectTier(passTier);
-  } else {
-    if (msgEl) {
-      msgEl.style.color = 'var(--timer-color)';
-      msgEl.innerText = '⚠️ Code unrecognized. Native Stripe coupons can also be applied directly at checkout.';
-    }
-  }
-}
-
 async function simulatePurchase() {
   const selectedTierBox = document.querySelector('.tier-box.selected');
   if (!selectedTierBox) { alert("Please select an option to continue."); return; }
@@ -497,8 +491,6 @@ async function simulatePurchase() {
   const paywallBtn = document.querySelector('.paywall-modal .btn-primary');
   const originalText = paywallBtn ? paywallBtn.innerText : "Unlock Access Now";
   const userEmail = localStorage.getItem('nudge_user_email') || '';
-  const promoInput = document.getElementById('paywall-promo-input');
-  const promoCode = promoInput ? promoInput.value.trim().toUpperCase() : '';
 
   if (paywallBtn) { paywallBtn.innerText = "INITIALIZING GATEWAY..."; paywallBtn.style.opacity = "0.7"; }
 
@@ -509,7 +501,6 @@ async function simulatePurchase() {
       body: JSON.stringify({
         planType: planType,
         email: userEmail,
-        promoCode: promoCode,
         successUrl: window.location.origin + '/?session=success',
         cancelUrl: window.location.origin
       })
@@ -612,7 +603,6 @@ function renderSingleChallengeRating(label, ratingScore) {
 }
 
 async function executeTurnaroundSpin() {
-  // Enforce Free Tier 4-Clicks/Day Limit
   const hasUnlimitedAccess = isUserPremiumOrPass();
   const dailyClicks = getDailyClicksCount();
 
@@ -653,7 +643,6 @@ async function executeTurnaroundSpin() {
     
     const data = await response.json();
 
-    // Increment Daily Click Count for Free Users
     if (!hasUnlimitedAccess) {
       incrementDailyClicks();
     }
