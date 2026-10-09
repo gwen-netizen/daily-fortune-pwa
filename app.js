@@ -277,11 +277,17 @@ function applyPremiumUIVisuals() {
     if (customText) {
       customText.innerText = customText.innerText.replace('⚡ ', '✅ ');
     }
+
+    // 3. Reveal In-App Manage Subscription Button
+    const manageBtn = document.getElementById('btn-manage-subscription');
+    if (manageBtn) {
+      manageBtn.style.display = 'block';
+    }
   }
 }
 
 /* ========================================================
-   3. STRIPE PAYWALL GATEWAY
+   3. STRIPE PAYWALL GATEWAY & PORTAL
 ======================================================== */
 async function simulatePurchase() {
   const selectedTierBox = document.querySelector('.tier-box.selected');
@@ -329,6 +335,48 @@ function checkStripeRedirectStatus() {
     alert("🎉 Premium Area is Now Unlocked!");
     window.history.replaceState({}, document.title, window.location.pathname);
     switchScreen('screen-dashboard');
+  }
+}
+
+async function openCustomerPortal() {
+  const userEmail = localStorage.getItem('nudge_user_email');
+  if (!userEmail) {
+    alert("Please log in with your email first.");
+    return;
+  }
+
+  const portalBtn = document.getElementById('btn-manage-subscription');
+  const originalText = portalBtn ? portalBtn.innerText : "⚙️ Manage / Cancel Subscription";
+  
+  if (portalBtn) {
+    portalBtn.innerText = "LOADING BILLING PORTAL...";
+    portalBtn.style.opacity = "0.7";
+  }
+
+  try {
+    const response = await fetch(getApiUrl('/api/create-portal-session'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: userEmail,
+        returnUrl: window.location.origin
+      })
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.url) {
+      window.location.href = data.url;
+    } else {
+      alert(`Portal Access Error: ${data.error || "Unable to open billing portal."}`);
+    }
+  } catch (err) {
+    alert(`Network Error: ${err.message}`);
+  } finally {
+    if (portalBtn) {
+      portalBtn.innerText = originalText;
+      portalBtn.style.opacity = "1";
+    }
   }
 }
 
