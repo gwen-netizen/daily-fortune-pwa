@@ -13,6 +13,14 @@ const victoryValidationStrings = [
   "The dopamine loop has been successfully redirected. You are now running on true clean execution energy."
 ];
 
+function getApiUrl(path) {
+  try {
+    return new URL(path, window.location.href).href;
+  } catch (e) {
+    return path;
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   updateMetricDashboard();
   checkStripeRedirectStatus();
@@ -49,9 +57,6 @@ function switchScreen(screenId) {
   }
 }
 
-/* ========================================================
-   1. AUTHENTICATION & OTP FLOW (ABSOLUTE URL FIX)
-======================================================== */
 async function initializeUserProfile() {
   const emailInput = document.getElementById('user-auth-email');
   if (!emailInput || !emailInput.value.includes('@')) {
@@ -72,8 +77,7 @@ async function initializeUserProfile() {
   }
 
   try {
-    // Explicit origin prefix prevents WebKit / PWA relative URL pattern errors
-    const endpoint = `${window.location.origin}/api/sync-user?email=${encodeURIComponent(userEmail)}&action=request_otp`;
+    const endpoint = getApiUrl(`/api/sync-user?email=${encodeURIComponent(userEmail)}&action=request_otp`);
     const response = await fetch(endpoint);
     const data = await response.json();
 
@@ -85,7 +89,7 @@ async function initializeUserProfile() {
       alert(`OTP Request Failed: ${data.error || "Unable to dispatch verification code via Supabase."}`);
     }
   } catch (error) {
-    alert(`Network Error: ${error.message}`);
+    alert(`Network Request Error: ${error.message}`);
   } finally {
     if (loginBtn) {
       loginBtn.innerText = originalText;
@@ -115,8 +119,7 @@ async function verifyOTP() {
   }
 
   try {
-    // Explicit origin prefix prevents WebKit / PWA relative URL pattern errors
-    const endpoint = `${window.location.origin}/api/sync-user?email=${encodeURIComponent(userEmail)}&action=verify_otp&token=${encodeURIComponent(token)}`;
+    const endpoint = getApiUrl(`/api/sync-user?email=${encodeURIComponent(userEmail)}&action=verify_otp&token=${encodeURIComponent(token)}`);
     const response = await fetch(endpoint);
     const data = await response.json();
 
@@ -139,7 +142,7 @@ async function verifyOTP() {
       alert(`Verification Error: ${data.error || "Invalid or expired access code."}`);
     }
   } catch (err) {
-    alert(`Network Error: ${err.message}`);
+    alert(`Network Request Error: ${err.message}`);
   } finally {
     if (verifyBtn) {
       verifyBtn.innerText = originalText;
@@ -165,13 +168,13 @@ async function syncLifetimeProgressToCloud() {
   if (!userEmail) return;
 
   try {
-    await fetch(`${window.location.origin}/api/sync-user`, {
+    await fetch(getApiUrl('/api/sync-user'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email: userEmail,
         total_wins: totalWinsCount,
-        focus_reclaimed: totalFocusReclaimed,
+        focus_reclaimed: focus_reclaimed || totalFocusReclaimed,
         premium_user: isPremium
       })
     });
@@ -180,9 +183,6 @@ async function syncLifetimeProgressToCloud() {
   }
 }
 
-/* ========================================================
-   2. DASHBOARD & UI SELECTIONS
-======================================================== */
 function selectOption(el, frictionKey) {
   document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
@@ -250,9 +250,6 @@ function applyPremiumUIVisuals() {
   }
 }
 
-/* ========================================================
-   3. STRIPE PAYWALL GATEWAY (ABSOLUTE URL FIX)
-======================================================== */
 async function simulatePurchase() {
   const selectedTierBox = document.querySelector('.tier-box.selected');
   if (!selectedTierBox) { alert("Please select a tracking tier to continue."); return; }
@@ -265,7 +262,7 @@ async function simulatePurchase() {
   if (paywallBtn) { paywallBtn.innerText = "INITIALIZING GATEWAY..."; paywallBtn.style.opacity = "0.7"; }
 
   try {
-    const response = await fetch(`${window.location.origin}/api/create-checkout-session`, {
+    const response = await fetch(getApiUrl('/api/create-checkout-session'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -301,9 +298,6 @@ function checkStripeRedirectStatus() {
   }
 }
 
-/* ========================================================
-   4. TASK EXECUTION & METRICS ENGINE (MOD 3)
-======================================================== */
 function renderSingleChallengeRating(label, ratingScore) {
   const labelNode = document.getElementById('target-metric-label');
   const starsNode = document.getElementById('target-metric-stars');
@@ -335,7 +329,7 @@ async function executeTurnaroundSpin() {
   const userEmail = localStorage.getItem('nudge_user_email') || 'anonymous_tester';
 
   try {
-    const endpoint = `${window.location.origin}/api/get-task?category=${categoryKey}&friction=${mindFrictionStyle}&email=${encodeURIComponent(userEmail)}`;
+    const endpoint = getApiUrl(`/api/get-task?category=${categoryKey}&friction=${mindFrictionStyle}&email=${encodeURIComponent(userEmail)}`);
     const response = await fetch(endpoint);
     
     if (!response.ok) {
@@ -437,9 +431,6 @@ function claimRewardStack() {
   switchScreen('screen-dashboard');
 }
 
-/* ========================================================
-   5. CUSTOM LIFELINES ENGINE
-======================================================== */
 function openCustomLifelineModal() {
   const isUserPremium = localStorage.getItem('nudge_premium_user') === 'true';
   if (!isUserPremium) {
