@@ -1,6 +1,7 @@
 // app.js - Full Core Application Controller Engine
 let isPremiumSelected = false;
 let countdownInterval = null;
+let passTickerInterval = null;
 let mindFrictionStyle = 'scroll'; 
 let isAppMuted = localStorage.getItem('nudge_app_muted') === 'true'; 
 
@@ -30,12 +31,102 @@ function getDeviceId() {
   return deviceId;
 }
 
+/* ========================================================
+   DAILY CLICK TRACKER & PASS COUNTDOWN ENGINE
+======================================================== */
+function getTodayDateString() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function getDailyClicksCount() {
+  const today = getTodayDateString();
+  const savedDate = localStorage.getItem('nudge_click_date');
+  if (savedDate !== today) {
+    localStorage.setItem('nudge_click_date', today);
+    localStorage.setItem('nudge_click_count', '0');
+    return 0;
+  }
+  return parseInt(localStorage.getItem('nudge_click_count') || '0', 10);
+}
+
+function incrementDailyClicks() {
+  const current = getDailyClicksCount();
+  const updated = current + 1;
+  localStorage.setItem('nudge_click_count', updated.toString());
+  updateMetricDashboard();
+  return updated;
+}
+
+function isPassActive() {
+  const expiry = parseInt(localStorage.getItem('nudge_pass_expiry') || '0', 10);
+  return Date.now() < expiry;
+}
+
+function isUserPremiumOrPass() {
+  const isPrem = localStorage.getItem('nudge_premium_user') === 'true';
+  return isPrem || isPassActive();
+}
+
+function startPassTicker() {
+  if (passTickerInterval) clearInterval(passTickerInterval);
+  updatePassCountdown();
+  passTickerInterval = setInterval(updatePassCountdown, 1000);
+}
+
+function updatePassCountdown() {
+  const isPrem = localStorage.getItem('nudge_premium_user') === 'true';
+  const passActive = isPassActive();
+  
+  const banners = [
+    document.getElementById('screen2-status-banner'),
+    document.getElementById('screen3-status-banner')
+  ];
+
+  banners.forEach(banner => {
+    if (!banner) return;
+    
+    if (isPrem) {
+      banner.style.display = 'block';
+      banner.style.background = '#E8F5E9';
+      banner.style.borderColor = 'var(--success-color)';
+      banner.style.color = 'var(--success-color)';
+      banner.innerHTML = '✅ <b>FULL PREMIUM UNLOCKED</b> • Unlimited Daily Intercepts';
+    } else if (passActive) {
+      banner.style.display = 'block';
+      banner.style.background = '#FFF8E1';
+      banner.style.borderColor = '#FFB300';
+      banner.style.color = '#B78103';
+      
+      const expiry = parseInt(localStorage.getItem('nudge_pass_expiry') || '0', 10);
+      const diffSec = Math.max(0, Math.floor((expiry - Date.now()) / 1000));
+      const hours = Math.floor(diffSec / 3600);
+      const mins = Math.floor((diffSec % 3600) / 60);
+      const secs = diffSec % 60;
+      
+      const hStr = String(hours).padStart(2, '0');
+      const mStr = String(mins).padStart(2, '0');
+      const sStr = String(secs).padStart(2, '0');
+      
+      banner.innerHTML = `⚡ <b>2-DAY PASS ACTIVE</b> • ⏱️ <b>${hStr}h ${mStr}m ${sStr}s</b> remaining`;
+    } else {
+      const clicksUsed = getDailyClicksCount();
+      banner.style.display = 'block';
+      banner.style.background = '#FAF7F2';
+      banner.style.borderColor = '#EAE3D9';
+      banner.style.color = '#7A7571';
+      banner.innerHTML = `🌱 <b>Free Account (${clicksUsed}/4 Daily Intercepts Used)</b> • <span style="text-decoration:underline; cursor:pointer; color:var(--text-color); font-weight:700;" onclick="openPaywallModal()">Get 2-Day Pass ($0.99)</span>`;
+    }
+  });
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   updateMetricDashboard();
   await checkStripeRedirectStatus();
   applyPremiumUIVisuals(); 
   initializeMuteUISystem(); 
-  renderCustomLifelines();
+  renderCustomIntercepts();
+  startPassTicker();
 
   const savedEmail = localStorage.getItem('nudge_user_email');
   const deviceId = getDeviceId();
@@ -77,6 +168,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 function updateMetricDashboard() {
   const streaksEl = document.getElementById('stat-streaks');
   const focusEl = document.getElementById('stat-focus');
+  const dailyUsesEl = document.getElementById('stat-daily-uses');
   
   if (streaksEl && focusEl) {
     streaksEl.innerText = totalWinsCount;
@@ -85,6 +177,17 @@ function updateMetricDashboard() {
     } else {
       const hoursScaled = totalFocusReclaimed / 60;
       focusEl.innerText = hoursScaled.toFixed(1) + ' hr';
+    }
+  }
+
+  if (dailyUsesEl) {
+    if (isUserPremiumOrPass()) {
+      dailyUsesEl.innerText = "Unlimited ⚡";
+      dailyUsesEl.style.color = "var(--success-color)";
+    } else {
+      const clicks = getDailyClicksCount();
+      dailyUsesEl.innerText = `${clicks}/4`;
+      dailyUsesEl.style.color = clicks >= 4 ? "var(--timer-color)" : "var(--text-color)";
     }
   }
 }
@@ -101,15 +204,17 @@ function switchScreen(screenId) {
     if (spinBtn) spinBtn.innerText = "START";
   }
 
-  if (screenId === 'screen-dashboard') {
+  if (screenId === 'screen-dashboard' || screenId === 'screen-onboarding-2') {
     applyPremiumUIVisuals();
-    renderCustomLifelines();
+    renderCustomIntercepts();
+    updatePassCountdown();
   }
 }
 
 function userLogout() {
   localStorage.removeItem('nudge_user_email');
   localStorage.removeItem('nudge_premium_user');
+  localStorage.removeItem('nudge_pass_expiry');
   localStorage.removeItem('nudge_total_wins');
   localStorage.removeItem('nudge_minutes');
   totalWinsCount = 0;
@@ -273,13 +378,17 @@ function selectDeck(el, isPremium, categoryKey) {
 }
 
 function startTriggerPhase() {
-  const isUserPremium = localStorage.getItem('nudge_premium_user') === 'true';
-  if (isPremiumSelected && !isUserPremium) {
-    const paywall = document.getElementById('paywall-overlay');
-    if (paywall) paywall.classList.add('active');
+  const hasAccess = isUserPremiumOrPass();
+  if (isPremiumSelected && !hasAccess) {
+    openPaywallModal();
   } else {
     switchScreen('screen-trigger');
   }
+}
+
+function openPaywallModal() {
+  const paywall = document.getElementById('paywall-overlay');
+  if (paywall) paywall.classList.add('active');
 }
 
 function closePaywall() {
@@ -309,8 +418,8 @@ function toggleAudioMuteSystem() {
 }
 
 function applyPremiumUIVisuals() {
-  const isUserPremium = localStorage.getItem('nudge_premium_user') === 'true';
-  if (isUserPremium) {
+  const hasAccess = isUserPremiumOrPass();
+  if (hasAccess) {
     const dopamineDeck = document.querySelector('.deck-item[data-category="dopamine"]');
     if (dopamineDeck) {
       const meta = dopamineDeck.querySelector('.deck-meta');
@@ -335,20 +444,15 @@ function applyPremiumUIVisuals() {
       if (name) name.innerHTML = "✅ The Anti-Overwhelm Deck";
     }
 
-    const customMeta = document.getElementById('custom-lifeline-meta');
-    const customText = document.getElementById('custom-lifeline-text');
+    const customMeta = document.getElementById('custom-intercept-meta');
+    const customText = document.getElementById('custom-intercept-text');
     if (customMeta) {
       customMeta.innerText = "UNLOCKED PREMIUM AREA";
       customMeta.className = "deck-meta free";
       customMeta.style.color = "var(--success-color)";
     }
     if (customText) {
-      customText.innerHTML = "✅ + Add Custom Lifeline";
-    }
-
-    const manageBtn = document.getElementById('btn-manage-subscription');
-    if (manageBtn) {
-      manageBtn.style.display = 'inline-block';
+      customText.innerHTML = "✅ + Add Custom Intercept";
     }
 
     const victoryManageBtn = document.getElementById('btn-victory-manage-subscription');
@@ -359,16 +463,42 @@ function applyPremiumUIVisuals() {
 }
 
 /* ========================================================
-   3. STRIPE PAYWALL GATEWAY & PORTAL
+   3. STRIPE GATEWAY, PASS & PROMO CODES
 ======================================================== */
+function applyPromoCode() {
+  const inputEl = document.getElementById('paywall-promo-input');
+  const msgEl = document.getElementById('paywall-promo-msg');
+  if (!inputEl || !inputEl.value.trim()) return;
+
+  const code = inputEl.value.trim().toUpperCase();
+  const validCodes = ['WELCOME99', 'NUDGE99', 'PROMO99', 'LAUNCH99', 'SAVE99', 'TRY99'];
+
+  if (validCodes.includes(code)) {
+    if (msgEl) {
+      msgEl.style.color = 'var(--success-color)';
+      msgEl.innerText = '🎉 Promo Code Applied! 2-Day Pass unlocked for $0.99.';
+    }
+    // Automatically select the 2-Day Pass Tier
+    const passTier = document.querySelector('.tier-box[data-plan="pass"]');
+    if (passTier) selectTier(passTier);
+  } else {
+    if (msgEl) {
+      msgEl.style.color = 'var(--timer-color)';
+      msgEl.innerText = '⚠️ Code unrecognized. Native Stripe coupons can also be applied directly at checkout.';
+    }
+  }
+}
+
 async function simulatePurchase() {
   const selectedTierBox = document.querySelector('.tier-box.selected');
-  if (!selectedTierBox) { alert("Please select a tracking tier to continue."); return; }
+  if (!selectedTierBox) { alert("Please select an option to continue."); return; }
 
-  const isLifetime = selectedTierBox.innerText.includes("Lifetime");
+  const planType = selectedTierBox.getAttribute('data-plan') || (selectedTierBox.innerText.includes("Lifetime") ? 'lifetime' : (selectedTierBox.innerText.includes("Pass") ? 'pass' : 'monthly'));
   const paywallBtn = document.querySelector('.paywall-modal .btn-primary');
-  const originalText = paywallBtn ? paywallBtn.innerText : "Upgrade Mindset Portfolio";
+  const originalText = paywallBtn ? paywallBtn.innerText : "Unlock Access Now";
   const userEmail = localStorage.getItem('nudge_user_email') || '';
+  const promoInput = document.getElementById('paywall-promo-input');
+  const promoCode = promoInput ? promoInput.value.trim().toUpperCase() : '';
 
   if (paywallBtn) { paywallBtn.innerText = "INITIALIZING GATEWAY..."; paywallBtn.style.opacity = "0.7"; }
 
@@ -377,8 +507,9 @@ async function simulatePurchase() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        planType: isLifetime ? 'lifetime' : 'monthly',
+        planType: planType,
         email: userEmail,
+        promoCode: promoCode,
         successUrl: window.location.origin + '/?session=success',
         cancelUrl: window.location.origin
       })
@@ -402,30 +533,24 @@ async function checkStripeRedirectStatus() {
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('session') === 'success') {
     const returnedEmail = urlParams.get('email') || localStorage.getItem('nudge_user_email');
-    const deviceId = getDeviceId();
+    const planType = urlParams.get('plan') || 'monthly';
 
     if (returnedEmail) {
       const cleanEmail = returnedEmail.trim().toLowerCase();
       localStorage.setItem('nudge_user_email', cleanEmail);
+    }
 
-      try {
-        const endpoint = getApiUrl(`/api/sync-user?email=${encodeURIComponent(cleanEmail)}&action=get_profile&device_id=${encodeURIComponent(deviceId)}`);
-        const res = await fetch(endpoint);
-        const data = await res.json();
-
-        if (res.ok && data.profile && data.profile.premium_user) {
-          localStorage.setItem('nudge_premium_user', 'true');
-          applyPremiumUIVisuals();
-          alert("🎉 Premium Area is Now Unlocked!");
-        } else {
-          localStorage.setItem('nudge_premium_user', 'true');
-          applyPremiumUIVisuals();
-          alert("🎉 Premium Area is Now Unlocked!");
-        }
-      } catch (e) {
-        localStorage.setItem('nudge_premium_user', 'true');
-        applyPremiumUIVisuals();
-      }
+    if (planType === 'pass' || planType === '2day') {
+      const expiry = Date.now() + (48 * 3600 * 1000);
+      localStorage.setItem('nudge_pass_expiry', expiry.toString());
+      applyPremiumUIVisuals();
+      updatePassCountdown();
+      alert("🎉 2-Day Unlimited Premium Pass Activated! Full access unlocked for 48 hours.");
+    } else {
+      localStorage.setItem('nudge_premium_user', 'true');
+      applyPremiumUIVisuals();
+      await syncLifetimeProgressToCloud();
+      alert("🎉 Premium Area is Now Unlocked!");
     }
 
     window.history.replaceState({}, document.title, window.location.pathname);
@@ -440,10 +565,7 @@ async function openCustomerPortal() {
     return;
   }
 
-  const portalBtn = document.getElementById('btn-manage-subscription');
   const victoryPortalBtn = document.getElementById('btn-victory-manage-subscription');
-  
-  if (portalBtn) { portalBtn.innerText = "Loading Billing Portal..."; portalBtn.style.opacity = "0.5"; }
   if (victoryPortalBtn) { victoryPortalBtn.innerText = "Loading Portal..."; victoryPortalBtn.style.opacity = "0.4"; }
 
   try {
@@ -466,7 +588,6 @@ async function openCustomerPortal() {
   } catch (err) {
     alert(`Network Error: ${err.message}`);
   } finally {
-    if (portalBtn) { portalBtn.innerText = "Manage Subscription"; portalBtn.style.opacity = "0.6"; }
     if (victoryPortalBtn) { victoryPortalBtn.innerText = "Manage Subscription"; victoryPortalBtn.style.opacity = "0.6"; }
   }
 }
@@ -491,6 +612,16 @@ function renderSingleChallengeRating(label, ratingScore) {
 }
 
 async function executeTurnaroundSpin() {
+  // Enforce Free Tier 4-Clicks/Day Limit
+  const hasUnlimitedAccess = isUserPremiumOrPass();
+  const dailyClicks = getDailyClicksCount();
+
+  if (!hasUnlimitedAccess && dailyClicks >= 4) {
+    alert("🔒 Daily Limit Reached (4/4 Intercepts Used Today)!\n\nUpgrade to Premium or get a 2-Day Pass ($0.99) for unlimited daily access.");
+    openPaywallModal();
+    return;
+  }
+
   const btn = document.querySelector('.big-red-btn');
   const instruction = document.getElementById('trigger-instructions');
   if (btn) { btn.innerText = "HOLD..."; btn.style.opacity = "0.6"; }
@@ -521,6 +652,11 @@ async function executeTurnaroundSpin() {
     }
     
     const data = await response.json();
+
+    // Increment Daily Click Count for Free Users
+    if (!hasUnlimitedAccess) {
+      incrementDailyClicks();
+    }
     
     setTimeout(() => {
       if (btn) { btn.innerText = "START"; btn.style.opacity = "1"; }
@@ -615,25 +751,24 @@ function claimRewardStack() {
 }
 
 /* ========================================================
-   5. CUSTOM LIFELINES ENGINE
+   5. CUSTOM INTERCEPTS ENGINE
 ======================================================== */
-function openCustomLifelineModal() {
-  const isUserPremium = localStorage.getItem('nudge_premium_user') === 'true';
-  if (!isUserPremium) {
-    const paywall = document.getElementById('paywall-overlay');
-    if (paywall) paywall.classList.add('active');
+function openCustomInterceptModal() {
+  const hasAccess = isUserPremiumOrPass();
+  if (!hasAccess) {
+    openPaywallModal();
   } else {
-    const modal = document.getElementById('custom-lifeline-modal');
+    const modal = document.getElementById('custom-intercept-modal');
     if (modal) modal.classList.add('active');
   }
 }
 
-function closeCustomLifelineModal() {
-  const modal = document.getElementById('custom-lifeline-modal');
+function closeCustomInterceptModal() {
+  const modal = document.getElementById('custom-intercept-modal');
   if (modal) modal.classList.remove('active');
 }
 
-function saveCustomLifeline() {
+function saveCustomIntercept() {
   const timeInput = document.getElementById('custom-time-input').value;
   const frictionInput = document.getElementById('custom-friction-input').value;
   const deckInput = document.getElementById('custom-deck-input').value;
@@ -644,27 +779,27 @@ function saveCustomLifeline() {
   }
 
   const newCustom = { time: timeInput, friction: frictionInput, deck: deckInput };
-  let customs = JSON.parse(localStorage.getItem('nudge_custom_lifelines') || '[]');
+  let customs = JSON.parse(localStorage.getItem('nudge_custom_intercepts') || localStorage.getItem('nudge_custom_lifelines') || '[]');
   customs.push(newCustom);
-  localStorage.setItem('nudge_custom_lifelines', JSON.stringify(customs));
+  localStorage.setItem('nudge_custom_intercepts', JSON.stringify(customs));
 
-  closeCustomLifelineModal();
-  renderCustomLifelines();
+  closeCustomInterceptModal();
+  renderCustomIntercepts();
 }
 
-function deleteCustomLifeline(index) {
-  let customs = JSON.parse(localStorage.getItem('nudge_custom_lifelines') || '[]');
+function deleteCustomIntercept(index) {
+  let customs = JSON.parse(localStorage.getItem('nudge_custom_intercepts') || localStorage.getItem('nudge_custom_lifelines') || '[]');
   customs.splice(index, 1);
-  localStorage.setItem('nudge_custom_lifelines', JSON.stringify(customs));
-  renderCustomLifelines();
+  localStorage.setItem('nudge_custom_intercepts', JSON.stringify(customs));
+  renderCustomIntercepts();
 }
 
-function renderCustomLifelines() {
-  const injectionPoint = document.getElementById('custom-lifelines-injection-point');
+function renderCustomIntercepts() {
+  const injectionPoint = document.getElementById('custom-intercepts-injection-point');
   if (!injectionPoint) return;
   
   injectionPoint.innerHTML = ''; 
-  const customs = JSON.parse(localStorage.getItem('nudge_custom_lifelines') || '[]');
+  const customs = JSON.parse(localStorage.getItem('nudge_custom_intercepts') || localStorage.getItem('nudge_custom_lifelines') || '[]');
   
   customs.forEach((c, index) => {
     if (!c.time) return;
@@ -683,7 +818,7 @@ function renderCustomLifelines() {
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
           <label class="toggle-switch"><input type="checkbox" checked><span class="slider"></span></label>
-          <button onclick="deleteCustomLifeline(${index})" style="background:none; border:none; color:#A8A29E; cursor:pointer; font-size:14px; padding:2px 6px;">✕</button>
+          <button onclick="deleteCustomIntercept(${index})" style="background:none; border:none; color:#A8A29E; cursor:pointer; font-size:14px; padding:2px 6px;">✕</button>
         </div>
       </div>
     `;
