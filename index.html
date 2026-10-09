@@ -69,6 +69,9 @@
     <!-- SCREEN 2: ONBOARDING PERSONALITY SELECTION -->
     <div id="screen-onboarding-2" class="screen">
       <div style="width: 100%; margin: auto 0;">
+        <!-- Live Countdown / Tier Banner -->
+        <div id="screen2-status-banner" style="width: 100%; padding: 10px 14px; border-radius: 12px; font-size: 12px; margin-bottom: 16px; border: 1px solid #EAE3D9; text-align: center;"></div>
+
         <h2 class="title-large" style="font-size: 24px; margin-bottom: 24px;">Identify Your Friction Line</h2>
         
         <div class="onboarding-options">
@@ -92,12 +95,16 @@
     <div id="screen-dashboard" class="screen">
       <div style="width: 100%;">
 
-        <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: -10px; padding: 0 4px;">
+        <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 4px;">
           <button class="btn-text-nav" onclick="userLogout()" style="font-size: 11px; color: #A8A29E;">🚪 Log Out</button>
           <button id="audio-mute-toggle" class="btn-text-nav" onclick="toggleAudioMuteSystem()" style="font-size: 16px; background: none; border: none; cursor: pointer;">🔊 Sound On</button>
         </div>
 
-        <div class="metric-ribbon" style="margin-bottom: 16px; margin-top: 12px;">
+        <!-- Live Countdown / Tier Banner -->
+        <div id="screen3-status-banner" style="width: 100%; padding: 10px 14px; border-radius: 12px; font-size: 12px; margin-bottom: 14px; border: 1px solid #EAE3D9; text-align: center;"></div>
+
+        <!-- Updated 3-Block Metric Ribbon -->
+        <div class="metric-ribbon" style="margin-bottom: 16px;">
           <div class="metric-block">
             <span class="metric-num" id="stat-streaks">0</span>
             <span class="metric-lbl">Total Wins</span>
@@ -105,6 +112,10 @@
           <div class="metric-block">
             <span class="metric-num" id="stat-focus">0.0m</span>
             <span class="metric-lbl">Focus Reclaimed</span>
+          </div>
+          <div class="metric-block">
+            <span class="metric-num" id="stat-daily-uses" style="color: var(--accent-color);">0/4</span>
+            <span class="metric-lbl">Daily Intercepts</span>
           </div>
         </div>
 
@@ -156,18 +167,13 @@
               <label class="toggle-switch"><input type="checkbox" checked disabled><span class="slider"></span></label>
             </div>
             
-            <div id="custom-lifelines-injection-point"></div>
+            <div id="custom-intercepts-injection-point"></div>
 
-            <button id="custom-lifeline-add-btn" class="btn-bypass" style="width: 100%; border: 2px dashed var(--premium-color); padding: 14px; border-radius: 14px; margin-top: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; background: #FAF7F2;" onclick="openCustomLifelineModal()">
-              <div id="custom-lifeline-meta" class="deck-meta premium" style="margin-bottom: 4px;">PREMIUM UPGRADE</div>
-              <div id="custom-lifeline-text" style="font-weight: 800; font-size: 14px; color: var(--text-color);">⚡ + Add Custom Lifeline</div>
+            <button id="custom-intercept-add-btn" class="btn-bypass" style="width: 100%; border: 2px dashed var(--premium-color); padding: 14px; border-radius: 14px; margin-top: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; background: #FAF7F2;" onclick="openCustomInterceptModal()">
+              <div id="custom-intercept-meta" class="deck-meta premium" style="margin-bottom: 4px;">PREMIUM UPGRADE</div>
+              <div id="custom-intercept-text" style="font-weight: 800; font-size: 14px; color: var(--text-color);">⚡ + Add Custom Intercept</div>
             </button>
           </div>
-        </div>
-
-        <!-- Subtle Dashboard Subscription Link -->
-        <div style="margin-top: 28px; text-align: center; padding-bottom: 8px;">
-          <button id="btn-manage-subscription" onclick="openCustomerPortal()" style="display: none; background: none; border: none; color: #A8A29E; font-size: 11px; font-weight: 500; text-decoration: underline; cursor: pointer; opacity: 0.6;">Manage Subscription</button>
         </div>
 
       </div>
@@ -216,6 +222,8 @@
       
       <div style="width: 100%;">
         <button class="btn-primary" style="background-color: var(--success-color);" onclick="claimRewardStack()">Claim Reward Stack</button>
+        
+        <!-- Discreet Bottom Right Manage Subscription Link -->
         <div style="width: 100%; text-align: right; margin-top: 12px; padding-right: 2px;">
           <button id="btn-victory-manage-subscription" onclick="openCustomerPortal()" style="display: none; background: none; border: none; color: #A8A29E; font-size: 11px; font-weight: 500; text-decoration: underline; cursor: pointer; opacity: 0.6;">Manage Subscription</button>
         </div>
@@ -226,36 +234,57 @@
     <div id="paywall-overlay" class="paywall-modal">
       <div>
         <h2 id="paywall-title" class="title-large" style="color: var(--premium-color); text-align: left; font-size: 24px;">Break Free From the Loops</h2>
-        <p id="paywall-desc" class="body-text" style="font-size: 14px; text-align: left; margin-bottom: 20px;">Unlock behavioral overrides modeled on top neural productivity systems.</p>
+        <p id="paywall-desc" class="body-text" style="font-size: 14px; text-align: left; margin-bottom: 16px;">Unlock behavioral overrides modeled on top neural productivity systems.</p>
         
-        <div class="paywall-features">
+        <div class="paywall-features" style="margin: 10px 0;">
           <div class="feature-item"><span>⚡</span> <div><b>The Dopamine Swap:</b> Intercepts short-form screen addictions instantly.</div></div>
-          <div class="feature-item"><span>🧠</span> <div><b>The Anti-Overwhelm Protocol:</b> Permanently bypasses decision-making paralysis.</div></div>
-          <div class="feature-item"><span>📈</span> <div><b>Custom Time Anchors:</b> Set specific hour intercepts mapped to your exact behavioral slumps.</div></div>
+          <div class="feature-item"><span>🧠</span> <div><b>The Anti-Overwhelm Protocol:</b> Bypasses decision-making paralysis.</div></div>
+          <div class="feature-item"><span>📈</span> <div><b>Custom Time Anchors:</b> Set specific hour intercepts for daily slumps.</div></div>
         </div>
 
-        <div class="tier-box selected" onclick="selectTier(this)">
+        <!-- Tier 1: 2-Day Pass ($0.99) -->
+        <div class="tier-box selected" data-plan="pass" onclick="selectTier(this)">
+          <span style="float: right; font-weight: 800; color: var(--success-color);">$0.99</span>
+          <div style="font-weight: 700; font-size: 15px;">2-Day Unlimited Pass</div>
+          <div style="font-size: 12px; color: #7A7571; margin-top: 2px;">48 hours of unrestricted intercepts & all premium decks.</div>
+        </div>
+
+        <!-- Tier 2: Lifetime Freedom Access ($14.99) -->
+        <div class="tier-box" data-plan="lifetime" onclick="selectTier(this)">
           <span style="float: right; font-weight: 800; color: var(--premium-color);">$14.99</span>
           <div style="font-weight: 700; font-size: 15px;">Lifetime Freedom Access</div>
-          <div style="font-size: 12px; color: #7A7571; margin-top: 2px;">One-time transaction. No lingering payment stress.</div>
+          <div style="font-size: 12px; color: #7A7571; margin-top: 2px;">One-time payment. Permanent access forever.</div>
         </div>
-        <div class="tier-box" onclick="selectTier(this)">
+
+        <!-- Tier 3: Continuous Monthly ($2.99/mo) -->
+        <div class="tier-box" data-plan="monthly" onclick="selectTier(this)">
           <span style="float: right; font-weight: 800;">$2.99/mo</span>
           <div style="font-weight: 700; font-size: 15px;">Continuous Momentum Plan</div>
-          <div style="font-size: 12px; color: #7A7571; margin-top: 2px;">Billed monthly. Cancel instantly with zero friction hooks.</div>
+          <div style="font-size: 12px; color: #7A7571; margin-top: 2px;">Billed monthly. Cancel anytime with zero friction.</div>
         </div>
+
+        <!-- Promotional Coupon Box -->
+        <div style="margin-top: 14px; text-align: left;">
+          <label style="font-size: 11px; font-weight: 700; color: #9C8E80; text-transform: uppercase;">🎟️ Promotional Coupon</label>
+          <div style="display: flex; gap: 8px; margin-top: 4px;">
+            <input type="text" id="paywall-promo-input" placeholder="e.g. WELCOME99" style="flex: 1; padding: 10px 14px; border: 1px solid #EAE3D9; border-radius: 12px; font-size: 13px; text-transform: uppercase; outline: none; background: #FFFFFF;">
+            <button id="paywall-promo-btn" onclick="applyPromoCode()" style="padding: 10px 16px; background: var(--text-color); color: #FFF; border: none; border-radius: 12px; font-size: 12px; font-weight: 700; cursor: pointer;">Apply</button>
+          </div>
+          <div id="paywall-promo-msg" style="font-size: 11px; margin-top: 4px; font-weight: 600;"></div>
+        </div>
+
       </div>
 
-      <div style="width: 100%;">
-        <button class="btn-primary" style="background: var(--text-color);" onclick="simulatePurchase()">Upgrade Mindset Portfolio</button>
-        <button class="btn-bypass" style="display: block; margin: 12px auto 0 auto;" onclick="closePaywall()">Continue with Limitations</button>
+      <div style="width: 100%; margin-top: 16px;">
+        <button class="btn-primary" style="background: var(--text-color);" onclick="simulatePurchase()">Unlock Access Now</button>
+        <button class="btn-bypass" style="display: block; margin: 12px auto 0 auto;" onclick="closePaywall()">Continue with Free Limit (4/4)</button>
       </div>
     </div>
 
-    <!-- PREMIUM CUSTOM LIFELINE CREATION MODAL -->
-    <div id="custom-lifeline-modal" class="paywall-modal">
+    <!-- PREMIUM CUSTOM INTERCEPT CREATION MODAL -->
+    <div id="custom-intercept-modal" class="paywall-modal">
       <div style="text-align: left;">
-        <h2 class="title-large" style="font-size: 22px; color: var(--text-color);">Create Custom Lifeline</h2>
+        <h2 class="title-large" style="font-size: 22px; color: var(--text-color);">Create Custom Intercept</h2>
         <p class="body-text" style="font-size: 13px; margin-bottom: 20px;">Deploy an exact interception anchor to shatter your specific daily slump.</p>
         
         <div style="margin-bottom: 16px;">
@@ -283,8 +312,8 @@
         </div>
       </div>
       <div style="width: 100%;">
-        <button class="btn-primary" onclick="saveCustomLifeline()">Save Intercept</button>
-        <button class="btn-bypass" style="display: block; margin: 12px auto 0 auto;" onclick="closeCustomLifelineModal()">Cancel</button>
+        <button class="btn-primary" onclick="saveCustomIntercept()">Save Intercept</button>
+        <button class="btn-bypass" style="display: block; margin: 12px auto 0 auto;" onclick="closeCustomInterceptModal()">Cancel</button>
       </div>
     </div>
 
