@@ -350,7 +350,7 @@ function applyPremiumUIVisuals() {
 
     const manageBtn = document.getElementById('btn-manage-subscription');
     if (manageBtn) {
-      manageBtn.style.display = 'block';
+      manageBtn.style.display = 'inline-block';
     }
   }
 }
@@ -395,12 +395,16 @@ async function simulatePurchase() {
   }
 }
 
-function checkStripeRedirectStatus() {
+async function checkStripeRedirectStatus() {
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('session') === 'success') {
+    const returnedEmail = urlParams.get('email') || localStorage.getItem('nudge_user_email');
+    if (returnedEmail) {
+      localStorage.setItem('nudge_user_email', returnedEmail.trim().toLowerCase());
+    }
     localStorage.setItem('nudge_premium_user', 'true');
     applyPremiumUIVisuals();
-    syncLifetimeProgressToCloud();
+    await syncLifetimeProgressToCloud();
     alert("🎉 Premium Area is Now Unlocked!");
     window.history.replaceState({}, document.title, window.location.pathname);
     switchScreen('screen-dashboard');
@@ -415,11 +419,11 @@ async function openCustomerPortal() {
   }
 
   const portalBtn = document.getElementById('btn-manage-subscription');
-  const originalText = portalBtn ? portalBtn.innerText : "⚙️ Manage / Cancel Subscription";
+  const originalText = portalBtn ? portalBtn.innerText : "Manage Subscription";
   
   if (portalBtn) {
-    portalBtn.innerText = "LOADING BILLING PORTAL...";
-    portalBtn.style.opacity = "0.7";
+    portalBtn.innerText = "Loading Billing Portal...";
+    portalBtn.style.opacity = "0.5";
   }
 
   try {
@@ -444,7 +448,7 @@ async function openCustomerPortal() {
   } finally {
     if (portalBtn) {
       portalBtn.innerText = originalText;
-      portalBtn.style.opacity = "1";
+      portalBtn.style.opacity = "0.7";
     }
   }
 }
