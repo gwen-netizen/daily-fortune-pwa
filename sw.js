@@ -1,37 +1,22 @@
-// sw.js - Handles push events and focuses the PWA tab
+const CACHE_NAME = 'nudge-pwa-v1';
+const ASSETS_TO_CACHE = [
+  '/',
+  '/index.html',
+  '/styles.css',
+  '/app.js',
+  '/manifest.json',
+  '/icon-192.png',
+  '/icon-512.png'
+];
 
-self.addEventListener('push', function(event) {
-  let data = { title: "2-min", body: "Tap to break your friction loop." };
-  if (event.data) {
-    try { data = event.data.json(); } 
-    catch (e) { data.body = event.data.text(); }
-  }
-
+self.addEventListener('install', (event) => {
   event.waitUntil(
-    self.registration.showNotification(data.title, {
-      body: data.body,
-      icon: "https://flaticon.com",
-      vibrate: [100, 50, 100],
-      data: { url: "/" }
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE))
   );
 });
 
-self.addEventListener('notificationclick', function(event) {
-  event.notification.close();
-  const urlToOpen = (event.notification.data && event.notification.data.url) ? event.notification.data.url : '/';
-
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
-      for (let i = 0; i < clientList.length; i++) {
-        let client = clientList[i];
-        if (client.url.includes(urlToOpen) && 'focus' in client) {
-          return client.focus();
-        }
-      }
-      if (clients.openWindow) {
-        return clients.openWindow(urlToOpen);
-      }
-    })
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request).then((response) => response || fetch(event.request))
   );
 });
