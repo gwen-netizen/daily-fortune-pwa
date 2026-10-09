@@ -12,11 +12,10 @@ module.exports = async function handler(req, res) {
 
   // ----------------------------------------------------
   // 1. CLOUD PROGRESS BACKUP (POST)
-  // SECURED: Cannot elevate or mutate `premium_user`
   // ----------------------------------------------------
   if (req.method === 'POST') {
     try {
-      const { email, total_wins, focus_reclaimed, device_id } = req.body;
+      const { email, total_wins, focus_reclaimed, device_id, pass_expires_at } = req.body;
       if (!email) return res.status(400).json({ error: "Email is required" });
 
       const lowerEmail = email.trim().toLowerCase();
@@ -37,18 +36,32 @@ module.exports = async function handler(req, res) {
         }
       }
 
-      // Fetch existing user profile to preserve system-managed fields
       const { data: existingProfile } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('email', lowerEmail)
         .maybeSingle();
 
+      let targetPremium = existingProfile ? existingProfile.premium_user : false;
+      let targetPassExpires = existingProfile ? existingProfile.pass_expires_at : null;
+
+      if (pass_expires_at) {
+        targetPassExpires = pass_expires_at;
+        targetPremium = true;
+      }
+
+      // Check for expiration
+      if (targetPassExpires && new Date(targetPassExpires).getTime() < Date.now()) {
+        targetPremium = false;
+        targetPassExpires = null;
+      }
+
       const updatePayload = { 
         email: lowerEmail, 
         total_wins: typeof total_wins === 'number' ? total_wins : (existingProfile?.total_wins || 0), 
         focus_reclaimed: typeof focus_reclaimed === 'number' ? focus_reclaimed : (existingProfile?.focus_reclaimed || 0.0),
-        premium_user: existingProfile ? existingProfile.premium_user : false // Preserves existing DB value strictly
+        premium_user: targetPremium,
+        pass_expires_at: targetPassExpires
       };
 
       if (device_id) {
@@ -121,7 +134,6 @@ module.exports = async function handler(req, res) {
           return res.status(401).json({ error: "Invalid or expired access code. Please try requesting a new one." });
         }
 
-        // Bind active_device_id to this newly verified device
         const { data: profileData } = await supabase
           .from('user_profiles')
           .upsert({ 
@@ -138,7 +150,7 @@ module.exports = async function handler(req, res) {
       }
 
       if (action === 'get_profile') {
-        const { data: profileData } = await supabase
+        let { data: profileData } = await supabase
           .from('user_profiles')
           .select('*')
           .eq('email', lowerEmail)
@@ -150,7 +162,20 @@ module.exports = async function handler(req, res) {
             code: "DEVICE_MISMATCH"
           });
         }
-          
+
+        // Expiration check
+        if (profileData && profileData.pass_expires_at) {
+          if (new Date(profileData.pass_expires_at).getTime() < Date.now()) {
+            await supabase
+              .from('user_profiles')
+              .update({ premium_user: false, pass_expires_at: null })
+              .eq('email', lowerEmail);
+
+            profileData.premium_user = false;
+            profileData.pass_expires_at = null;
+          }
+        }
+
         return res.status(200).json({ profile: profileData || { premium_user: false } });
       }
 
