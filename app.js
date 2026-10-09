@@ -21,17 +21,54 @@ function getApiUrl(path) {
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+function getDeviceId() {
+  let deviceId = localStorage.getItem('nudge_device_id');
+  if (!deviceId) {
+    deviceId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : 'dev_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+    localStorage.setItem('nudge_device_id', deviceId);
+  }
+  return deviceId;
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
   updateMetricDashboard();
   checkStripeRedirectStatus();
   applyPremiumUIVisuals(); 
   initializeMuteUISystem(); 
   renderCustomLifelines();
 
-  // Persistent Session Guard: Prevent OTP trigger on page refresh if already logged in
   const savedEmail = localStorage.getItem('nudge_user_email');
+  const deviceId = getDeviceId();
+
   if (savedEmail && savedEmail.includes('@')) {
-    switchScreen('screen-dashboard');
+    try {
+      const endpoint = getApiUrl(`/api/sync-user?email=${encodeURIComponent(savedEmail)}&action=get_profile&device_id=${encodeURIComponent(deviceId)}`);
+      const response = await fetch(endpoint);
+      
+      if (response.status === 409) {
+        alert("🔒 Session Expired: Your account was accessed on another device.");
+        userLogout();
+        return;
+      }
+
+      const data = await response.json();
+      if (response.ok && data.profile) {
+        totalWinsCount = data.profile.total_wins || 0;
+        totalFocusReclaimed = data.profile.focus_reclaimed || 0.0;
+        localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
+        localStorage.setItem('nudge_minutes', totalFocusReclaimed.toString());
+
+        if (data.profile.premium_user) {
+          localStorage.setItem('nudge_premium_user', 'true');
+        } else {
+          localStorage.removeItem('nudge_premium_user');
+        }
+      }
+      updateMetricDashboard();
+      switchScreen('screen-dashboard');
+    } catch (e) {
+      switchScreen('screen-dashboard');
+    }
   } else {
     switchScreen('screen-onboarding-1');
   }
@@ -129,6 +166,7 @@ async function initializeUserProfile() {
 async function verifyOTP() {
   const userEmail = localStorage.getItem('nudge_user_email');
   const otpInput = document.getElementById('user-otp-input');
+  const deviceId = getDeviceId();
   
   if (!otpInput || otpInput.value.trim().length < 6) {
     alert("Please enter the full 6-digit access code sent to your email.");
@@ -146,7 +184,7 @@ async function verifyOTP() {
   }
 
   try {
-    const endpoint = getApiUrl(`/api/sync-user?email=${encodeURIComponent(userEmail)}&action=verify_otp&token=${encodeURIComponent(token)}`);
+    const endpoint = getApiUrl(`/api/sync-user?email=${encodeURIComponent(userEmail)}&action=verify_otp&token=${encodeURIComponent(token)}&device_id=${encodeURIComponent(deviceId)}`);
     const response = await fetch(endpoint);
     const data = await response.json();
 
@@ -192,19 +230,26 @@ function bypassToDiagnostic() {
 async function syncLifetimeProgressToCloud() {
   const userEmail = localStorage.getItem('nudge_user_email');
   const isPremium = localStorage.getItem('nudge_premium_user') === 'true';
+  const deviceId = getDeviceId();
   if (!userEmail) return;
 
   try {
-    await fetch(getApiUrl('/api/sync-user'), {
+    const response = await fetch(getApiUrl('/api/sync-user'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email: userEmail,
         total_wins: totalWinsCount,
         focus_reclaimed: totalFocusReclaimed,
-        premium_user: isPremium
+        premium_user: isPremium,
+        device_id: deviceId
       })
     });
+
+    if (response.status === 409) {
+      alert("🔒 Session Expired: Your account was accessed on another device.");
+      userLogout();
+    }
   } catch (err) {
     console.warn(err);
   }
@@ -268,7 +313,6 @@ function toggleAudioMuteSystem() {
 function applyPremiumUIVisuals() {
   const isUserPremium = localStorage.getItem('nudge_premium_user') === 'true';
   if (isUserPremium) {
-    // 1. Dopamine Deck Card
     const dopamineDeck = document.querySelector('.deck-item[data-category="dopamine"]');
     if (dopamineDeck) {
       const meta = dopamineDeck.querySelector('.deck-meta');
@@ -281,7 +325,6 @@ function applyPremiumUIVisuals() {
       if (name) name.innerHTML = "✅ The Dopamine Swap Deck";
     }
 
-    // 2. Overwhelm Deck Card
     const overwhelmDeck = document.querySelector('.deck-item[data-category="overwhelm"]');
     if (overwhelmDeck) {
       const meta = overwhelmDeck.querySelector('.deck-meta');
@@ -294,7 +337,6 @@ function applyPremiumUIVisuals() {
       if (name) name.innerHTML = "✅ The Anti-Overwhelm Deck";
     }
 
-    // 3. Custom Lifelines Button
     const customMeta = document.getElementById('custom-lifeline-meta');
     const customText = document.getElementById('custom-lifeline-text');
     if (customMeta) {
@@ -306,7 +348,6 @@ function applyPremiumUIVisuals() {
       customText.innerHTML = "✅ + Add Custom Lifeline";
     }
 
-    // 4. Reveal In-App Manage Subscription Button
     const manageBtn = document.getElementById('btn-manage-subscription');
     if (manageBtn) {
       manageBtn.style.display = 'block';
@@ -440,11 +481,18 @@ async function executeTurnaroundSpin() {
   else if (activeDeckName.includes("overwhelm")) categoryKey = 'overwhelm';
 
   const userEmail = localStorage.getItem('nudge_user_email') || 'anonymous_tester';
+  const deviceId = getDeviceId();
 
   try {
-    const endpoint = getApiUrl(`/api/get-task?category=${categoryKey}&friction=${mindFrictionStyle}&email=${encodeURIComponent(userEmail)}`);
+    const endpoint = getApiUrl(`/api/get-task?category=${categoryKey}&friction=${mindFrictionStyle}&email=${encodeURIComponent(userEmail)}&device_id=${encodeURIComponent(deviceId)}`);
     const response = await fetch(endpoint);
     
+    if (response.status === 409) {
+      alert("🔒 Session Expired: Your account was accessed on another device.");
+      userLogout();
+      return;
+    }
+
     if (!response.ok) {
       const serverErr = await response.json();
       throw new Error(serverErr.error || "Server validation failure.");
