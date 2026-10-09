@@ -10,9 +10,6 @@ module.exports = async function handler(req, res) {
 
   const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-  // ----------------------------------------------------
-  // 1. CLOUD PROGRESS BACKUP (POST)
-  // ----------------------------------------------------
   if (req.method === 'POST') {
     try {
       const { email, total_wins, focus_reclaimed, premium_user } = req.body;
@@ -35,9 +32,6 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  // ----------------------------------------------------
-  // 2. AUTHENTICATION & PROFILE RETRIEVAL (GET)
-  // ----------------------------------------------------
   if (req.method === 'GET') {
     const { email, action, token } = req.query;
     if (!email) return res.status(400).json({ error: "Email parameter missing" });
@@ -45,19 +39,17 @@ module.exports = async function handler(req, res) {
     const lowerEmail = email.toLowerCase();
     
     try {
-      // Action A: Request 6-digit OTP Code
       if (action === 'request_otp') {
         const { error } = await supabase.auth.signInWithOtp({ 
           email: lowerEmail,
           options: {
-            shouldCreateUser: true // Automatically registers new users
+            shouldCreateUser: true
           }
         });
         if (error) throw error;
         return res.status(200).json({ sent: true });
       }
       
-      // Action B: Verify 6-digit OTP Code (Fail-Safe Matrix)
       if (action === 'verify_otp') {
         if (!token) return res.status(400).json({ error: "Token missing" });
 
@@ -65,7 +57,6 @@ module.exports = async function handler(req, res) {
         let verifiedAuthData = null;
         let lastAuthError = null;
 
-        // Iterates through all possible Supabase OTP token types to guarantee verification
         for (const otpType of otpTypes) {
           const { data, error } = await supabase.auth.verifyOtp({
             email: lowerEmail,
@@ -82,11 +73,9 @@ module.exports = async function handler(req, res) {
         }
 
         if (!verifiedAuthData) {
-          console.warn("OTP verification rejected on all types for:", lowerEmail, lastAuthError);
-          return res.status(401).json({ error: "Invalid or expired code. Please try requesting a new one." });
+          return res.status(401).json({ error: "Invalid or expired access code. Please try requesting a new one." });
         }
 
-        // Fetch or initialize user profile from DB
         const { data: profileData } = await supabase
           .from('user_profiles')
           .select('*')
@@ -99,7 +88,6 @@ module.exports = async function handler(req, res) {
         });
       }
 
-      // Action C: Secure Premium Check after Payment
       if (action === 'get_profile') {
         const { data: profileData } = await supabase
           .from('user_profiles')
