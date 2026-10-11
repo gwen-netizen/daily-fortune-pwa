@@ -3,133 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Attention Lifeboat | Break The Loop</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Stop Spiraling. Start Moving.</title>
+    <meta name="description" content="One daily micro-task to break your mental freeze.">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="/icon-192.png">
+    
     <style>
-        body { font-family: 'Poppins', sans-serif; }
-        .gradient-bg {
-            background: linear-gradient(135deg, #FFF7ED 0%, #F0FDF4 50%, #EFF6FF 100%);
+        /* Base Reset & Typography */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
-        .btn-gradient {
-            background: linear-gradient(90deg, #A855F7 0%, #0D9488 100%);
+        
+        body {
+            background-color: #0B0F19;
+            color: #F9FAFB;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Utility Classes */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, #F9FAFB 0%, #9CA3AF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Buttons & Inputs */
+        .btn-primary {
+            background-color: #6366F1;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.1s ease, box-shadow 0.2s ease;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        /* Sections */
+        .hero {
+            padding: 12vh 0 8vh;
+            text-align: center;
+        }
+
+        .pwa-guide {
+            background-color: #111827;
+            padding: 24px 0;
+            text-align: center;
+            border-top: 1px solid #1F2937;
+            border-bottom: 1px solid #1F2937;
+        }
+
+        .social-proof {
+            padding: 80px 0;
+        }
+
+        .checkout {
+            background-color: #111827;
+            padding: 80px 0 120px;
+            text-align: center;
         }
     </style>
 </head>
-<body class="gradient-bg min-h-screen flex flex-col items-center py-12 px-4 space-y-8">
+<body>
 
-    <!-- SECTION 1: THE HERO HOOK -->
-    <div class="w-full max-w-xl bg-white/85 border border-slate-200 backdrop-blur-md rounded-2xl p-6 md:p-8 shadow-sm text-center">
-        <h1 class="text-2xl md:text-3xl font-extrabold text-[#2E1065] leading-tight mb-6">
-            It started as a 30-minute casual scroll.<br>Now it’s an endless 2-hour loop.
-        </h1>
-        
-        <div class="text-left max-w-md mx-auto space-y-2 mb-6 text-slate-700 text-sm md:text-base font-medium">
-            <p>• <strong>The Reality:</strong> One quick video became unstoppable consumption.</p>
-            <p>• <strong>The State:</strong> Your mind is trapped in work, desperately needing a breather.</p>
-            <p>• <strong>The Problem:</strong> You’ve simply forgotten the healthy way to break away.</p>
+    <!-- 1. The Frictionless Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <!-- Simulated 3-Second Visual Hook Placeholder -->
+            <div style="width: 100%; max-width: 280px; height: 160px; background: linear-gradient(45deg, #1F2937, #374151); border-radius: 20px; margin: 0 auto 30px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 40px rgba(99, 102, 241, 0.15); border: 1px solid #374151;">
+                <span style="color: #6366F1; font-weight: bold;">[Auto-playing UI Video]</span>
+            </div>
+
+            <h1 style="font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 800; margin-bottom: 15px; letter-spacing: -0.04em; line-height: 1.1;" class="text-gradient">
+                Stop spiraling.<br>Start moving.
+            </h1>
+            
+            <p style="font-size: 1.15rem; color: #9CA3AF; margin-bottom: 40px; max-width: 480px; margin-left: auto; margin-right: auto;">
+                One daily micro-task to break your mental freeze. No menus. No choices. Just instant momentum.
+            </p>
+
+            <!-- Frictionless Action directly to sync-user API -->
+            <form action="/api/sync-user" method="POST" style="display: flex; flex-direction: column; align-items: center; gap: 12px; max-width: 340px; margin: 0 auto;">
+                <input type="email" name="email" placeholder="Enter email to start in 2 seconds" required 
+                       style="padding: 16px 20px; width: 100%; border-radius: 12px; border: 1px solid #374151; background: #1F2937; color: white; font-size: 1rem; outline: none;">
+                <button type="submit" class="btn-primary" style="padding: 16px 24px; width: 100%; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);">
+                    Launch App Instantly ⚡️
+                </button>
+            </form>
         </div>
+    </section>
 
-        <h2 class="text-xl font-extrabold text-[#0D9488] tracking-wide mb-4">
-            STOP FIGHTING YOUR OWN BRAIN.
-        </h2>
-        
-        <p class="text-sm font-medium text-slate-600 leading-normal mb-6">
-            You don’t lack willpower. You just need a nudge.
-        </p>
-
-        <button onclick="launchApp()" class="btn-gradient w-full text-white text-lg font-extrabold py-4 px-6 rounded-xl transform transition-transform active:scale-98 shadow-md tracking-wider">
-            [ CLAIM YOUR FREE 2-DAY FULL PREMIUM PASS NOW ]
-        </button>
-    </div>
-
-    <!-- SECTION 2: THE FEATURE ARCHITECTURE -->
-    <div class="w-full max-w-xl bg-white/85 border border-slate-200 backdrop-blur-md rounded-2xl p-6 md:p-8 shadow-sm">
-        <h3 class="text-base font-extrabold text-[#2E1065] mb-5 text-center tracking-wider">
-            BUILT FOR HEAVY BRAIN FOG
-        </h3>
-        
-        <div class="space-y-3 text-sm text-slate-700 font-bold">
-            <div class="flex items-center space-x-3">
-                <span class="text-green-600 text-xl leading-none">✓</span>
-                <span>400+ unpredictable, loop-breaking nudges.</span>
-            </div>
-            <div class="flex items-center space-x-3">
-                <span class="text-green-600 text-xl leading-none">✓</span>
-                <span>Steals the best focus hacks from top psychology books.</span>
-            </div>
-            <div class="flex items-center space-x-3">
-                <span class="text-green-600 text-xl leading-none">✓</span>
-                <span>Instant gratification, weaponized to make you get things done.</span>
+    <!-- 2. Contextual PWA Installation Guide -->
+    <section class="pwa-guide">
+        <div class="container">
+            <p style="color: #0D9488; font-weight: 700; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.75rem;">
+                Skip the App Store download
+            </p>
+            <div style="display: flex; justify-content: center; align-items: center; gap: 15px; color: #D1D5DB; font-size: 0.9rem; flex-wrap: wrap;">
+                <div><strong>1.</strong> Tap Share</div>
+                <div style="color: #4B5563;">→</div>
+                <div><strong>2.</strong> Add to Home Screen</div>
+                <div style="color: #4B5563;">→</div>
+                <div><strong>3.</strong> Done.</div>
             </div>
         </div>
+    </section>
 
-        <button onclick="launchApp()" class="btn-gradient w-full text-white text-base font-extrabold py-3 px-6 rounded-xl mt-6 shadow-sm tracking-wide">
-            [ INITIALISE WORKSPACE & START NOW ]
-        </button>
-    </div>
-
-    <!-- SECTION 3: VISUAL PROOF SCREENSHOTS -->
-    <div class="w-full max-w-xl bg-white/85 border border-slate-200 backdrop-blur-md rounded-2xl p-6 shadow-sm">
-        <div class="grid grid-cols-2 gap-4 text-center">
-            <div class="space-y-2">
-                <img src="assets/image_9Mxfvr.png" alt="Target Setup" class="w-full h-auto rounded-lg border border-slate-100 shadow-sm" onerror="this.style.display='none'">
-                <p class="text-xs md:text-sm font-bold text-green-700">✓ 1-Tap Target Setup</p>
+    <!-- 3. Hyper-Specific Social Proof -->
+    <section class="social-proof">
+        <div class="container" style="display: flex; flex-direction: column; gap: 24px; max-width: 600px;">
+            
+            <!-- Tweet-style Card -->
+            <div style="background: #1F2937; padding: 24px; border-radius: 16px; border-left: 4px solid #6366F1;">
+                <p style="color: #F9FAFB; font-size: 1.05rem; line-height: 1.5; margin-bottom: 12px;">
+                    "I have severe ADHD and usually quit productivity apps in 2 days because configuring them is exhausting. This is the only thing that actually stuck. It just tells me what to do and gives me confetti when I do it."
+                </p>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 32px; height: 32px; background: #374151; border-radius: 50%;"></div>
+                    <span style="color: #9CA3AF; font-size: 0.9rem; font-weight: 500;">@Alex_Builds</span>
+                </div>
             </div>
-            <div class="space-y-2">
-                <img src="assets/image_s6ea8z.png" alt="Countdown Timer" class="w-full h-auto rounded-lg border border-slate-100 shadow-sm" onerror="this.style.display='none'">
-                <p class="text-xs md:text-sm font-bold text-green-700">✓ 120-Sec Active Timer</p>
+
+            <!-- Reddit-style Card -->
+            <div style="background: #1F2937; padding: 24px; border-radius: 16px; border-left: 4px solid #0D9488;">
+                <p style="color: #F9FAFB; font-size: 1.05rem; line-height: 1.5; margin-bottom: 12px;">
+                    "Saved me from a 4-hour review spiral. When my brain freezes, I just open this, tap once, and do the one task it gives me. It genuinely breaks the paralysis."
+                </p>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="color: #ef4444; font-weight: bold; font-size: 1.2rem;">↑</span>
+                    <span style="color: #9CA3AF; font-size: 0.9rem; font-weight: 500;">r/productivity • 4.2k Upvotes</span>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- 4. Ruthless Decision Minimization Checkout -->
+    <section class="checkout">
+        <div class="container">
+            <h2 style="color: #F9FAFB; font-size: clamp(2rem, 4vw, 2.5rem); font-weight: 800; margin-bottom: 16px;">
+                Unlock your momentum.
+            </h2>
+            <p style="color: #9CA3AF; font-size: 1.1rem; margin-bottom: 48px; max-width: 500px; margin-left: auto; margin-right: auto;">
+                No complicated tiers. Just full access to daily tasks, instant syncing, and streak tracking.
+            </p>
+            
+            <div style="background: #1F2937; max-width: 380px; margin: 0 auto; padding: 40px 30px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); border: 1px solid #374151;">
+                <h3 style="color: #E5E7EB; font-size: 1.2rem; margin-bottom: 12px; font-weight: 600;">Lifetime Access</h3>
+                <div style="font-size: 3.5rem; font-weight: 800; color: #0D9488; margin-bottom: 30px; line-height: 1;">
+                    $19<span style="font-size: 1.2rem; color: #6B7280; font-weight: 500;">/once</span>
+                </div>
+                
+                <!-- Directly hitting the checkout API -->
+                <form action="/api/create-checkout-session" method="POST">
+                    <button type="submit" class="btn-primary" style="width: 100%; padding: 18px; font-size: 1.15rem; background-color: #0D9488;">
+                        Get Started Now
+                    </button>
+                </form>
+                <p style="color: #6B7280; font-size: 0.85rem; margin-top: 20px; display: flex; justify-content: center; align-items: center; gap: 6px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    Secure 1-Tap Checkout
+                </p>
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- SECTION 4: OUTCOME MATRIX -->
-    <div class="w-full max-w-xl bg-white/85 border border-slate-200 backdrop-blur-md rounded-2xl p-6 md:p-8 shadow-sm">
-        <h3 class="text-base font-extrabold text-[#2E1065] mb-4 text-center tracking-widest">CHOOSE YOUR TARGET RESULT</h3>
-        
-        <div class="space-y-4 text-sm text-slate-700 font-medium leading-relaxed">
-            <p>⚡ <strong class="text-slate-900">CHARISMA DECK</strong> ── Prepare for and secure successful, high-impact meetings.</p>
-            <p>🔥 <strong class="text-slate-900">DOPAMINE DECK</strong> ── Receive an immediate burst of radical confidence.</p>
-            <p>💎 <strong class="text-slate-900">WEALTH DECK</strong> ── For an ultra-lightweight focus reset right before sleep.</p>
-            <p>🌊 <strong class="text-slate-900">OVERWHELM DECK</strong> ── Shatter chaos and trigger instant laser focus.</p>
-        </div>
-    </div>
-
-    <!-- SECTION 5: PREMIUM CAPABILITIES -->
-    <div class="w-full max-w-xl bg-white/85 border border-slate-200 backdrop-blur-md rounded-2xl p-6 md:p-8 shadow-sm text-left">
-        <h3 class="text-sm font-extrabold text-[#0D9488] mb-4 text-center tracking-widest">PREMIUM ENHANCEMENTS</h3>
-        <div class="space-y-3 text-xs md:text-sm text-slate-600 leading-relaxed">
-            <p><strong class="text-slate-900">🚨 Proactive Custom Intercept Alarms:</strong> Set strategic circuit breakers at your peak slump hours to intercept infinite scrolling loops automatically.</p>
-            <div class="w-full h-px bg-slate-200 my-2"></div>
-            <p><strong class="text-slate-900">🧠 High-Dopamine Refreshes:</strong> Turn task execution into an engaging game that leaves you completely energized for real work.</p>
-        </div>
-    </div>
-
-    <!-- SECTION 6: THE PRIMARY LIFELINE FINALE -->
-    <div class="w-full max-w-xl text-center">
-        <button onclick="launchApp()" class="btn-gradient w-full text-white text-lg font-extrabold py-5 px-6 rounded-xl transform transition-transform active:scale-98 shadow-md tracking-wider">
-            [ CLAIM 2-DAY FULL PREMIUM PASS & BREAK LOOP NOW ]
-        </button>
-    </div>
-
-    <script>
-        // DEVICE SESSION DETECTOR: Skip landing page if already signed up/logged in on this device
-        (function() {
-            const savedEmail = localStorage.getItem('nudge_user_email');
-            if (savedEmail && savedEmail.includes('@')) {
-                const urlParams = new URLSearchParams(window.location.search);
-                const promo = urlParams.get('promo');
-                const targetUrl = promo ? `/app?promo=${promo}` : '/app';
-                window.location.href = targetUrl;
-            }
-        })();
-
-        // APP LAUNCHER
-        function launchApp() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const promo = urlParams.get('promo') || 'PREMIUM99';
-            window.location.href = `/app?promo=${promo}`;
-        }
-    </script>
 </body>
 </html>
