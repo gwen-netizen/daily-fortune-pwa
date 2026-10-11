@@ -7,115 +7,187 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Poppins', sans-serif; }
-        
-        /* Warm, calming oatmeal background instead of clinical or chaotic gradients */
-        .gamified-bg {
-            background-color: #FDFBF7;
-            background-image: linear-gradient(180deg, #FDFBF7 0%, #F4F1EA 100%);
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background-color: #FDFBF7; /* Soft Oatmeal Base */
+            color: #1E293B; /* Deep Slate */
         }
         
-        /* Friendly, high-momentum coral button with soft shadow */
+        .text-slate-dark { color: #1E293B; }
+        .text-habit-green { color: #10B981; }
+        
+        /* High-momentum, friendly CTA */
         .btn-gamified {
             background-color: #FF6B6B;
-            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.25);
-            transition: all 0.15s ease;
+            box-shadow: 0 8px 24px rgba(255, 107, 107, 0.25);
+            transition: all 0.2s ease;
         }
         .btn-gamified:hover {
-            background-color: #ff5252;
-            box-shadow: 0 10px 25px rgba(255, 107, 107, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(255, 107, 107, 0.35);
+        }
+        .btn-gamified:active { 
+            transform: translateY(1px); 
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.2);
+        }
+
+        /* Soft, approachable UI cards */
+        .card-soft {
+            background: #FFFFFF;
+            border-radius: 32px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(226, 232, 240, 0.6);
         }
     </style>
 </head>
-<body class="gamified-bg min-h-screen flex flex-col items-center py-12 px-4 space-y-8">
+<body class="min-h-screen flex flex-col font-sans overflow-x-hidden">
 
-    <div class="w-full max-w-xl bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm text-center">
-        <h1 class="text-2xl md:text-3xl font-extrabold text-[#1E293B] leading-tight mb-6">
-            It started as a 30-minute casual scroll.<br>Now it’s an endless 2-hour loop.
-        </h1>
+    <!-- HERO SECTION -->
+    <section class="w-full px-6 py-16 md:py-24 max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+        <div class="w-full lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left">
+            <h1 class="text-3xl md:text-4xl lg:text-5xl font-extrabold text-slate-dark leading-tight mb-8">
+                It started as a 30-minute casual scroll.<br>
+                <span class="text-[#FF6B6B]">Now it’s an endless 2-hour loop.</span>
+            </h1>
+            
+            <div class="space-y-4 mb-10 text-slate-600 text-base md:text-lg font-medium max-w-lg">
+                <p class="flex items-start gap-3">
+                    <span class="text-habit-green mt-1">✦</span>
+                    <span><strong>The Reality:</strong> One quick video became unstoppable consumption.</span>
+                </p>
+                <p class="flex items-start gap-3">
+                    <span class="text-habit-green mt-1">✦</span>
+                    <span><strong>The State:</strong> Your mind is trapped in work, desperately needing a breather.</span>
+                </p>
+                <p class="flex items-start gap-3">
+                    <span class="text-habit-green mt-1">✦</span>
+                    <span><strong>The Problem:</strong> You’ve simply forgotten the healthy way to break away.</span>
+                </p>
+            </div>
+
+            <button onclick="launchApp()" class="btn-gamified w-full md:w-auto text-white text-lg font-extrabold py-5 px-8 rounded-full tracking-wide">
+                [ CLAIM YOUR FREE 2-DAY FULL PREMIUM PASS NOW ]
+            </button>
+        </div>
+
+        <div class="w-full lg:w-1/2 relative">
+            <!-- Hero Image Integration -->
+            <img src="meditating.png" alt="Finding peace and breaking the loop" class="w-full h-auto rounded-[40px] shadow-2xl object-cover border-4 border-white transform hover:scale-[1.02] transition-transform duration-500">
+        </div>
+    </section>
+
+    <!-- WILLPOWER SECTION (WITH HERO.PNG) -->
+    <section class="w-full px-6 py-16 bg-white border-y border-slate-100">
+        <div class="max-w-3xl mx-auto text-center flex flex-col items-center">
+            <h2 class="text-2xl md:text-3xl font-extrabold text-habit-green tracking-wide mb-4">
+                STOP FIGHTING YOUR OWN BRAIN.
+            </h2>
+            <p class="text-lg font-medium text-slate-500 leading-normal mb-10">
+                You don’t lack willpower. You just need a nudge.
+            </p>
+            
+            <!-- Secondary Image Integration -->
+            <img src="hero.png" alt="Get a Nudge Interface" class="w-full max-w-md h-auto rounded-[32px] shadow-xl border-4 border-white mb-10">
+            
+            <button onclick="launchApp()" class="btn-gamified w-full md:w-2/3 text-white text-base md:text-lg font-extrabold py-4 px-6 rounded-full tracking-wide">
+                [ INITIALISE GUEST WORKSPACE & START NOW ]
+            </button>
+        </div>
+    </section>
+
+    <!-- FEATURES & MECHANICS SECTION -->
+    <section class="w-full px-6 py-20 max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
         
-        <div class="text-left max-w-md mx-auto space-y-2 mb-6 text-slate-600 text-sm md:text-base font-medium">
-            <p>• <strong>The Reality:</strong> One quick video became unstoppable consumption.</p>
-            <p>• <strong>The State:</strong> Your mind is trapped in work, desperately needing a breather.</p>
-            <p>• <strong>The Problem:</strong> You’ve simply forgotten the healthy way to break away.</p>
+        <!-- Brain Fog Card -->
+        <div class="card-soft p-8 md:p-10 flex flex-col justify-center">
+            <h3 class="text-lg md:text-xl font-extrabold text-slate-dark mb-6 tracking-wider">
+                BUILT FOR HEAVY BRAIN FOG
+            </h3>
+            <div class="space-y-5 text-base text-slate-600 font-medium">
+                <div class="flex items-start gap-4">
+                    <span class="text-habit-green text-2xl leading-none bg-green-50 p-2 rounded-full">✓</span>
+                    <span class="mt-1">400+ unpredictable, loop-breaking nudges.</span>
+                </div>
+                <div class="flex items-start gap-4">
+                    <span class="text-habit-green text-2xl leading-none bg-green-50 p-2 rounded-full">✓</span>
+                    <span class="mt-1">Steals the best focus hacks from top psychology books.</span>
+                </div>
+                <div class="flex items-start gap-4">
+                    <span class="text-habit-green text-2xl leading-none bg-green-50 p-2 rounded-full">✓</span>
+                    <span class="mt-1">Instant gratification, weaponized to make you get things done.</span>
+                </div>
+            </div>
         </div>
 
-        <h2 class="text-xl font-extrabold text-[#10B981] tracking-wide mb-4">
-            STOP FIGHTING YOUR OWN BRAIN.
-        </h2>
+        <!-- UI Previews Card -->
+        <div class="card-soft p-8 md:p-10">
+            <div class="grid grid-cols-2 gap-6 h-full items-center">
+                <div class="space-y-4 text-center">
+                    <div class="bg-slate-50 rounded-2xl p-2 border border-slate-100">
+                        <img src="assets/image_9Mxfvr.png" alt="Target Setup" class="w-full h-auto rounded-xl shadow-sm" onerror="this.style.display='none'">
+                    </div>
+                    <p class="text-sm font-bold text-habit-green">✓ 1-Tap Target Setup</p>
+                </div>
+                <div class="space-y-4 text-center">
+                    <div class="bg-slate-50 rounded-2xl p-2 border border-slate-100">
+                        <img src="assets/image_s6ea8z.png" alt="Countdown Timer" class="w-full h-auto rounded-xl shadow-sm" onerror="this.style.display='none'">
+                    </div>
+                    <p class="text-sm font-bold text-habit-green">✓ 120-Sec Active Timer</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- DECKS & PREMIUM ENHANCEMENTS -->
+    <section class="w-full px-6 py-12 max-w-4xl mx-auto flex flex-col gap-8">
         
-        <p class="text-sm font-medium text-slate-500 leading-normal mb-6">
-            You don’t lack willpower. You just need a nudge.
-        </p>
-
-        <button onclick="launchApp()" class="btn-gamified w-full text-white text-lg font-extrabold py-4 px-6 rounded-full transform active:scale-95 tracking-wider">
-            [ CLAIM YOUR FREE 2-DAY FULL PREMIUM PASS NOW ]
-        </button>
-    </div>
-
-    <div class="w-full max-w-xl bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm">
-        <h3 class="text-base font-extrabold text-[#1E293B] mb-5 text-center tracking-wider">
-            BUILT FOR HEAVY BRAIN FOG
-        </h3>
-        
-        <div class="space-y-3 text-sm text-slate-600 font-bold">
-            <div class="flex items-center space-x-3">
-                <span class="text-[#10B981] text-xl leading-none">✓</span>
-                <span>400+ unpredictable, loop-breaking nudges.</span>
-            </div>
-            <div class="flex items-center space-x-3">
-                <span class="text-[#10B981] text-xl leading-none">✓</span>
-                <span>Steals the best focus hacks from top psychology books.</span>
-            </div>
-            <div class="flex items-center space-x-3">
-                <span class="text-[#10B981] text-xl leading-none">✓</span>
-                <span>Instant gratification, weaponized to make you get things done.</span>
+        <!-- Target Result Decks -->
+        <div class="card-soft p-8 md:p-10">
+            <h3 class="text-lg md:text-xl font-extrabold text-slate-dark mb-6 text-center tracking-widest">
+                CHOOSE YOUR TARGET RESULT
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm md:text-base text-slate-600 font-medium">
+                <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100 hover:border-green-200 transition-colors">
+                    <p>⚡ <strong class="text-slate-800">CHARISMA DECK</strong><br>Prepare for and secure successful, high-impact meetings.</p>
+                </div>
+                <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100 hover:border-green-200 transition-colors">
+                    <p>🔥 <strong class="text-slate-800">DOPAMINE DECK</strong><br>Receive an immediate burst of radical confidence.</p>
+                </div>
+                <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100 hover:border-green-200 transition-colors">
+                    <p>💎 <strong class="text-slate-800">WEALTH DECK</strong><br>For an ultra-lightweight focus reset right before sleep.</p>
+                </div>
+                <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100 hover:border-green-200 transition-colors">
+                    <p>🌊 <strong class="text-slate-800">OVERWHELM DECK</strong><br>Shatter chaos and trigger instant laser focus.</p>
+                </div>
             </div>
         </div>
 
-        <button onclick="launchApp()" class="btn-gamified w-full text-white text-base font-extrabold py-3 px-6 rounded-full mt-6 tracking-wide transform active:scale-95">
-            [ INITIALISE GUEST WORKSPACE & START NOW ]
-        </button>
-    </div>
-
-    <div class="w-full max-w-xl bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
-        <div class="grid grid-cols-2 gap-4 text-center">
-            <div class="space-y-2">
-                <img src="assets/image_9Mxfvr.png" alt="Target Setup" class="w-full h-auto rounded-2xl border border-slate-100 shadow-sm" onerror="this.style.display='none'">
-                <p class="text-xs md:text-sm font-bold text-[#10B981]">✓ 1-Tap Target Setup</p>
+        <!-- Premium Enhancements -->
+        <div class="card-soft p-8 md:p-10 bg-white">
+            <h3 class="text-lg font-extrabold text-habit-green mb-6 text-center tracking-widest">
+                PREMIUM ENHANCEMENTS
+            </h3>
+            <div class="space-y-6 text-sm md:text-base text-slate-600 leading-relaxed max-w-2xl mx-auto">
+                <p class="flex gap-4 items-start">
+                    <span class="text-xl">🚨</span>
+                    <span><strong class="text-slate-800">Proactive Custom Intercept Alarms:</strong> Set strategic circuit breakers at your peak slump hours to intercept infinite scrolling loops automatically.</span>
+                </p>
+                <div class="w-full h-px bg-slate-100"></div>
+                <p class="flex gap-4 items-start">
+                    <span class="text-xl">🧠</span>
+                    <span><strong class="text-slate-800">High-Dopamine Refreshes:</strong> Turn task execution into an engaging game that leaves you completely energized for real work.</span>
+                </p>
             </div>
-            <div class="space-y-2">
-                <img src="assets/image_s6ea8z.png" alt="Countdown Timer" class="w-full h-auto rounded-2xl border border-slate-100 shadow-sm" onerror="this.style.display='none'">
-                <p class="text-xs md:text-sm font-bold text-[#10B981]">✓ 120-Sec Active Timer</p>
-            </div>
         </div>
-    </div>
+    </section>
 
-    <div class="w-full max-w-xl bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm">
-        <h3 class="text-base font-extrabold text-[#1E293B] mb-4 text-center tracking-widest">CHOOSE YOUR TARGET RESULT</h3>
-        
-        <div class="space-y-4 text-sm text-slate-600 font-medium leading-relaxed">
-            <p>⚡ <strong class="text-slate-800">CHARISMA DECK</strong> ── Prepare for and secure successful, high-impact meetings.</p>
-            <p>🔥 <strong class="text-slate-800">DOPAMINE DECK</strong> ── Receive an immediate burst of radical confidence.</p>
-            <p>💎 <strong class="text-slate-800">WEALTH DECK</strong> ── For an ultra-lightweight focus reset right before sleep.</p>
-            <p>🌊 <strong class="text-slate-800">OVERWHELM DECK</strong> ── Shatter chaos and trigger instant laser focus.</p>
-        </div>
-    </div>
-
-    <div class="w-full max-w-xl bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm text-left">
-        <h3 class="text-sm font-extrabold text-[#10B981] mb-4 text-center tracking-widest">PREMIUM ENHANCEMENTS</h3>
-        <div class="space-y-3 text-xs md:text-sm text-slate-600 leading-relaxed">
-            <p><strong class="text-slate-800">🚨 Proactive Custom Intercept Alarms:</strong> Set strategic circuit breakers at your peak slump hours to intercept infinite scrolling loops automatically.</p>
-            <div class="w-full h-px bg-slate-100 my-3"></div>
-            <p><strong class="text-slate-800">🧠 High-Dopamine Refreshes:</strong> Turn task execution into an engaging game that leaves you completely energized for real work.</p>
-        </div>
-    </div>
-
-    <div class="w-full max-w-xl text-center pb-8">
-        <button onclick="launchApp()" class="btn-gamified w-full text-white text-lg font-extrabold py-5 px-6 rounded-full transform active:scale-95 tracking-wider">
+    <!-- FINAL CTA -->
+    <section class="w-full px-6 py-16 mb-12 text-center max-w-3xl mx-auto">
+        <button onclick="launchApp()" class="btn-gamified w-full text-white text-lg md:text-xl font-extrabold py-6 px-8 rounded-full tracking-wider">
             [ CLAIM 2-DAY FULL PREMIUM PASS & BREAK LOOP NOW ]
         </button>
-    </div>
+        <p class="text-sm text-slate-400 font-medium mt-6">Takes 30 seconds to start. No willpower required.</p>
+    </section>
 
     <script>
         // DEVICE SESSION DETECTOR: Skip landing page if already signed up/logged in on this device
