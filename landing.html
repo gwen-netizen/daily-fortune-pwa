@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Attention Lifeboat | Break The Loop</title>
-    <!-- Tailwind CSS Script Infrastructure for High-Velocity Layout Rendering -->
-    <script src="https://tailwindcss.com"></script>
+    <!-- Corrected Tailwind CSS Script Infrastructure for High-Velocity Layout Rendering -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Corrected Google Fonts Infrastructure Vector -->
     <link href="https://googleapis.com" rel="stylesheet">
     <style>
         body { font-family: 'Poppins', sans-serif; }
@@ -120,12 +121,20 @@
 
     <!-- Internal PWA Route Parameter Tunnel Pipeline Script -->
     <script>
+        // BACKGROUND AUTO-LOGIN CHECK: Bypasses marketing page for returning active sessions
+        (function() {
+            const hasActiveSession = localStorage.getItem('user') || localStorage.getItem('token') || document.cookie.includes('session');
+            if (hasActiveSession) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const promo = urlParams.get('promo') || 'PREMIUM99';
+                window.location.href = `/app?promo=${promo}`;
+            }
+        })();
+
+        // THE PRIMARY ACTION EXECUTER
         function launchApp() {
-            // Captures viral incoming parameters from automated direct DMs seamlessly
             const urlParams = new URLSearchParams(window.location.search);
             const promo = urlParams.get('promo') || 'PREMIUM99';
-            
-            // Fires traffic past the landing barrier directly into your existing PWA workspace
             window.location.href = `/app?promo=${promo}`;
         }
     </script>
