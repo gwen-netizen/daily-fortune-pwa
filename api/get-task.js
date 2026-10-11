@@ -14,8 +14,8 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
-    const { category, friction, email, device_id } = req.query;
-
+    const { category, friction, email } = req.query;
+    
     if (!category) {
       return res.status(400).json({ error: "Missing required category parameter." });
     }
@@ -29,19 +29,11 @@ module.exports = async function handler(req, res) {
     if (cleanEmail && cleanEmail !== 'anonymous_tester') {
       const { data } = await supabase
         .from('user_profiles')
-        .select('premium_user, active_device_id, pass_expires_at')
+        .select('premium_user, pass_expires_at')
         .eq('email', cleanEmail)
         .maybeSingle();
-
+      
       userProfile = data;
-    }
-
-    // Verify Single Active Device
-    if (userProfile && userProfile.active_device_id && device_id && userProfile.active_device_id !== device_id) {
-      return res.status(409).json({ 
-        error: "Session Expired: Your account was accessed on another device.",
-        code: "DEVICE_MISMATCH"
-      });
     }
 
     // Supabase 48-Hour Pass Expiration Verification
