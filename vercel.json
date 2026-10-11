@@ -1,26 +1,9 @@
 {
   "version": 2,
   "cleanUrls": true,
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/(styles\\.css|app\\.js|manifest\\.json|sw\\.js|icon-192\\.png|icon-512\\.png|assets/.*)",
-      "dest": "/$1"
-    },
-    {
-      "src": "/app",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/",
-      "dest": "/landing.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/landing.html"
-    }
+  "rewrites": [
+    { "source": "/app", "destination": "/index.html" },
+    { "source": "/", "destination": "/landing.html" },
+    { "source": "/((?!api/|styles\\.css|app\\.js|manifest\\.json|sw\\.js|icon-192\\.png|icon-512\\.png|assets/|landing\\.html|index\\.html).*)", "destination": "/landing.html" }
   ]
 }
