@@ -1,26 +1,22 @@
 {
   "version": 2,
   "cleanUrls": true,
-  "builds": [
-    { "src": "index.html", "use": "@vercel/static" },
-    { "src": "styles.css", "use": "@vercel/static" },
-    { "src": "app.js", "use": "@vercel/static" },
-    { "src": "sw.js", "use": "@vercel/static" },
-    { "src": "manifest.json", "use": "@vercel/static" },
-    { "src": "icon-192.png", "use": "@vercel/static" },
-    { "src": "icon-512.png", "use": "@vercel/static" },
-    { "src": "api/create-checkout-session.js", "use": "@vercel/node" },
-    { "src": "api/create-portal-session.js", "use": "@vercel/node" },
-    { "src": "api/get-task.js", "use": "@vercel/node" },
-    { "src": "api/sync-user.js", "use": "@vercel/node" },
-    { "src": "api/webhook.js", "use": "@vercel/node" }
-  ],
-  "routes": [
-    { "src": "/api/create-checkout-session", "dest": "/api/create-checkout-session.js" },
-    { "src": "/api/create-portal-session", "dest": "/api/create-portal-session.js" },
-    { "src": "/api/get-task", "dest": "/api/get-task.js" },
-    { "src": "/api/sync-user", "dest": "/api/sync-user.js" },
-    { "src": "/api/webhook", "dest": "/api/webhook.js" },
-    { "src": "/(.*)", "dest": "/index.html" }
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/app",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/(styles\\.css|app\\.js|manifest\\.json|sw\\.js|assets/.*)",
+      "destination": "/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/landing.html"
+    }
   ]
 }
