@@ -8,7 +8,7 @@
     },
     {
       "source": "/app",
-      "destination": "/index.html"
+      "destination": "/app.html"
     },
     {
       "source": "/(styles\\.css|app\\.js|manifest\\.json|sw\\.js|assets/.*)",
