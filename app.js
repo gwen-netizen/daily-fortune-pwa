@@ -514,8 +514,8 @@ async function simulatePurchase() {
       body: JSON.stringify({
         planType: planType,
         email: userEmail,
-        successUrl: window.location.origin + '/?session=success',
-        cancelUrl: window.location.origin
+        successUrl: window.location.origin + '/app?session=success',
+        cancelUrl: window.location.origin + '/app'
       })
     });
 
@@ -578,7 +578,7 @@ async function openCustomerPortal() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email: userEmail,
-        returnUrl: window.location.origin
+        returnUrl: window.location.origin + '/app'
       })
     });
 
