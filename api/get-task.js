@@ -6,7 +6,7 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -36,6 +36,7 @@ module.exports = async function handler(req, res) {
       userProfile = data;
     }
 
+    // Verify Single Active Device
     if (userProfile && userProfile.active_device_id && device_id && userProfile.active_device_id !== device_id) {
       return res.status(409).json({ 
         error: "Session Expired: Your account was accessed on another device.",
@@ -43,6 +44,7 @@ module.exports = async function handler(req, res) {
       });
     }
 
+    // Supabase 48-Hour Pass Expiration Verification
     if (userProfile && userProfile.pass_expires_at) {
       const expiresAt = new Date(userProfile.pass_expires_at).getTime();
       if (Date.now() >= expiresAt) {
