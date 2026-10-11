@@ -1,7 +1,7 @@
-const CACHE_NAME = 'nudge-pwa-v2';
+const CACHE_NAME = 'nudge-pwa-v3';
 const ASSETS_TO_CACHE = [
+  '/',
   '/app',
-  '/index.html',
   '/styles.css',
   '/app.js',
   '/manifest.json',
