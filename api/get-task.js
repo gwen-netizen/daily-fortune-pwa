@@ -15,7 +15,7 @@ module.exports = async function handler(req, res) {
 
   try {
     const { category, friction, email, device_id } = req.query;
-    
+
     if (!category) {
       return res.status(400).json({ error: "Missing required category parameter." });
     }
@@ -32,7 +32,7 @@ module.exports = async function handler(req, res) {
         .select('premium_user, active_device_id, pass_expires_at')
         .eq('email', cleanEmail)
         .maybeSingle();
-      
+
       userProfile = data;
     }
 
