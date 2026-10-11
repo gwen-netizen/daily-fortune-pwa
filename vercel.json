@@ -1,9 +1,25 @@
 {
   "version": 2,
   "cleanUrls": true,
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/landing.html",
+      "permanent": false
+    }
+  ],
   "rewrites": [
-    { "source": "/app", "destination": "/index.html" },
-    { "source": "/", "destination": "/landing.html" },
-    { "source": "/((?!api/|styles\\.css|app\\.js|manifest\\.json|sw\\.js|icon-192\\.png|icon-512\\.png|assets/|landing\\.html|index\\.html).*)", "destination": "/landing.html" }
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/app",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/(styles\\.css|app\\.js|manifest\\.json|sw\\.js|icon-192\\.png|icon-512\\.png|assets/.*)",
+      "destination": "/$1"
+    }
   ]
 }
