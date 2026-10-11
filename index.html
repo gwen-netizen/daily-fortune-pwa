@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stop Spiraling. Start Moving.</title>
-    <meta name="description" content="One daily micro-task to break your mental freeze.">
+    <title>Break the freeze. Get your first win.</title>
+    <meta name="description" content="A gamified daily push to help you build habits without overthinking.">
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" type="image/png" href="/icon-192.png">
     
@@ -14,60 +14,72 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: ui-rounded, 'Hiragino Maru Gothic ProN', Quicksand, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
         
         body {
-            background-color: #0B0F19;
-            color: #F9FAFB;
+            background-color: #FDFBF7; /* Warm, calming oat background */
+            color: #1E293B; /* Deep, confident slate text */
             line-height: 1.6;
             -webkit-font-smoothing: antialiased;
         }
 
-        /* Utility Classes */
         .container {
-            max-width: 800px;
+            max-width: 750px;
             margin: 0 auto;
-            padding: 0 20px;
+            padding: 0 24px;
         }
 
-        .text-gradient {
-            background: linear-gradient(135deg, #F9FAFB 0%, #9CA3AF 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        /* Buttons & Inputs */
+        /* Fun, Encouraging Buttons */
         .btn-primary {
-            background-color: #6366F1;
+            background-color: #FF6B6B; /* Momentum Coral */
             color: white;
             border: none;
-            border-radius: 12px;
-            font-weight: bold;
-            font-size: 1.1rem;
+            border-radius: 100px; /* Pill shape for friendliness */
+            font-weight: 700;
+            font-size: 1.15rem;
             cursor: pointer;
-            transition: transform 0.1s ease, box-shadow 0.2s ease;
+            transition: transform 0.15s ease, box-shadow 0.2s ease;
             display: inline-flex;
             justify-content: center;
             align-items: center;
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.25);
         }
         
         .btn-primary:active {
-            transform: scale(0.98);
+            transform: scale(0.96);
+        }
+
+        /* Soft Form Inputs */
+        .input-friendly {
+            padding: 16px 24px;
+            width: 100%;
+            border-radius: 100px;
+            border: 2px solid #E2E8F0;
+            background: #FFFFFF;
+            color: #1E293B;
+            font-size: 1.05rem;
+            outline: none;
+            transition: border-color 0.2s;
+            text-align: center;
+        }
+        
+        .input-friendly:focus {
+            border-color: #10B981; /* Growth Green focus */
         }
 
         /* Sections */
         .hero {
-            padding: 12vh 0 8vh;
+            padding: 10vh 0 8vh;
             text-align: center;
         }
 
         .pwa-guide {
-            background-color: #111827;
+            background-color: #F8FAFC;
             padding: 24px 0;
             text-align: center;
-            border-top: 1px solid #1F2937;
-            border-bottom: 1px solid #1F2937;
+            border-top: 1px dashed #CBD5E1;
+            border-bottom: 1px dashed #CBD5E1;
         }
 
         .social-proof {
@@ -75,111 +87,117 @@
         }
 
         .checkout {
-            background-color: #111827;
+            background-color: #F1F5F9;
             padding: 80px 0 120px;
             text-align: center;
+            border-top: 2px solid #E2E8F0;
         }
     </style>
 </head>
 <body>
 
-    <!-- 1. The Frictionless Hero Section -->
+    <!-- 1. The Frictionless, Encouraging Hero -->
     <section class="hero">
         <div class="container">
-            <!-- Simulated 3-Second Visual Hook Placeholder -->
-            <div style="width: 100%; max-width: 280px; height: 160px; background: linear-gradient(45deg, #1F2937, #374151); border-radius: 20px; margin: 0 auto 30px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 40px rgba(99, 102, 241, 0.15); border: 1px solid #374151;">
-                <span style="color: #6366F1; font-weight: bold;">[Auto-playing UI Video]</span>
+            <!-- Playful, rounded video container -->
+            <div style="width: 100%; max-width: 260px; height: 160px; background: #E2E8F0; border-radius: 32px; margin: 0 auto 32px; display: flex; align-items: center; justify-content: center; box-shadow: 0 12px 30px rgba(0,0,0,0.05); overflow: hidden;">
+                <span style="color: #64748B; font-weight: 600; font-size: 0.9rem;">[Auto-playing Confetti Video]</span>
             </div>
 
-            <h1 style="font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 800; margin-bottom: 15px; letter-spacing: -0.04em; line-height: 1.1;" class="text-gradient">
-                Stop spiraling.<br>Start moving.
+            <h1 style="font-size: clamp(2.2rem, 5vw, 3.5rem); font-weight: 800; margin-bottom: 16px; letter-spacing: -0.02em; line-height: 1.15;">
+                Your brain is full.<br>Let's make this easy.
             </h1>
             
-            <p style="font-size: 1.15rem; color: #9CA3AF; margin-bottom: 40px; max-width: 480px; margin-left: auto; margin-right: auto;">
-                One daily micro-task to break your mental freeze. No menus. No choices. Just instant momentum.
+            <p style="font-size: 1.15rem; color: #475569; margin-bottom: 40px; max-width: 480px; margin-left: auto; margin-right: auto;">
+                A gentle, gamified nudge that gives you just one simple task to kickstart your momentum. No overthinking allowed.
             </p>
 
-            <!-- Frictionless Action directly to sync-user API -->
-            <form action="/api/sync-user" method="POST" style="display: flex; flex-direction: column; align-items: center; gap: 12px; max-width: 340px; margin: 0 auto;">
-                <input type="email" name="email" placeholder="Enter email to start in 2 seconds" required 
-                       style="padding: 16px 20px; width: 100%; border-radius: 12px; border: 1px solid #374151; background: #1F2937; color: white; font-size: 1rem; outline: none;">
-                <button type="submit" class="btn-primary" style="padding: 16px 24px; width: 100%; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);">
-                    Launch App Instantly ⚡️
+            <form action="/api/sync-user" method="POST" style="display: flex; flex-direction: column; align-items: center; gap: 14px; max-width: 340px; margin: 0 auto;">
+                <input type="email" name="email" placeholder="Drop your email to hop in" required class="input-friendly">
+                <button type="submit" class="btn-primary" style="padding: 16px 24px; width: 100%;">
+                    Get your first win 🎈
                 </button>
             </form>
+            <p style="color: #94A3B8; font-size: 0.85rem; margin-top: 16px; font-weight: 500;">
+                Join 14,000+ others breaking their freeze.
+            </p>
         </div>
     </section>
 
-    <!-- 2. Contextual PWA Installation Guide -->
+    <!-- 2. Gentle PWA Installation Anchor -->
     <section class="pwa-guide">
         <div class="container">
-            <p style="color: #0D9488; font-weight: 700; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.75rem;">
-                Skip the App Store download
+            <p style="color: #10B981; font-weight: 700; margin-bottom: 12px; font-size: 0.85rem;">
+                Keep it handy (No App Store needed)
             </p>
-            <div style="display: flex; justify-content: center; align-items: center; gap: 15px; color: #D1D5DB; font-size: 0.9rem; flex-wrap: wrap;">
+            <div style="display: flex; justify-content: center; align-items: center; gap: 12px; color: #64748B; font-size: 0.95rem; flex-wrap: wrap; font-weight: 500;">
                 <div><strong>1.</strong> Tap Share</div>
-                <div style="color: #4B5563;">→</div>
+                <div style="color: #CBD5E1;">→</div>
                 <div><strong>2.</strong> Add to Home Screen</div>
-                <div style="color: #4B5563;">→</div>
-                <div><strong>3.</strong> Done.</div>
+                <div style="color: #CBD5E1;">→</div>
+                <div><strong>3.</strong> Start playing.</div>
             </div>
         </div>
     </section>
 
-    <!-- 3. Hyper-Specific Social Proof -->
+    <!-- 3. Relatable, Confident Social Proof -->
     <section class="social-proof">
         <div class="container" style="display: flex; flex-direction: column; gap: 24px; max-width: 600px;">
             
-            <!-- Tweet-style Card -->
-            <div style="background: #1F2937; padding: 24px; border-radius: 16px; border-left: 4px solid #6366F1;">
-                <p style="color: #F9FAFB; font-size: 1.05rem; line-height: 1.5; margin-bottom: 12px;">
-                    "I have severe ADHD and usually quit productivity apps in 2 days because configuring them is exhausting. This is the only thing that actually stuck. It just tells me what to do and gives me confetti when I do it."
+            <!-- Encouraging User Card 1 -->
+            <div style="background: #FFFFFF; padding: 32px; border-radius: 24px; border: 1px solid #E2E8F0; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+                <div style="display: flex; gap: 4px; margin-bottom: 16px; color: #F59E0B; font-size: 1.2rem;">
+                    ★ ★ ★ ★ ★
+                </div>
+                <p style="color: #334155; font-size: 1.1rem; line-height: 1.6; margin-bottom: 16px; font-weight: 500;">
+                    "Usually, I download a habit app, spend 2 hours categorizing things, get overwhelmed, and delete it. This app just gives me a little push. It actually works because I don't have to think."
                 </p>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <div style="width: 32px; height: 32px; background: #374151; border-radius: 50%;"></div>
-                    <span style="color: #9CA3AF; font-size: 0.9rem; font-weight: 500;">@Alex_Builds</span>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 40px; height: 40px; background: #FFEDD5; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">🪴</div>
+                    <span style="color: #64748B; font-size: 0.95rem; font-weight: 600;">Sarah M. • Habit Builder</span>
                 </div>
             </div>
 
-            <!-- Reddit-style Card -->
-            <div style="background: #1F2937; padding: 24px; border-radius: 16px; border-left: 4px solid #0D9488;">
-                <p style="color: #F9FAFB; font-size: 1.05rem; line-height: 1.5; margin-bottom: 12px;">
-                    "Saved me from a 4-hour review spiral. When my brain freezes, I just open this, tap once, and do the one task it gives me. It genuinely breaks the paralysis."
+            <!-- Encouraging User Card 2 -->
+            <div style="background: #FFFFFF; padding: 32px; border-radius: 24px; border: 1px solid #E2E8F0; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+                <div style="display: flex; gap: 4px; margin-bottom: 16px; color: #F59E0B; font-size: 1.2rem;">
+                    ★ ★ ★ ★ ★
+                </div>
+                <p style="color: #334155; font-size: 1.1rem; line-height: 1.6; margin-bottom: 16px; font-weight: 500;">
+                    "I struggle heavily with task paralysis. The gamified aspect feels like a gentle game rather than a stressful to-do list. I finally have a 14-day streak on something."
                 </p>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="color: #ef4444; font-weight: bold; font-size: 1.2rem;">↑</span>
-                    <span style="color: #9CA3AF; font-size: 0.9rem; font-weight: 500;">r/productivity • 4.2k Upvotes</span>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 40px; height: 40px; background: #E0E7FF; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">⚡️</div>
+                    <span style="color: #64748B; font-size: 0.95rem; font-weight: 600;">David T. • Procrastinator in recovery</span>
                 </div>
             </div>
 
         </div>
     </section>
 
-    <!-- 4. Ruthless Decision Minimization Checkout -->
+    <!-- 4. Simple, Low-Pressure Checkout -->
     <section class="checkout">
         <div class="container">
-            <h2 style="color: #F9FAFB; font-size: clamp(2rem, 4vw, 2.5rem); font-weight: 800; margin-bottom: 16px;">
-                Unlock your momentum.
+            <h2 style="color: #1E293B; font-size: clamp(1.8rem, 4vw, 2.2rem); font-weight: 800; margin-bottom: 12px;">
+                Ready to break the cycle?
             </h2>
-            <p style="color: #9CA3AF; font-size: 1.1rem; margin-bottom: 48px; max-width: 500px; margin-left: auto; margin-right: auto;">
-                No complicated tiers. Just full access to daily tasks, instant syncing, and streak tracking.
+            <p style="color: #475569; font-size: 1.1rem; margin-bottom: 40px; max-width: 400px; margin-left: auto; margin-right: auto;">
+                One tiny investment in yourself. Unlock all daily tasks, streaks, and your personal habit journey.
             </p>
             
-            <div style="background: #1F2937; max-width: 380px; margin: 0 auto; padding: 40px 30px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); border: 1px solid #374151;">
-                <h3 style="color: #E5E7EB; font-size: 1.2rem; margin-bottom: 12px; font-weight: 600;">Lifetime Access</h3>
-                <div style="font-size: 3.5rem; font-weight: 800; color: #0D9488; margin-bottom: 30px; line-height: 1;">
-                    $19<span style="font-size: 1.2rem; color: #6B7280; font-weight: 500;">/once</span>
+            <div style="background: #FFFFFF; max-width: 360px; margin: 0 auto; padding: 40px 32px; border-radius: 32px; box-shadow: 0 20px 40px rgba(0,0,0,0.06); border: 1px solid #E2E8F0;">
+                <h3 style="color: #64748B; font-size: 1rem; margin-bottom: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Lifetime Access</h3>
+                <div style="font-size: 3.5rem; font-weight: 800; color: #1E293B; margin-bottom: 24px; line-height: 1;">
+                    $19<span style="font-size: 1.1rem; color: #94A3B8; font-weight: 600;">/once</span>
                 </div>
                 
-                <!-- Directly hitting the checkout API -->
                 <form action="/api/create-checkout-session" method="POST">
-                    <button type="submit" class="btn-primary" style="width: 100%; padding: 18px; font-size: 1.15rem; background-color: #0D9488;">
-                        Get Started Now
+                    <button type="submit" class="btn-primary" style="width: 100%; padding: 18px; font-size: 1.15rem; background-color: #10B981; box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25);">
+                        Start Building Habits
                     </button>
                 </form>
-                <p style="color: #6B7280; font-size: 0.85rem; margin-top: 20px; display: flex; justify-content: center; align-items: center; gap: 6px;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                    Secure 1-Tap Checkout
+                <p style="color: #94A3B8; font-size: 0.85rem; margin-top: 20px; font-weight: 500;">
+                    Secure, 1-tap checkout. No recurring fees.
                 </p>
             </div>
         </div>
