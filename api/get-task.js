@@ -1,11 +1,11 @@
-import { createClient } from '@supabase/supabase-js';
-import taskMatrix from './tasks.js';
+const { createClient } = require('@supabase/supabase-js');
+const taskMatrix = require('../lib/tasks.js');
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY; 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
@@ -90,4 +90,4 @@ export default async function handler(req, res) {
     console.error("Task Engine Failure:", error);
     return res.status(500).json({ error: "Internal processing pipeline failure.", details: error.message });
   }
-}
+};
