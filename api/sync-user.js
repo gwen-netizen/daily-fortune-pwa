@@ -19,7 +19,6 @@ module.exports = async function handler(req, res) {
       const now = Date.now();
 
       if (now >= expiresAt) {
-        // Hardcode Supabase update to set premium_user = false and pass_expires_at = null
         await supabase
           .from('user_profiles')
           .update({ premium_user: false, pass_expires_at: null })
@@ -37,25 +36,10 @@ module.exports = async function handler(req, res) {
   // ----------------------------------------------------
   if (req.method === 'POST') {
     try {
-      const { email, total_wins, focus_reclaimed, device_id, promo_code } = req.body;
+      const { email, total_wins, focus_reclaimed, promo_code } = req.body;
       if (!email) return res.status(400).json({ error: "Email is required" });
 
       const lowerEmail = email.trim().toLowerCase();
-
-      if (device_id) {
-        const { data: currentProf } = await supabase
-          .from('user_profiles')
-          .select('active_device_id')
-          .eq('email', lowerEmail)
-          .maybeSingle();
-
-        if (currentProf && currentProf.active_device_id && currentProf.active_device_id !== device_id) {
-          return res.status(409).json({ 
-            error: "Device Session Conflict: Account is active on another device.",
-            code: "DEVICE_MISMATCH"
-          });
-        }
-      }
 
       const { data: existingProfile } = await supabase
         .from('user_profiles')
@@ -66,7 +50,6 @@ module.exports = async function handler(req, res) {
       let isPremium = existingProfile ? existingProfile.premium_user : false;
       let passExpiry = existingProfile ? existingProfile.pass_expires_at : null;
 
-      // Check for Promo Code PREMIUM99
       if (promo_code === 'PREMIUM99') {
         isPremium = true;
         passExpiry = new Date(Date.now() + (48 * 3600 * 1000)).toISOString();
@@ -79,10 +62,6 @@ module.exports = async function handler(req, res) {
         premium_user: isPremium,
         pass_expires_at: passExpiry
       };
-
-      if (device_id) {
-        updatePayload.active_device_id = device_id;
-      }
 
       let { data, error } = await supabase
         .from('user_profiles')
@@ -104,7 +83,7 @@ module.exports = async function handler(req, res) {
   // 2. AUTHENTICATION & PROFILE RETRIEVAL (GET)
   // ----------------------------------------------------
   if (req.method === 'GET') {
-    const { email, action, token, device_id, promo_code } = req.query;
+    const { email, action, token, promo_code } = req.query;
     if (!email) return res.status(400).json({ error: "Email parameter missing" });
 
     const lowerEmail = email.trim().toLowerCase();
@@ -162,12 +141,19 @@ module.exports = async function handler(req, res) {
 
         let { data: profileData } = await supabase
           .from('user_profiles')
-          .upsert({ 
-            email: lowerEmail, 
-            active_device_id: device_id || null
-          }, { onConflict: 'email' })
-          .select()
-          .single();
+          .select('*')
+          .eq('email', lowerEmail)
+          .maybeSingle();
+
+        // Safety fallback if row does not exist yet
+        if (!profileData) {
+          const { data: newProfile } = await supabase
+            .from('user_profiles')
+            .upsert({ email: lowerEmail, premium_user: false }, { onConflict: 'email' })
+            .select()
+            .single();
+          profileData = newProfile;
+        }
 
         profileData = await sanitizePassStatus(profileData);
 
@@ -183,13 +169,6 @@ module.exports = async function handler(req, res) {
           .select('*')
           .eq('email', lowerEmail)
           .maybeSingle();
-
-        if (profileData && profileData.active_device_id && device_id && profileData.active_device_id !== device_id) {
-          return res.status(409).json({ 
-            error: "Session Conflict: Account is logged in on another device.",
-            code: "DEVICE_MISMATCH"
-          });
-        }
 
         profileData = await sanitizePassStatus(profileData);
           
