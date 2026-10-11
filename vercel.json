@@ -1,25 +1,26 @@
 {
   "version": 2,
   "cleanUrls": true,
-  "redirects": [
+  "routes": [
     {
-      "source": "/",
-      "destination": "/landing.html",
-      "permanent": false
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
     },
     {
-      "source": "/app",
-      "destination": "/index.html"
+      "src": "/(styles\\.css|app\\.js|manifest\\.json|sw\\.js|icon-192\\.png|icon-512\\.png|assets/.*)",
+      "dest": "/$1"
     },
     {
-      "source": "/(styles\\.css|app\\.js|manifest\\.json|sw\\.js|assets/.*)",
-      "destination": "/$1"
+      "src": "/app",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/",
+      "dest": "/landing.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/landing.html"
     }
   ]
 }
