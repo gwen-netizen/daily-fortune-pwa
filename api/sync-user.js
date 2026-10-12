@@ -5,12 +5,14 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  // VITAL FIX: Explicitly prevents Vercel from serving stale cached login payloads
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-  // Helper to enforce 48h pass expiration inside Supabase
   async function sanitizePassStatus(profile) {
     if (!profile) return profile;
 
@@ -31,9 +33,6 @@ module.exports = async function handler(req, res) {
     return profile;
   }
 
-  // ----------------------------------------------------
-  // 1. CLOUD PROGRESS BACKUP & PROMO SYNC (POST)
-  // ----------------------------------------------------
   if (req.method === 'POST') {
     try {
       const { email, total_wins, focus_reclaimed, promo_code } = req.body;
@@ -79,9 +78,6 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  // ----------------------------------------------------
-  // 2. AUTHENTICATION & PROFILE RETRIEVAL (GET)
-  // ----------------------------------------------------
   if (req.method === 'GET') {
     const { email, action, token, promo_code } = req.query;
     if (!email) return res.status(400).json({ error: "Email parameter missing" });
@@ -96,22 +92,16 @@ module.exports = async function handler(req, res) {
         });
         if (error) throw error;
 
-        let passExpiry = null;
-        let isPrem = false;
+        // VITAL FIX: Separated creation logic to completely avoid overriding existing rows
         if (promo_code === 'PREMIUM99') {
-          isPrem = true;
-          passExpiry = new Date(Date.now() + (48 * 3600 * 1000)).toISOString();
+          const passExpiry = new Date(Date.now() + (48 * 3600 * 1000)).toISOString();
+          await supabase.from('user_profiles').upsert({ email: lowerEmail, premium_user: true, pass_expires_at: passExpiry }, { onConflict: 'email' });
+        } else {
+          const { data: existing } = await supabase.from('user_profiles').select('email').eq('email', lowerEmail).maybeSingle();
+          if (!existing) {
+             await supabase.from('user_profiles').insert({ email: lowerEmail, premium_user: false, total_wins: 0, focus_reclaimed: 0 });
+          }
         }
-
-        await supabase
-          .from('user_profiles')
-          .upsert({ 
-            email: lowerEmail,
-            total_wins: 0,
-            focus_reclaimed: 0.0,
-            premium_user: isPrem,
-            pass_expires_at: passExpiry
-          }, { onConflict: 'email', ignoreDuplicates: !isPrem });
 
         return res.status(200).json({ sent: true });
       }
@@ -143,13 +133,13 @@ module.exports = async function handler(req, res) {
           .from('user_profiles')
           .select('*')
           .eq('email', lowerEmail)
-          .maybeSingle();
+          .limit(1)
+          .single();
 
-        // Safety fallback if row does not exist yet
         if (!profileData) {
           const { data: newProfile } = await supabase
             .from('user_profiles')
-            .upsert({ email: lowerEmail, premium_user: false }, { onConflict: 'email' })
+            .insert({ email: lowerEmail, premium_user: false, total_wins: 0, focus_reclaimed: 0 })
             .select()
             .single();
           profileData = newProfile;
@@ -168,7 +158,8 @@ module.exports = async function handler(req, res) {
           .from('user_profiles')
           .select('*')
           .eq('email', lowerEmail)
-          .maybeSingle();
+          .limit(1)
+          .single();
 
         profileData = await sanitizePassStatus(profileData);
           
