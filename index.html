@@ -5,222 +5,228 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Attention Lifeboat | Break The Loop</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { 
             font-family: 'Poppins', sans-serif; 
-            background-color: #5B21B6; /* Electric Violet - high energy, premium, game-like */
-            background-image: radial-gradient(circle at top right, #7C3AED, #4C1D95);
+            background-color: #FAFAFA; /* Clean, fatigue-reducing background */
+            color: #0F172A; /* Authoritative Deep Slate */
+        }
+
+        /* Velocity Orange - Impulsive, urgent, but professional */
+        .btn-velocity {
+            background-color: #FF5500;
             color: #FFFFFF;
+            box-shadow: 0 4px 14px rgba(255, 85, 0, 0.3);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-velocity:hover {
+            background-color: #E64D00;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 85, 0, 0.4);
+        }
+        .btn-velocity:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 8px rgba(255, 85, 0, 0.3);
         }
 
-        /* The Dopamine Hit Button - Tactile, Neon, Unmissable */
-        .btn-dopamine {
-            background-color: #D9FE36; /* Neon Lime - peak impulsive contrast against violet */
-            color: #111827;
+        /* Premium Utility Cards - Clean, satisfying, structured */
+        .card-utility {
+            background: #FFFFFF;
             border-radius: 24px;
-            box-shadow: 0 8px 0px #A3E635, 0 15px 25px rgba(217, 254, 54, 0.2);
-            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border: 2px solid #111827;
-        }
-        .btn-dopamine:active {
-            transform: translateY(8px);
-            box-shadow: 0 0px 0px #A3E635, 0 5px 10px rgba(217, 254, 54, 0.2);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 25px -3px rgba(0, 0, 0, 0.05);
+            border: 1px solid #E2E8F0;
         }
 
-        /* Tactile, playful app-like cards */
-        .card-pop {
-            background-color: #FFFFFF;
-            color: #111827;
-            border-radius: 32px;
-            box-shadow: 8px 8px 0px rgba(0,0,0,0.2);
-            border: 3px solid #111827;
-            transition: transform 0.2s;
-        }
-
-        /* Fun vibrant deck blocks */
+        /* Subtle interactive decks */
         .deck-block {
-            border-radius: 20px;
-            border: 3px solid #111827;
-            box-shadow: 4px 4px 0px rgba(0,0,0,0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
+            border-radius: 16px;
+            border: 1px solid #E2E8F0;
+            background: #F8FAFC;
+            transition: all 0.2s ease;
         }
-        .deck-block:hover { 
-            transform: translate(-2px, -2px);
-            box-shadow: 6px 6px 0px rgba(0,0,0,0.15); 
+        .deck-block:hover {
+            border-color: #4F46E5;
+            background: #FFFFFF;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.08);
+            transform: translateY(-2px);
         }
-        
-        .bg-cyan-pop { background-color: #67E8F9; }
-        .bg-pink-pop { background-color: #F9A8D4; }
-        .bg-yellow-pop { background-color: #FDE047; }
-        .bg-green-pop { background-color: #86EFAC; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col font-sans overflow-x-hidden pb-20">
 
     <!-- HERO SECTION -->
-    <section class="w-full px-6 py-12 md:py-20 max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+    <section class="w-full px-6 py-16 md:py-24 max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
         <div class="w-full lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left z-10">
             
-            <!-- Playful tag -->
-            <div class="bg-white/10 px-5 py-2 rounded-full text-[#D9FE36] font-bold text-sm mb-6 inline-block backdrop-blur-md border border-white/20 uppercase tracking-wider">
-                ⚡️ Break the paralysis
+            <div class="bg-indigo-50 px-4 py-2 rounded-full text-indigo-700 font-bold text-xs mb-6 inline-block border border-indigo-100 tracking-wider uppercase">
+                The Attention Lifeboat
             </div>
 
-            <h1 class="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-[1.1] mb-8 drop-shadow-md">
-                It started as a 30-minute casual scroll.<br>
-                <span class="text-[#D9FE36]">Now it’s an endless 2-hour loop.</span>
+            <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-slate-900 leading-[1.15] mb-8">
+                Break mind paralysis and snap out of the endless scroll in <span class="text-[#FF5500]">exactly 120 seconds.</span>
             </h1>
             
-            <div class="space-y-4 mb-10 text-white text-base md:text-lg font-bold max-w-lg bg-white/10 p-6 rounded-3xl border border-white/20 backdrop-blur-sm">
+            <div class="space-y-4 mb-10 text-slate-600 text-base md:text-lg font-medium max-w-lg">
                 <p class="flex items-start gap-3">
-                    <span class="text-[#D9FE36] text-xl leading-none mt-1">🎯</span>
+                    <span class="text-indigo-600 text-xl leading-none mt-1">✦</span>
                     <span><strong>The Reality:</strong> One quick video became unstoppable consumption.</span>
                 </p>
                 <p class="flex items-start gap-3">
-                    <span class="text-[#D9FE36] text-xl leading-none mt-1">🧠</span>
+                    <span class="text-indigo-600 text-xl leading-none mt-1">✦</span>
                     <span><strong>The State:</strong> Your mind is trapped in work, desperately needing a breather.</span>
                 </p>
                 <p class="flex items-start gap-3">
-                    <span class="text-[#D9FE36] text-xl leading-none mt-1">🚧</span>
+                    <span class="text-indigo-600 text-xl leading-none mt-1">✦</span>
                     <span><strong>The Problem:</strong> You’ve simply forgotten the healthy way to break away.</span>
                 </p>
             </div>
 
-            <button onclick="launchApp()" class="btn-dopamine w-full md:w-auto text-lg md:text-xl font-black py-5 px-8">
+            <button onclick="launchApp()" class="btn-velocity w-full md:w-auto text-lg font-bold py-4 px-8 rounded-xl tracking-wide">
                 CLAIM YOUR FREE 2-DAY FULL PREMIUM PASS NOW
             </button>
         </div>
 
         <div class="w-full lg:w-1/2 relative flex justify-center">
-            <!-- Hero Image Integration - Floating 3D Frame -->
-            <div class="relative bg-[#D9FE36] p-2 rounded-[40px] shadow-[8px_8px_0px_#111827] rotate-[3deg] hover:rotate-0 transition-transform duration-300 border-4 border-[#111827]">
-                <img src="meditating.png" alt="Finding peace and breaking the loop" class="w-full h-auto rounded-[32px] object-cover border-2 border-[#111827]">
-                <div class="absolute -top-5 -left-5 text-5xl drop-shadow-lg animate-bounce">🧘‍♀️</div>
+            <!-- Hero Image Integration - Clean, premium framing -->
+            <div class="relative bg-white p-2 rounded-[32px] shadow-2xl border border-slate-100">
+                <img src="meditating.png" alt="Finding peace and breaking the loop" class="w-full h-auto rounded-[24px] object-cover">
             </div>
         </div>
     </section>
 
     <!-- WILLPOWER SECTION (WITH HERO.PNG) -->
-    <section class="w-full px-6 py-20 mt-10 bg-[#FAFAF9] text-[#111827] border-y-4 border-[#111827]">
+    <section class="w-full px-6 py-20 bg-slate-50 border-y border-slate-200">
         <div class="max-w-4xl mx-auto flex flex-col items-center text-center">
-            <h2 class="text-3xl md:text-4xl font-black text-[#5B21B6] tracking-tight mb-4 uppercase">
+            <h2 class="text-2xl md:text-3xl font-extrabold text-indigo-900 tracking-wide mb-4">
                 STOP FIGHTING YOUR OWN BRAIN.
             </h2>
-            <p class="text-xl font-bold text-slate-500 mb-12">
-                You don’t lack willpower. You just need a nudge.
+            <p class="text-lg md:text-xl font-medium text-slate-500 mb-12 max-w-2xl">
+                You don’t lack willpower. You just need a perfectly timed, frictionless nudge.
             </p>
             
             <!-- Secondary Image Integration -->
             <div class="relative mb-12 w-full max-w-md">
-                <div class="bg-[#A855F7] p-2 rounded-[36px] shadow-[8px_8px_0px_#111827] border-4 border-[#111827] -rotate-[2deg]">
-                    <img src="hero.png" alt="Get a Nudge Interface" class="w-full h-auto rounded-[28px] border-2 border-[#111827]">
-                </div>
-                <div class="absolute -bottom-6 -right-6 text-6xl drop-shadow-xl animate-pulse">🔥</div>
+                <img src="hero.png" alt="Get a Nudge Interface" class="w-full h-auto rounded-[24px] shadow-xl border border-slate-200">
             </div>
             
-            <button onclick="launchApp()" class="btn-dopamine w-full md:w-3/4 text-lg md:text-xl font-black py-5 px-6 mt-4">
+            <button onclick="launchApp()" class="btn-velocity w-full md:w-2/3 text-lg font-bold py-4 px-6 rounded-xl tracking-wide">
                 [ INITIALISE GUEST WORKSPACE & START NOW ]
             </button>
         </div>
     </section>
 
     <!-- FEATURES & MECHANICS SECTION -->
-    <section class="w-full px-6 py-20 max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10">
+    <section class="w-full px-6 py-20 max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
         
         <!-- Brain Fog Card -->
-        <div class="card-pop p-8 md:p-12 flex flex-col justify-center">
-            <h3 class="text-2xl font-black text-[#5B21B6] mb-8 uppercase tracking-wide">
-                BUILT FOR HEAVY BRAIN FOG
+        <div class="card-utility p-8 md:p-10 flex flex-col justify-center">
+            <h3 class="text-lg md:text-xl font-extrabold text-slate-900 mb-8 tracking-wider uppercase">
+                Built For Heavy Brain Fog
             </h3>
-            <div class="space-y-6 text-lg text-slate-800 font-bold">
-                <div class="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border-2 border-slate-200">
-                    <span class="text-[#111827] text-2xl bg-[#D9FE36] w-12 h-12 flex items-center justify-center rounded-xl flex-shrink-0 border-2 border-[#111827]">✓</span>
-                    <span>400+ unpredictable, loop-breaking nudges.</span>
+            <div class="space-y-6 text-base text-slate-700 font-medium">
+                <div class="flex items-start gap-4">
+                    <span class="text-indigo-600 text-xl bg-indigo-50 w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0">✓</span>
+                    <span class="mt-1">400+ unpredictable, loop-breaking nudges.</span>
                 </div>
-                <div class="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border-2 border-slate-200">
-                    <span class="text-[#111827] text-2xl bg-[#D9FE36] w-12 h-12 flex items-center justify-center rounded-xl flex-shrink-0 border-2 border-[#111827]">✓</span>
-                    <span>Steals the best focus hacks from top psychology books.</span>
+                <div class="flex items-start gap-4">
+                    <span class="text-indigo-600 text-xl bg-indigo-50 w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0">✓</span>
+                    <span class="mt-1">Steals the best focus hacks from top psychology books.</span>
                 </div>
-                <div class="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border-2 border-slate-200">
-                    <span class="text-[#111827] text-2xl bg-[#D9FE36] w-12 h-12 flex items-center justify-center rounded-xl flex-shrink-0 border-2 border-[#111827]">✓</span>
-                    <span>Instant gratification, weaponized to make you get things done.</span>
+                <div class="flex items-start gap-4">
+                    <span class="text-indigo-600 text-xl bg-indigo-50 w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0">✓</span>
+                    <span class="mt-1">Instant gratification, weaponized to make you get things done.</span>
                 </div>
             </div>
         </div>
 
         <!-- UI Previews Card -->
-        <div class="card-pop p-8 md:p-12 bg-[#111827] text-white">
+        <div class="card-utility p-8 md:p-10 bg-slate-900 text-white border-slate-800">
+            <h3 class="text-lg md:text-xl font-extrabold text-white mb-8 tracking-wider uppercase text-center">
+                Fast & Frictionless
+            </h3>
             <div class="grid grid-cols-2 gap-6 h-full items-center">
                 <div class="space-y-4 text-center">
-                    <div class="bg-white/10 rounded-3xl p-3 border border-white/20">
-                        <img src="assets/image_9Mxfvr.png" alt="Target Setup" class="w-full h-auto rounded-2xl" onerror="this.style.display='none'">
+                    <div class="bg-slate-800 rounded-2xl p-3 border border-slate-700">
+                        <img src="assets/image_9Mxfvr.png" alt="Target Setup" class="w-full h-auto rounded-xl" onerror="this.style.display='none'">
                     </div>
-                    <p class="text-base font-black text-[#D9FE36]">✓ 1-Tap Target Setup</p>
+                    <p class="text-sm font-bold text-[#FF5500]">✓ 1-Tap Target Setup</p>
                 </div>
                 <div class="space-y-4 text-center">
-                    <div class="bg-white/10 rounded-3xl p-3 border border-white/20">
-                        <img src="assets/image_s6ea8z.png" alt="Countdown Timer" class="w-full h-auto rounded-2xl" onerror="this.style.display='none'">
+                    <div class="bg-slate-800 rounded-2xl p-3 border border-slate-700">
+                        <img src="assets/image_s6ea8z.png" alt="Countdown Timer" class="w-full h-auto rounded-xl" onerror="this.style.display='none'">
                     </div>
-                    <p class="text-base font-black text-[#D9FE36]">✓ 120-Sec Active Timer</p>
+                    <p class="text-sm font-bold text-[#FF5500]">✓ 120-Sec Active Timer</p>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- DECKS & PREMIUM ENHANCEMENTS -->
-    <section class="w-full px-6 py-12 max-w-4xl mx-auto flex flex-col gap-10">
+    <section class="w-full px-6 py-12 max-w-4xl mx-auto flex flex-col gap-8">
         
         <!-- Target Result Decks -->
-        <div class="card-pop p-8 md:p-12">
-            <h3 class="text-2xl font-black text-[#111827] mb-8 text-center uppercase tracking-wide">
-                CHOOSE YOUR TARGET RESULT
+        <div class="card-utility p-8 md:p-10">
+            <h3 class="text-lg md:text-xl font-extrabold text-slate-900 mb-8 text-center tracking-widest uppercase">
+                Choose Your Target Result
             </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-base font-bold text-[#111827]">
-                <div class="deck-block bg-cyan-pop p-6">
-                    <p class="text-3xl mb-2">⚡</p>
-                    <p><strong class="font-black text-lg block mb-1">CHARISMA DECK</strong> Prepare for and secure successful, high-impact meetings.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm md:text-base font-medium text-slate-600">
+                <div class="deck-block p-5 flex gap-4 items-start">
+                    <span class="text-2xl">⚡</span>
+                    <div>
+                        <strong class="text-slate-900 block mb-1">CHARISMA DECK</strong> 
+                        Prepare for and secure successful, high-impact meetings.
+                    </div>
                 </div>
-                <div class="deck-block bg-pink-pop p-6">
-                    <p class="text-3xl mb-2">🔥</p>
-                    <p><strong class="font-black text-lg block mb-1">DOPAMINE DECK</strong> Receive an immediate burst of radical confidence.</p>
+                <div class="deck-block p-5 flex gap-4 items-start">
+                    <span class="text-2xl">🔥</span>
+                    <div>
+                        <strong class="text-slate-900 block mb-1">DOPAMINE DECK</strong> 
+                        Receive an immediate burst of radical confidence.
+                    </div>
                 </div>
-                <div class="deck-block bg-yellow-pop p-6">
-                    <p class="text-3xl mb-2">💎</p>
-                    <p><strong class="font-black text-lg block mb-1">WEALTH DECK</strong> For an ultra-lightweight focus reset right before sleep.</p>
+                <div class="deck-block p-5 flex gap-4 items-start">
+                    <span class="text-2xl">💎</span>
+                    <div>
+                        <strong class="text-slate-900 block mb-1">WEALTH DECK</strong> 
+                        For an ultra-lightweight focus reset right before sleep.
+                    </div>
                 </div>
-                <div class="deck-block bg-green-pop p-6">
-                    <p class="text-3xl mb-2">🌊</p>
-                    <p><strong class="font-black text-lg block mb-1">OVERWHELM DECK</strong> Shatter chaos and trigger instant laser focus.</p>
+                <div class="deck-block p-5 flex gap-4 items-start">
+                    <span class="text-2xl">🌊</span>
+                    <div>
+                        <strong class="text-slate-900 block mb-1">OVERWHELM DECK</strong> 
+                        Shatter chaos and trigger instant laser focus.
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Premium Enhancements -->
-        <div class="card-pop p-8 md:p-12">
-            <h3 class="text-2xl font-black text-[#A855F7] mb-8 text-center uppercase tracking-widest">
-                PREMIUM ENHANCEMENTS
+        <div class="card-utility p-8 md:p-10">
+            <h3 class="text-lg font-extrabold text-indigo-600 mb-8 text-center tracking-widest uppercase">
+                Premium Enhancements
             </h3>
-            <div class="space-y-6 text-base md:text-lg text-slate-700 font-bold max-w-2xl mx-auto">
-                <div class="flex gap-5 items-start bg-slate-50 p-6 rounded-3xl border-2 border-slate-200">
-                    <span class="text-4xl bg-white p-3 rounded-2xl border-2 border-[#111827] shadow-[4px_4px_0px_#111827]">🚨</span>
-                    <p><strong class="text-[#111827] block mb-1">Proactive Custom Intercept Alarms:</strong> Set strategic circuit breakers at your peak slump hours to intercept infinite scrolling loops automatically.</p>
+            <div class="space-y-6 text-sm md:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
+                <div class="flex gap-4 items-start">
+                    <span class="text-2xl mt-1">🚨</span>
+                    <p><strong class="text-slate-900">Proactive Custom Intercept Alarms:</strong> Set strategic circuit breakers at your peak slump hours to intercept infinite scrolling loops automatically.</p>
                 </div>
-                <div class="flex gap-5 items-start bg-slate-50 p-6 rounded-3xl border-2 border-slate-200">
-                    <span class="text-4xl bg-white p-3 rounded-2xl border-2 border-[#111827] shadow-[4px_4px_0px_#111827]">🧠</span>
-                    <p><strong class="text-[#111827] block mb-1">High-Dopamine Refreshes:</strong> Turn task execution into an engaging game that leaves you completely energized for real work.</p>
+                <div class="w-full h-px bg-slate-100 my-2"></div>
+                <div class="flex gap-4 items-start">
+                    <span class="text-2xl mt-1">🧠</span>
+                    <p><strong class="text-slate-900">High-Dopamine Refreshes:</strong> Turn task execution into a satisfying, gamified achievement that leaves you completely energized for real work.</p>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- FINAL CTA -->
-    <section class="w-full px-6 py-12 mt-4 text-center max-w-3xl mx-auto">
-        <button onclick="launchApp()" class="btn-dopamine w-full text-xl md:text-2xl font-black py-6 px-8 leading-tight">
+    <section class="w-full px-6 py-12 text-center max-w-3xl mx-auto">
+        <button onclick="launchApp()" class="btn-velocity w-full text-lg md:text-xl font-bold py-5 px-8 rounded-xl tracking-wide">
             [ CLAIM 2-DAY FULL PREMIUM PASS & BREAK LOOP NOW ]
         </button>
+        <p class="text-sm text-slate-400 font-medium mt-6">Takes 30 seconds to start. No willpower required.</p>
     </section>
 
     <script>
