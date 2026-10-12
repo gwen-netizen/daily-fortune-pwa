@@ -176,7 +176,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
         localStorage.setItem('nudge_minutes', totalFocusReclaimed.toString());
 
-        if (data.profile.premium_user) {
+        if (data.profile.premium_user === true || data.profile.premium_user === 'true') {
           localStorage.setItem('nudge_premium_user', 'true');
         } else {
           localStorage.removeItem('nudge_premium_user');
@@ -189,6 +189,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           } else {
             localStorage.removeItem('nudge_pass_expiry');
           }
+        } else {
+          localStorage.removeItem('nudge_pass_expiry');
         }
       }
       updateMetricDashboard();
@@ -341,8 +343,22 @@ async function verifyOTP() {
         localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
         localStorage.setItem('nudge_minutes', totalFocusReclaimed.toString());
 
-        if (data.profile.premium_user) {
+        // VITAL FIX: Strictly forces the frontend to completely align with the exact DB state
+        if (data.profile.premium_user === true || data.profile.premium_user === 'true') {
           localStorage.setItem('nudge_premium_user', 'true');
+        } else {
+          localStorage.removeItem('nudge_premium_user');
+        }
+
+        if (data.profile.pass_expires_at) {
+          const passExp = new Date(data.profile.pass_expires_at).getTime();
+          if (Date.now() < passExp) {
+            localStorage.setItem('nudge_pass_expiry', passExp.toString());
+          } else {
+            localStorage.removeItem('nudge_pass_expiry');
+          }
+        } else {
+          localStorage.removeItem('nudge_pass_expiry');
         }
       }
 
