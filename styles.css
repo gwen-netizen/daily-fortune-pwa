@@ -205,7 +205,8 @@ body {
 }
 
 .deck-desc { 
-  font-size: 13px; 
+  font-size: 15px; 
+  font-weight: 500;
   color: #7A7571; 
   margin-top: 3px; 
   line-height: 1.4; 
