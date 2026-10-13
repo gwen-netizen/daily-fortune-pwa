@@ -5,8 +5,6 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
-  // VITAL FIX: Explicitly prevents Vercel from serving stale cached login payloads
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -48,10 +46,13 @@ module.exports = async function handler(req, res) {
 
       let isPremium = existingProfile ? existingProfile.premium_user : false;
       let passExpiry = existingProfile ? existingProfile.pass_expires_at : null;
+      let promoClaimed = existingProfile ? existingProfile.promo_claimed : false;
 
-      if (promo_code === 'PREMIUM99') {
+      // Intelligent Promo Code Enforcement
+      if (promo_code === 'PREMIUM99' && !isPremium && !promoClaimed) {
         isPremium = true;
         passExpiry = new Date(Date.now() + (48 * 3600 * 1000)).toISOString();
+        promoClaimed = true;
       }
 
       const updatePayload = { 
@@ -59,7 +60,8 @@ module.exports = async function handler(req, res) {
         total_wins: typeof total_wins === 'number' ? total_wins : (existingProfile?.total_wins || 0), 
         focus_reclaimed: typeof focus_reclaimed === 'number' ? focus_reclaimed : (existingProfile?.focus_reclaimed || 0.0),
         premium_user: isPremium,
-        pass_expires_at: passExpiry
+        pass_expires_at: passExpiry,
+        promo_claimed: promoClaimed
       };
 
       let { data, error } = await supabase
@@ -92,16 +94,30 @@ module.exports = async function handler(req, res) {
         });
         if (error) throw error;
 
-        // VITAL FIX: Separated creation logic to completely avoid overriding existing rows
-        if (promo_code === 'PREMIUM99') {
-          const passExpiry = new Date(Date.now() + (48 * 3600 * 1000)).toISOString();
-          await supabase.from('user_profiles').upsert({ email: lowerEmail, premium_user: true, pass_expires_at: passExpiry }, { onConflict: 'email' });
-        } else {
-          const { data: existing } = await supabase.from('user_profiles').select('email').eq('email', lowerEmail).maybeSingle();
-          if (!existing) {
-             await supabase.from('user_profiles').insert({ email: lowerEmail, premium_user: false, total_wins: 0, focus_reclaimed: 0 });
-          }
+        // Fetch existing to decide on promo code applicability
+        const { data: existingProfile } = await supabase.from('user_profiles').select('*').eq('email', lowerEmail).maybeSingle();
+
+        let isPrem = existingProfile?.premium_user || false;
+        let passExpiry = existingProfile?.pass_expires_at || null;
+        let promoClaimed = existingProfile?.promo_claimed || false;
+        let tWins = existingProfile?.total_wins || 0;
+        let fReclaimed = existingProfile?.focus_reclaimed || 0.0;
+
+        // Intelligent Promo Code Enforcement
+        if (promo_code === 'PREMIUM99' && !isPrem && !promoClaimed) {
+          isPrem = true;
+          passExpiry = new Date(Date.now() + (48 * 3600 * 1000)).toISOString();
+          promoClaimed = true;
         }
+
+        await supabase.from('user_profiles').upsert({ 
+          email: lowerEmail,
+          total_wins: tWins,
+          focus_reclaimed: fReclaimed,
+          premium_user: isPrem,
+          pass_expires_at: passExpiry,
+          promo_claimed: promoClaimed
+        }, { onConflict: 'email' });
 
         return res.status(200).json({ sent: true });
       }
@@ -139,7 +155,7 @@ module.exports = async function handler(req, res) {
         if (!profileData) {
           const { data: newProfile } = await supabase
             .from('user_profiles')
-            .insert({ email: lowerEmail, premium_user: false, total_wins: 0, focus_reclaimed: 0 })
+            .insert({ email: lowerEmail, premium_user: false, total_wins: 0, focus_reclaimed: 0, promo_claimed: false })
             .select()
             .single();
           profileData = newProfile;
@@ -149,7 +165,7 @@ module.exports = async function handler(req, res) {
 
         return res.status(200).json({ 
           success: true, 
-          profile: profileData || { total_wins: 0, focus_reclaimed: 0, premium_user: false }
+          profile: profileData || { total_wins: 0, focus_reclaimed: 0, premium_user: false, promo_claimed: false }
         });
       }
 
@@ -163,7 +179,7 @@ module.exports = async function handler(req, res) {
 
         profileData = await sanitizePassStatus(profileData);
           
-        return res.status(200).json({ profile: profileData || { premium_user: false } });
+        return res.status(200).json({ profile: profileData || { premium_user: false, promo_claimed: false } });
       }
 
       return res.status(400).json({ error: "Invalid action type" });
