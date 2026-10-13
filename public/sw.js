@@ -1,32 +1,37 @@
-const CACHE_NAME = 'nudge-pwa-v4';
-const ASSETS_TO_CACHE = [
-  '/',
-  '/app',
-  '/styles.css',
-  '/app.js',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png'
-];
+const CACHE_NAME = 'attention-lifeboat-v2';
 
-self.addEventListener('install', (event) => {
-  self.skipWaiting();
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE))
-  );
+// 1. Force the new service worker to take over immediately
+self.addEventListener('install', event => {
+    self.skipWaiting();
 });
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) => 
-      Promise.all(keys.map((k) => k !== CACHE_NAME && caches.delete(k)))
-    )
-  );
+// 2. Delete all old, broken caches so they never load again
+self.addEventListener('activate', event => {
+    event.waitUntil(
+        caches.keys().then(cacheNames => {
+            return Promise.all(
+                cacheNames.map(cache => {
+                    if (cache !== CACHE_NAME) {
+                        return caches.delete(cache);
+                    }
+                })
+            );
+        }).then(() => self.clients.claim())
+    );
 });
 
-self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
-  event.respondWith(
-    caches.match(event.request).then((response) => response || fetch(event.request))
-  );
+// 3. Network-First Strategy: Always fetch the newest live code first. 
+// Only use the cache if the user actually loses their internet connection.
+self.addEventListener('fetch', event => {
+    event.respondWith(
+        fetch(event.request)
+            .then(response => {
+                const responseClone = response.clone();
+                caches.open(CACHE_NAME).then(cache => {
+                    cache.put(event.request, responseClone);
+                });
+                return response;
+            })
+            .catch(() => caches.match(event.request))
+    );
 });
