@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nudge-pwa-v3';
+const CACHE_NAME = 'nudge-pwa-v4';
 const ASSETS_TO_CACHE = [
   '/',
   '/app',
