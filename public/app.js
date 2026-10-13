@@ -68,33 +68,6 @@ function isUserPremiumOrPass() {
   return isPrem || isPassActive();
 }
 
-async function checkAndTriggerScreen1Promo(email) {
-  const promoInput = document.getElementById('user-promo-code');
-  if (!promoInput) return;
-
-  const code = promoInput.value.trim().toUpperCase();
-  const alreadyClaimed = localStorage.getItem('nudge_promo_claimed') === 'true';
-
-  if (code === 'PREMIUM99' && !alreadyClaimed) {
-    const expiry = Date.now() + (48 * 3600 * 1000);
-    localStorage.setItem('nudge_pass_expiry', expiry.toString());
-    localStorage.setItem('nudge_promo_claimed', 'true');
-
-    // Sync to Supabase directly
-    if (email) {
-      try {
-        await fetch(getApiUrl('/api/sync-user'), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: email, promo_code: 'PREMIUM99', device_id: getDeviceId() })
-        });
-      } catch (e) {}
-    }
-
-    alert("🎉 Promotional Code Redeemed! 48-Hour Free Premium Pass Unlocked.");
-  }
-}
-
 function startPassTicker() {
   if (passTickerInterval) clearInterval(passTickerInterval);
   updatePassCountdown();
@@ -155,6 +128,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderCustomIntercepts();
   startPassTicker();
 
+  // Auto-fill Promo Code for New/Unclaimed Users
+  const claimed = localStorage.getItem('nudge_promo_claimed') === 'true';
+  const promoInput = document.getElementById('user-promo-code');
+  if (promoInput) {
+    if (!claimed) {
+      promoInput.value = 'PREMIUM99';
+    } else {
+      promoInput.value = '';
+      promoInput.placeholder = 'Promo Code Claimed';
+      promoInput.disabled = true;
+      promoInput.style.opacity = '0.6';
+    }
+  }
+
   const savedEmail = localStorage.getItem('nudge_user_email');
   const deviceId = getDeviceId();
 
@@ -163,18 +150,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       const endpoint = getApiUrl(`/api/sync-user?email=${encodeURIComponent(savedEmail)}&action=get_profile&device_id=${encodeURIComponent(deviceId)}`);
       const response = await fetch(endpoint);
       
-      if (response.status === 409) {
-        alert("🔒 Session Expired: Your account was accessed on another device.");
-        userLogout();
-        return;
-      }
-
       const data = await response.json();
       if (response.ok && data.profile) {
         totalWinsCount = data.profile.total_wins || 0;
         totalFocusReclaimed = data.profile.focus_reclaimed || 0.0;
         localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
         localStorage.setItem('nudge_minutes', totalFocusReclaimed.toString());
+
+        if (data.profile.promo_claimed) {
+          localStorage.setItem('nudge_promo_claimed', 'true');
+        }
 
         if (data.profile.premium_user === true || data.profile.premium_user === 'true') {
           localStorage.setItem('nudge_premium_user', 'true');
@@ -274,7 +259,6 @@ async function initializeUserProfile() {
 
   const userEmail = emailInput.value.trim().toLowerCase();
   localStorage.setItem('nudge_user_email', userEmail);
-  await checkAndTriggerScreen1Promo(userEmail);
 
   const promoInput = document.getElementById('user-promo-code');
   const promoCode = promoInput ? promoInput.value.trim().toUpperCase() : '';
@@ -314,7 +298,6 @@ async function initializeUserProfile() {
 async function verifyOTP() {
   const userEmail = localStorage.getItem('nudge_user_email');
   const otpInput = document.getElementById('user-otp-input');
-  const deviceId = getDeviceId();
   
   if (!otpInput || otpInput.value.trim().length < 6) {
     alert("Please enter the full 6-digit access code sent to your email.");
@@ -332,7 +315,7 @@ async function verifyOTP() {
   }
 
   try {
-    const endpoint = getApiUrl(`/api/sync-user?email=${encodeURIComponent(userEmail)}&action=verify_otp&token=${encodeURIComponent(token)}&device_id=${encodeURIComponent(deviceId)}`);
+    const endpoint = getApiUrl(`/api/sync-user?email=${encodeURIComponent(userEmail)}&action=verify_otp&token=${encodeURIComponent(token)}`);
     const response = await fetch(endpoint);
     const data = await response.json();
 
@@ -343,7 +326,10 @@ async function verifyOTP() {
         localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
         localStorage.setItem('nudge_minutes', totalFocusReclaimed.toString());
 
-        // VITAL FIX: Strictly forces the frontend to completely align with the exact DB state
+        if (data.profile.promo_claimed) {
+          localStorage.setItem('nudge_promo_claimed', 'true');
+        }
+
         if (data.profile.premium_user === true || data.profile.premium_user === 'true') {
           localStorage.setItem('nudge_premium_user', 'true');
         } else {
@@ -381,7 +367,6 @@ async function verifyOTP() {
 
 async function syncLifetimeProgressToCloud() {
   const userEmail = localStorage.getItem('nudge_user_email');
-  const deviceId = getDeviceId();
   if (!userEmail) return;
 
   try {
@@ -391,13 +376,12 @@ async function syncLifetimeProgressToCloud() {
       body: JSON.stringify({
         email: userEmail,
         total_wins: totalWinsCount,
-        focus_reclaimed: totalFocusReclaimed,
-        device_id: deviceId
+        focus_reclaimed: totalFocusReclaimed
       })
     });
 
     if (response.status === 409) {
-      alert("🔒 Session Expired: Your account was accessed on another device.");
+      alert("🔒 Session Expired.");
       userLogout();
     }
   } catch (err) {
@@ -653,14 +637,13 @@ async function executeTurnaroundSpin() {
   else if (activeDeckName.includes("overwhelm")) categoryKey = 'overwhelm';
 
   const userEmail = localStorage.getItem('nudge_user_email') || 'anonymous_tester';
-  const deviceId = getDeviceId();
 
   try {
-    const endpoint = getApiUrl(`/api/get-task?category=${categoryKey}&friction=${mindFrictionStyle}&email=${encodeURIComponent(userEmail)}&device_id=${encodeURIComponent(deviceId)}`);
+    const endpoint = getApiUrl(`/api/get-task?category=${categoryKey}&friction=${mindFrictionStyle}&email=${encodeURIComponent(userEmail)}`);
     const response = await fetch(endpoint);
     
     if (response.status === 409) {
-      alert("🔒 Session Expired: Your account was accessed on another device.");
+      alert("🔒 Session Expired.");
       userLogout();
       return;
     }
