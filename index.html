@@ -49,10 +49,10 @@
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col font-sans overflow-x-hidden pb-20">
+<body class="min-h-screen flex flex-col font-sans overflow-x-hidden">
 
     <!-- HERO SECTION (Single Column) -->
-    <section class="w-full px-6 py-16 md:py-24 max-w-4xl mx-auto flex flex-col items-center text-center">
+    <section class="w-full px-6 py-20 md:py-24 max-w-4xl mx-auto flex flex-col items-center text-center">
         
         <h1 class="text-4xl md:text-6xl font-extrabold text-slate-900 leading-[1.1] tracking-tight mb-6 max-w-4xl mx-auto">
             A tool that breaks the mental paralysis
@@ -65,12 +65,12 @@
             That's probably all you need.
         </p>
 
-        <button onclick="launchApp()" class="btn-velocity w-full md:w-auto text-lg font-bold py-5 px-10 rounded-xl tracking-wide mb-12">
+        <button onclick="launchApp()" class="btn-velocity w-full md:w-auto text-lg font-bold py-5 px-10 rounded-xl tracking-wide mb-16">
             CLAIM YOUR FREE 2-DAY FULL PREMIUM PASS NOW
         </button>
 
-        <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight mb-6">
-            Reset your Focus
+        <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-8">
+            Reset your <span class="text-[#FF5500]">Focus</span>
         </h2>
 
         <!-- Enlarged Hero Image -->
@@ -80,7 +80,7 @@
     </section>
 
     <!-- THE NUDGE SECTION (Single Column) -->
-    <section class="w-full px-6 py-24 bg-slate-50 border-y border-slate-200">
+    <section class="w-full px-6 py-20 md:py-24 bg-slate-50 border-y border-slate-200">
         <div class="max-w-4xl mx-auto flex flex-col items-center text-center">
             
             <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-4">
@@ -95,18 +95,20 @@
                 <img src="hero.png" alt="Get a Nudge Interface" class="w-full h-auto rounded-[24px] shadow-2xl border border-slate-200">
             </div>
 
-            <!-- Big Impact Statement -->
-            <h2 class="text-4xl md:text-6xl font-extrabold text-slate-900 mt-24 md:mt-32 tracking-tight leading-none max-w-3xl mx-auto">
-                400 plus unpredictable<br>
-                <span class="text-indigo-600">loop breaking nudges</span>
-            </h2>
-
         </div>
     </section>
 
     <!-- DECKS & DOOM SCROLL SECTION (Single Column) -->
-    <section class="w-full px-6 py-20 max-w-4xl mx-auto flex flex-col gap-10">
+    <section class="w-full px-6 py-20 md:py-24 max-w-4xl mx-auto flex flex-col gap-12">
         
+        <!-- Big Impact Statement Moved Here -->
+        <div class="text-center mb-4">
+            <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                400+ unpredictable<br>
+                <span class="text-indigo-600">loop breaking nudges</span>
+            </h2>
+        </div>
+
         <!-- Main Target Area Card -->
         <div class="card-utility p-8 md:p-14 flex flex-col items-center">
             
@@ -154,7 +156,7 @@
     </section>
 
     <!-- HOW IT WORKS (PWA SECTION) -->
-    <section class="w-full px-6 py-16 bg-white border-y border-slate-200">
+    <section class="w-full px-6 py-20 bg-white border-y border-slate-200">
         <div class="max-w-4xl mx-auto">
             <div class="text-center mb-12">
                 <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight mb-4">
@@ -196,12 +198,25 @@
     </section>
 
     <!-- FINAL CTA -->
-    <section class="w-full px-6 py-16 text-center max-w-3xl mx-auto">
+    <section class="w-full px-6 py-20 text-center max-w-3xl mx-auto">
         <button onclick="launchApp()" class="btn-velocity w-full md:w-auto text-lg md:text-xl font-bold py-5 px-10 rounded-xl tracking-wide">
             CLAIM 2-DAY FULL PREMIUM PASS NOW
         </button>
         <p class="text-sm text-slate-400 font-medium mt-6">Takes 30 seconds to start. No willpower required.</p>
     </section>
+
+    <!-- FOOTER -->
+    <footer class="w-full py-8 bg-white border-t border-slate-200 text-center">
+        <div class="max-w-4xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p class="text-sm text-slate-400 font-medium">
+                &copy; 2026 The Attention Lifeboat. All rights reserved.
+            </p>
+            <div class="flex gap-6 text-sm text-slate-400 font-medium">
+                <a href="#" class="hover:text-slate-600 transition-colors">Privacy Policy</a>
+                <a href="#" class="hover:text-slate-600 transition-colors">Terms of Service</a>
+            </div>
+        </div>
+    </footer>
 
     <script>
         // DEVICE SESSION DETECTOR: Skip landing page if already signed up/logged in on this device
