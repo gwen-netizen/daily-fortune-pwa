@@ -10,8 +10,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="2-min">
 
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/images/icon-192.png">
+  <link rel="apple-touch-icon" href="/images/icon-192.png">
   <link rel="stylesheet" href="styles.css">
   <link rel="manifest" href="manifest.json">
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -82,17 +82,14 @@
         <h2 class="title-large" style="font-size: 24px; margin-bottom: 24px;">Identify Your Friction Line</h2>
         
         <div class="onboarding-options">
-          <div class="option-card selected" onclick="selectOption(this, 'scroll')">
-            <div class="option-title">⚡ Mindless Loop Scrolling</div>
-            <div class="option-desc">For the Dopamine-Starved Avoider trapped in systemic social video algorithms.</div>
+          <div class="option-card selected" onclick="selectOption(this, 'scroll')" style="padding: 24px 16px; text-align: center;">
+            <div class="option-title" style="font-size: 18px; margin: 0;">⚡ Can't stop scrolling</div>
           </div>
-          <div class="option-card" onclick="selectOption(this, 'paralysis')">
-            <div class="option-title">🧠 Intimidating Task Paralysis</div>
-            <div class="option-desc">For the Overwhelmed Procrastinator frozen by complex, multi-step actions.</div>
+          <div class="option-card" onclick="selectOption(this, 'paralysis')" style="padding: 24px 16px; text-align: center;">
+            <div class="option-title" style="font-size: 18px; margin: 0;">🧠 Swamped with work</div>
           </div>
-          <div class="option-card" onclick="selectOption(this, 'routine')">
-            <div class="option-title">🌱 Low Physical Presence</div>
-            <div class="option-desc">For building subtle structural charisma, hydration habits, and physical presence.</div>
+          <div class="option-card" onclick="selectOption(this, 'routine')" style="padding: 24px 16px; text-align: center;">
+            <div class="option-title" style="font-size: 18px; margin: 0;">🌱 Out of gas</div>
           </div>
         </div>
       </div>
@@ -312,6 +309,7 @@
   <script src="app.js"></script>
 
   <script>
+    // 1. PWA Install Prompt Logic
     let deferredPrompt;
     const installBtn = document.getElementById('pwa-install-btn');
 
@@ -335,12 +333,13 @@
       });
     }
 
+    // 2. Service Worker Registration & AUTO-UPDATE LOGIC
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js').catch(err => console.error("SW reg error:", err));
       });
 
-      // The Auto-Update Trigger
+      // 3. The Auto-Update Trigger
       // When the background worker finishes downloading your Vercel updates, this forces the screen to instantly reload and show the new UI.
       let refreshing = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
