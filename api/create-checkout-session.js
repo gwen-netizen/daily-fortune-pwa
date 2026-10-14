@@ -23,7 +23,7 @@ module.exports = async function handler(req, res) {
     live: { 
       lifetime: process.env.STRIPE_LIVE_LIFETIME_PRICE_ID || 'price_YOUR_LIVE_LIFETIME_ID', 
       monthly: process.env.STRIPE_LIVE_MONTHLY_PRICE_ID || 'price_YOUR_LIVE_MONTHLY_ID',
-      pass: process.env.STRIPE_PRICE_2_DAY || process.env.STRIPE_LIVE_PASS_PRICE_ID || 'price_1UOeGrG617eW830nwxz6eHsB' // Reads STRIPE_PRICE_2_DAY directly
+      pass: process.env.STRIPE_PRICE_2_DAY || process.env.STRIPE_LIVE_PASS_PRICE_ID || 'price_1UOeGrG617eW830nwxz6eHsB'
     }
   };
 
@@ -55,7 +55,8 @@ module.exports = async function handler(req, res) {
       cancel_url: cancelUrl,
       client_reference_id: cleanEmail,
       customer_email: cleanEmail || undefined,
-      allow_promotion_codes: true
+      allow_promotion_codes: true,
+      metadata: { plan_type: planType } // VITAL FIX: Attaches the plan type so the webhook knows what was purchased
     };
 
     const session = await stripeClient.checkout.sessions.create(sessionPayload);
