@@ -42,13 +42,22 @@ async function handler(req, res) {
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
       const userEmail = session.client_reference_id || session.customer_email;
+      const planType = session.metadata ? session.metadata.plan_type : null;
 
       if (userEmail) {
+        let passExpiry = null;
+        
+        // VITAL FIX: If they bought the $0.99 pass, set the Supabase expiration to exactly 48 hours from now
+        if (planType === 'pass' || planType === '2day') {
+          passExpiry = new Date(Date.now() + (48 * 3600 * 1000)).toISOString();
+        }
+
         const { error } = await supabase
           .from('user_profiles')
           .upsert({ 
             email: userEmail.toLowerCase(), 
-            premium_user: true 
+            premium_user: true,
+            pass_expires_at: passExpiry
           }, { onConflict: 'email' });
 
         if (error) throw error;
@@ -67,7 +76,7 @@ async function handler(req, res) {
       if (userEmail) {
         const { error } = await supabase
           .from('user_profiles')
-          .update({ premium_user: false })
+          .update({ premium_user: false, pass_expires_at: null })
           .eq('email', userEmail.toLowerCase());
 
         if (error) throw error;
