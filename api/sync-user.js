@@ -33,7 +33,7 @@ module.exports = async function handler(req, res) {
 
   if (req.method === 'POST') {
     try {
-      const { email, total_wins, focus_reclaimed, promo_code } = req.body;
+      const { email, total_wins, focus_reclaimed, promo_claimed } = req.body;
       if (!email) return res.status(400).json({ error: "Email is required" });
 
       const lowerEmail = email.trim().toLowerCase();
@@ -44,35 +44,26 @@ module.exports = async function handler(req, res) {
         .eq('email', lowerEmail)
         .maybeSingle();
 
-      let isPremium = existingProfile ? existingProfile.premium_user : false;
-      let passExpiry = existingProfile ? existingProfile.pass_expires_at : null;
-      let promoClaimed = existingProfile ? existingProfile.promo_claimed : false;
-
-      // Intelligent Promo Code Enforcement
-      if (promo_code === 'PREMIUM99' && !isPremium && !promoClaimed) {
-        isPremium = true;
-        passExpiry = new Date(Date.now() + (48 * 3600 * 1000)).toISOString();
-        promoClaimed = true;
-      }
-
       const updatePayload = { 
-        email: lowerEmail, 
         total_wins: typeof total_wins === 'number' ? total_wins : (existingProfile?.total_wins || 0), 
         focus_reclaimed: typeof focus_reclaimed === 'number' ? focus_reclaimed : (existingProfile?.focus_reclaimed || 0.0),
-        premium_user: isPremium,
-        pass_expires_at: passExpiry,
-        promo_claimed: promoClaimed
+        promo_claimed: promo_claimed !== undefined ? promo_claimed : (existingProfile?.promo_claimed || false)
       };
 
       let { data, error } = await supabase
         .from('user_profiles')
-        .upsert(updatePayload, { onConflict: 'email' })
+        .update(updatePayload)
+        .eq('email', lowerEmail)
         .select()
-        .single();
+        .maybeSingle();
+        
+      if (!data) {
+         updatePayload.email = lowerEmail;
+         const resInsert = await supabase.from('user_profiles').insert(updatePayload).select().single();
+         data = resInsert.data;
+      }
 
-      if (error) throw error;
       data = await sanitizePassStatus(data);
-
       return res.status(200).json({ success: true, profile: data });
     } catch (err) {
       console.error("Supabase Write Error:", err);
@@ -93,40 +84,14 @@ module.exports = async function handler(req, res) {
           options: { shouldCreateUser: true }
         });
         if (error) throw error;
-
-        // Fetch existing to decide on promo code applicability
-        const { data: existingProfile } = await supabase.from('user_profiles').select('*').eq('email', lowerEmail).maybeSingle();
-
-        let isPrem = existingProfile?.premium_user || false;
-        let passExpiry = existingProfile?.pass_expires_at || null;
-        let promoClaimed = existingProfile?.promo_claimed || false;
-        let tWins = existingProfile?.total_wins || 0;
-        let fReclaimed = existingProfile?.focus_reclaimed || 0.0;
-
-        // Intelligent Promo Code Enforcement
-        if (promo_code === 'PREMIUM99' && !isPrem && !promoClaimed) {
-          isPrem = true;
-          passExpiry = new Date(Date.now() + (48 * 3600 * 1000)).toISOString();
-          promoClaimed = true;
-        }
-
-        await supabase.from('user_profiles').upsert({ 
-          email: lowerEmail,
-          total_wins: tWins,
-          focus_reclaimed: fReclaimed,
-          premium_user: isPrem,
-          pass_expires_at: passExpiry,
-          promo_claimed: promoClaimed
-        }, { onConflict: 'email' });
-
         return res.status(200).json({ sent: true });
       }
       
       if (action === 'verify_otp') {
         if (!token) return res.status(400).json({ error: "Token missing" });
 
-        const otpTypes = ['email', 'signup', 'magiclink'];
         let verifiedAuthData = null;
+        const otpTypes = ['email', 'signup', 'magiclink'];
 
         for (const otpType of otpTypes) {
           const { data, error } = await supabase.auth.verifyOtp({
@@ -149,8 +114,7 @@ module.exports = async function handler(req, res) {
           .from('user_profiles')
           .select('*')
           .eq('email', lowerEmail)
-          .limit(1)
-          .single();
+          .maybeSingle();
 
         if (!profileData) {
           const { data: newProfile } = await supabase
@@ -159,6 +123,32 @@ module.exports = async function handler(req, res) {
             .select()
             .single();
           profileData = newProfile;
+        }
+
+        // --- INTELLIGENT PROMO CODE ENFORCEMENT ---
+        // Runs cleanly only after the user account definitively exists
+        let isPrem = profileData?.premium_user || false;
+        let passExpiry = profileData?.pass_expires_at || null;
+        let promoClaimed = profileData?.promo_claimed || false;
+        let requiresUpdate = false;
+
+        // If code is correct AND user is not premium AND they haven't used a promo code before
+        if (promo_code === 'PREMIUM99' && !isPrem && !promoClaimed) {
+          isPrem = true;
+          passExpiry = new Date(Date.now() + (48 * 3600 * 1000)).toISOString();
+          promoClaimed = true;
+          requiresUpdate = true;
+        }
+
+        if (requiresUpdate) {
+           const { data: updatedProfile } = await supabase
+             .from('user_profiles')
+             .update({ premium_user: isPrem, pass_expires_at: passExpiry, promo_claimed: promoClaimed })
+             .eq('email', lowerEmail)
+             .select()
+             .maybeSingle();
+             
+           if (updatedProfile) profileData = updatedProfile;
         }
 
         profileData = await sanitizePassStatus(profileData);
@@ -174,8 +164,7 @@ module.exports = async function handler(req, res) {
           .from('user_profiles')
           .select('*')
           .eq('email', lowerEmail)
-          .limit(1)
-          .single();
+          .maybeSingle();
 
         profileData = await sanitizePassStatus(profileData);
           
