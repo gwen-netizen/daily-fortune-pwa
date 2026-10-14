@@ -1,4 +1,4 @@
-const CACHE_NAME = 'attention-lifeboat-v10';
+const CACHE_NAME = 'attention-lifeboat-v11';
 
 // 1. Force the new service worker to take over immediately
 self.addEventListener('install', event => {
