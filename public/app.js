@@ -143,11 +143,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   const savedEmail = localStorage.getItem('nudge_user_email');
-  const deviceId = getDeviceId();
-
+  
   if (savedEmail && savedEmail.includes('@')) {
     try {
-      const endpoint = getApiUrl(`/api/sync-user?email=${encodeURIComponent(savedEmail)}&action=get_profile&device_id=${encodeURIComponent(deviceId)}`);
+      const endpoint = getApiUrl(`/api/sync-user?email=${encodeURIComponent(savedEmail)}&action=get_profile`);
       const response = await fetch(endpoint);
       
       const data = await response.json();
@@ -260,9 +259,6 @@ async function initializeUserProfile() {
   const userEmail = emailInput.value.trim().toLowerCase();
   localStorage.setItem('nudge_user_email', userEmail);
 
-  const promoInput = document.getElementById('user-promo-code');
-  const promoCode = promoInput ? promoInput.value.trim().toUpperCase() : '';
-
   const loginBtn = document.getElementById('btn-take-control');
   const originalText = loginBtn ? loginBtn.innerText : "Take Control";
   
@@ -273,7 +269,7 @@ async function initializeUserProfile() {
   }
 
   try {
-    const endpoint = getApiUrl(`/api/sync-user?email=${encodeURIComponent(userEmail)}&action=request_otp&promo_code=${encodeURIComponent(promoCode)}`);
+    const endpoint = getApiUrl(`/api/sync-user?email=${encodeURIComponent(userEmail)}&action=request_otp`);
     const response = await fetch(endpoint);
     const data = await response.json();
 
@@ -305,6 +301,9 @@ async function verifyOTP() {
   }
 
   const token = otpInput.value.trim();
+  const promoInput = document.getElementById('user-promo-code');
+  const promoCode = promoInput ? promoInput.value.trim().toUpperCase() : '';
+
   const verifyBtn = document.querySelector('#screen-auth-verify .btn-primary');
   const originalText = verifyBtn ? verifyBtn.innerText : "Verify Identity";
   
@@ -315,7 +314,7 @@ async function verifyOTP() {
   }
 
   try {
-    const endpoint = getApiUrl(`/api/sync-user?email=${encodeURIComponent(userEmail)}&action=verify_otp&token=${encodeURIComponent(token)}`);
+    const endpoint = getApiUrl(`/api/sync-user?email=${encodeURIComponent(userEmail)}&action=verify_otp&token=${encodeURIComponent(token)}&promo_code=${encodeURIComponent(promoCode)}`);
     const response = await fetch(endpoint);
     const data = await response.json();
 
@@ -369,6 +368,8 @@ async function syncLifetimeProgressToCloud() {
   const userEmail = localStorage.getItem('nudge_user_email');
   if (!userEmail) return;
 
+  const claimed = localStorage.getItem('nudge_promo_claimed') === 'true';
+
   try {
     const response = await fetch(getApiUrl('/api/sync-user'), {
       method: 'POST',
@@ -376,14 +377,10 @@ async function syncLifetimeProgressToCloud() {
       body: JSON.stringify({
         email: userEmail,
         total_wins: totalWinsCount,
-        focus_reclaimed: totalFocusReclaimed
+        focus_reclaimed: totalFocusReclaimed,
+        promo_claimed: claimed
       })
     });
-
-    if (response.status === 409) {
-      alert("🔒 Session Expired.");
-      userLogout();
-    }
   } catch (err) {
     console.warn(err);
   }
@@ -642,12 +639,6 @@ async function executeTurnaroundSpin() {
     const endpoint = getApiUrl(`/api/get-task?category=${categoryKey}&friction=${mindFrictionStyle}&email=${encodeURIComponent(userEmail)}`);
     const response = await fetch(endpoint);
     
-    if (response.status === 409) {
-      alert("🔒 Session Expired.");
-      userLogout();
-      return;
-    }
-
     if (!response.ok) {
       const serverErr = await response.json();
       throw new Error(serverErr.error || "Server validation failure.");
