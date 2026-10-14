@@ -339,6 +339,16 @@
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js').catch(err => console.error("SW reg error:", err));
       });
+
+      // The Auto-Update Trigger
+      // When the background worker finishes downloading your Vercel updates, this forces the screen to instantly reload and show the new UI.
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload(); 
+        }
+      });
     }
   </script>
 </body>
