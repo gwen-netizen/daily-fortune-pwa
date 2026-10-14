@@ -86,13 +86,8 @@ function updatePassCountdown() {
   banners.forEach(banner => {
     if (!banner) return;
     
-    if (isPrem) {
-      banner.style.display = 'block';
-      banner.style.background = '#E8F5E9';
-      banner.style.borderColor = 'var(--success-color)';
-      banner.style.color = 'var(--success-color)';
-      banner.innerHTML = '✅ <b>FULL PREMIUM UNLOCKED</b> • Unlimited Daily Intercepts';
-    } else if (passActive) {
+    // VITAL FIX: Prioritizes the 48-Hour Timer over the Lifetime Banner
+    if (passActive) {
       banner.style.display = 'block';
       banner.style.background = '#FFF8E1';
       banner.style.borderColor = '#FFB300';
@@ -109,6 +104,12 @@ function updatePassCountdown() {
       const sStr = String(secs).padStart(2, '0');
       
       banner.innerHTML = `⚡ <b>2-DAY PASS ACTIVE</b> • ⏱️ <b>${hStr}h ${mStr}m ${sStr}s</b> remaining`;
+    } else if (isPrem) {
+      banner.style.display = 'block';
+      banner.style.background = '#E8F5E9';
+      banner.style.borderColor = 'var(--success-color)';
+      banner.style.color = 'var(--success-color)';
+      banner.innerHTML = '✅ <b>FULL PREMIUM UNLOCKED</b> • Unlimited Daily Intercepts';
     } else {
       const clicksUsed = getDailyClicksCount();
       banner.style.display = 'block';
@@ -128,7 +129,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderCustomIntercepts();
   startPassTicker();
 
-  // Auto-fill Promo Code for New/Unclaimed Users
   const claimed = localStorage.getItem('nudge_promo_claimed') === 'true';
   const promoInput = document.getElementById('user-promo-code');
   if (promoInput) {
@@ -166,8 +166,10 @@ document.addEventListener("DOMContentLoaded", async () => {
           localStorage.removeItem('nudge_premium_user');
         }
 
+        // VITAL FIX: Mobile Safari/Android Timestamp Parsing Protection
         if (data.profile.pass_expires_at) {
-          const passExp = new Date(data.profile.pass_expires_at).getTime();
+          const safeDateStr = data.profile.pass_expires_at.replace(' ', 'T');
+          const passExp = new Date(safeDateStr).getTime();
           if (Date.now() < passExp) {
             localStorage.setItem('nudge_pass_expiry', passExp.toString());
           } else {
@@ -275,7 +277,7 @@ async function initializeUserProfile() {
 
     if (response.ok && data.sent) {
       const noticeEl = document.getElementById('verification-notice-text');
-      if (noticeEl) noticeEl.innerText = `We sent a secure 6-digit access code to ${userEmail}.`;
+      if (noticeEl) noticeEl.innerText = `We sent a secure 8-digit access code to ${userEmail}.`;
       switchScreen('screen-auth-verify');
     } else {
       alert(`OTP Request Failed: ${data.error || "Unable to dispatch verification code via Supabase."}`);
@@ -296,7 +298,7 @@ async function verifyOTP() {
   const otpInput = document.getElementById('user-otp-input');
   
   if (!otpInput || otpInput.value.trim().length < 6) {
-    alert("Please enter the full 6-digit access code sent to your email.");
+    alert("Please enter the full access code sent to your email.");
     return;
   }
 
@@ -335,8 +337,10 @@ async function verifyOTP() {
           localStorage.removeItem('nudge_premium_user');
         }
 
+        // VITAL FIX: Mobile Safari/Android Timestamp Parsing Protection
         if (data.profile.pass_expires_at) {
-          const passExp = new Date(data.profile.pass_expires_at).getTime();
+          const safeDateStr = data.profile.pass_expires_at.replace(' ', 'T');
+          const passExp = new Date(safeDateStr).getTime();
           if (Date.now() < passExp) {
             localStorage.setItem('nudge_pass_expiry', passExp.toString());
           } else {
@@ -511,8 +515,8 @@ async function simulatePurchase() {
       body: JSON.stringify({
         planType: planType,
         email: userEmail,
-        successUrl: window.location.origin + '/app?session=success',
-        cancelUrl: window.location.origin + '/app'
+        successUrl: window.location.origin + '/app.html?session=success',
+        cancelUrl: window.location.origin + '/app.html'
       })
     });
 
@@ -575,7 +579,7 @@ async function openCustomerPortal() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email: userEmail,
-        returnUrl: window.location.origin + '/app'
+        returnUrl: window.location.origin + '/app.html'
       })
     });
 
