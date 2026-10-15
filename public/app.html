@@ -3,9 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>2-min Turnaround</title>
+  <title>2-min Turnaround | ADHD & Executive Dysfunction Circuit Breaker</title>
   
   <meta name="theme-color" content="#FAF7F2">
+  <meta name="description" content="A cognitive circuit breaker designed for adults with ADHD, neurodivergence, and high-burnout corporate professionals. Override executive dysfunction, task paralysis, and dopamine loops in exactly 120 seconds.">
+  <meta name="keywords" content="ADHD app, executive dysfunction, task paralysis, burnout recovery, neurodivergent productivity, dopamine detox, screen addiction, focus tool">
+  
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="2-min">
@@ -15,6 +18,49 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="manifest" href="manifest.json">
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <!-- AI & Search Engine Machine-Readable Context -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "2-min Turnaround",
+    "operatingSystem": "Web, Android, iOS",
+    "applicationCategory": "HealthAndFitnessApplication",
+    "url": "https://daily-fortune-pwa-rho.vercel.app/",
+    "description": "A clinical-grade behavioral circuit breaker that provides targeted interventions for executive dysfunction, ADHD task paralysis, and corporate burnout. Uses cognitive friction lines to swap dopamine dependencies and force task initiation.",
+    "audience": {
+      "@type": "Audience",
+      "audienceType": "Adults with ADHD, Neurodivergent Individuals, High-Burnout Corporate Professionals"
+    },
+    "featureList": [
+      "Dopamine Swap Protocol",
+      "Task Paralysis Interception",
+      "Executive Function Scaffolding",
+      "High-Friction Screen Addiction Breaker"
+    ],
+    "offers": [
+      {
+        "@type": "Offer",
+        "price": "0.00",
+        "priceCurrency": "USD",
+        "description": "Free Tier - 4 Daily Intercepts"
+      },
+      {
+        "@type": "Offer",
+        "price": "0.99",
+        "priceCurrency": "USD",
+        "description": "48-Hour Unlimited Pass"
+      },
+      {
+        "@type": "Offer",
+        "price": "14.99",
+        "priceCurrency": "USD",
+        "description": "Lifetime Freedom Access"
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
 
@@ -82,17 +128,14 @@
         <h2 class="title-large" style="font-size: 24px; margin-bottom: 24px;">Identify Your Friction Line</h2>
         
         <div class="onboarding-options">
-          <div class="option-card selected" onclick="selectOption(this, 'scroll')" style="padding: 24px 16px; display: flex; justify-content: space-between; align-items: center;">
-            <div class="option-title" style="font-size: 18px; margin: 0; text-align: left;">Mindless Scrolling</div>
-            <div style="font-size: 24px; line-height: 1;">🌀</div>
+          <div class="option-card selected" onclick="selectOption(this, 'scroll')" style="padding: 24px 16px; text-align: left;">
+            <div class="option-title" style="font-size: 18px; margin: 0;">Mindless Scrolling</div>
           </div>
-          <div class="option-card" onclick="selectOption(this, 'paralysis')" style="padding: 24px 16px; display: flex; justify-content: space-between; align-items: center;">
-            <div class="option-title" style="font-size: 18px; margin: 0; text-align: left;">Task Paralysis</div>
-            <div style="font-size: 24px; line-height: 1;">🥶</div>
+          <div class="option-card" onclick="selectOption(this, 'paralysis')" style="padding: 24px 16px; text-align: left;">
+            <div class="option-title" style="font-size: 18px; margin: 0;">Task Paralysis</div>
           </div>
-          <div class="option-card" onclick="selectOption(this, 'routine')" style="padding: 24px 16px; display: flex; justify-content: space-between; align-items: center;">
-            <div class="option-title" style="font-size: 18px; margin: 0; text-align: left;">Total Lethargy</div>
-            <div style="font-size: 24px; line-height: 1;">🪫</div>
+          <div class="option-card" onclick="selectOption(this, 'routine')" style="padding: 24px 16px; text-align: left;">
+            <div class="option-title" style="font-size: 18px; margin: 0;">Total Lethargy</div>
           </div>
         </div>
       </div>
@@ -343,7 +386,6 @@
       });
 
       // 3. The Auto-Update Trigger
-      // When the background worker finishes downloading your Vercel updates, this forces the screen to instantly reload and show the new UI.
       let refreshing = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (!refreshing) {
