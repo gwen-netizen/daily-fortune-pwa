@@ -1,4 +1,4 @@
-const CACHE_NAME = '120reset-v22';
+const CACHE_NAME = '120reset-v31';
 
 // 1. Force the new service worker to take over immediately
 self.addEventListener('install', event => {
@@ -20,9 +20,12 @@ self.addEventListener('activate', event => {
     );
 });
 
-// 3. Network-First Strategy
+// 3. Network-First Strategy for static assets ONLY (strictly bypass /api/)
 self.addEventListener('fetch', event => {
-    if (event.request.method !== 'GET') return;
+    // CRITICAL: Never intercept or cache dynamic serverless API calls
+    if (event.request.method !== 'GET' || event.request.url.includes('/api/')) {
+        return;
+    }
 
     event.respondWith(
         fetch(event.request)
