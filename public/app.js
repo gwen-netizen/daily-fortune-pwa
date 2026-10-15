@@ -1,17 +1,20 @@
-// app.js - Full Core Application Controller Engine
+// app.js - Single Source of Truth Engine (Supabase-Verified)
+let currentUserProfile = null; // Live authoritative record from Supabase
 let isPremiumSelected = false;
 let countdownInterval = null;
 let passTickerInterval = null;
+let interceptMonitorInterval = null;
+let lastTriggeredMinute = "";
 let mindFrictionStyle = 'scroll'; 
 let isAppMuted = localStorage.getItem('nudge_app_muted') === 'true'; 
 
-let totalWinsCount = parseInt(localStorage.getItem('nudge_total_wins') || '0');
-let totalFocusReclaimed = parseFloat(localStorage.getItem('nudge_minutes') || '0.0');
+let totalWinsCount = 0;
+let totalFocusReclaimed = 0.0;
 
 const victoryValidationStrings = [
-  "You chose active alignment while the rest of the world remained paralyzed on the couch scrolling algorithms. Focus Reclaimed.",
-  "Friction broken. By taking action for 120 seconds, you proved to your brain that execution is entirely safe.",
-  "The dopamine loop has been successfully redirected. You are now running on true clean execution energy."
+  "You chose active alignment while the rest of the world remained paralyzed scrolling algorithms. Focus Reclaimed.",
+  "Friction broken. By taking action for 120 seconds, you proved to your brain that execution is safe.",
+  "The dopamine loop has been successfully redirected. You are now running on clean execution energy."
 ];
 
 function getApiUrl(path) {
@@ -22,17 +25,143 @@ function getApiUrl(path) {
   }
 }
 
-function getDeviceId() {
-  let deviceId = localStorage.getItem('nudge_device_id');
-  if (!deviceId) {
-    deviceId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : 'dev_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
-    localStorage.setItem('nudge_device_id', deviceId);
+// Universal ISO parser for PostgreSQL timestamptz strings
+function parseDbTimestamp(dateStr) {
+  if (!dateStr) return 0;
+  try {
+    let clean = String(dateStr).trim().replace(' ', 'T');
+    if (/[+-]\d{2}$/.test(clean)) {
+      clean += ':00';
+    }
+    const parsed = new Date(clean).getTime();
+    return isNaN(parsed) ? 0 : parsed;
+  } catch (e) {
+    return 0;
   }
-  return deviceId;
 }
 
 /* ========================================================
-   DAILY CLICK TRACKER & PASS COUNTDOWN ENGINE
+   LIVE SUBSCRIPTION EVALUATION (ZERO LOCALSTORAGE FLAGS)
+======================================================== */
+function isUserPremiumOrPass() {
+  if (!currentUserProfile) return false;
+
+  // 1. Permanent/Monthly subscriber
+  if (currentUserProfile.premium_user === true || currentUserProfile.premium_user === 'true') {
+    return true;
+  }
+
+  // 2. Active 48-Hour Pass holder
+  if (currentUserProfile.pass_expires_at) {
+    const expiryMs = parseDbTimestamp(currentUserProfile.pass_expires_at);
+    return Date.now() < expiryMs;
+  }
+
+  return false;
+}
+
+function getPassRemainingSeconds() {
+  if (!currentUserProfile || !currentUserProfile.pass_expires_at) return 0;
+  const expiryMs = parseDbTimestamp(currentUserProfile.pass_expires_at);
+  return Math.max(0, Math.floor((expiryMs - Date.now()) / 1000));
+}
+
+function startPassTicker() {
+  if (passTickerInterval) clearInterval(passTickerInterval);
+  updatePassCountdown();
+  passTickerInterval = setInterval(updatePassCountdown, 1000);
+}
+
+function updatePassCountdown() {
+  const banners = [
+    document.getElementById('screen2-status-banner'),
+    document.getElementById('screen3-status-banner')
+  ];
+
+  const hasAccess = isUserPremiumOrPass();
+  const remainingSecs = getPassRemainingSeconds();
+
+  banners.forEach(banner => {
+    if (!banner) return;
+    
+    if (remainingSecs > 0) {
+      banner.style.display = 'block';
+      banner.style.background = '#FFF8E1';
+      banner.style.borderColor = '#FFB300';
+      banner.style.color = '#B78103';
+      
+      const hours = Math.floor(remainingSecs / 3600);
+      const mins = Math.floor((remainingSecs % 3600) / 60);
+      const secs = remainingSecs % 60;
+      
+      const hStr = String(hours).padStart(2, '0');
+      const mStr = String(mins).padStart(2, '0');
+      const sStr = String(secs).padStart(2, '0');
+      
+      banner.innerHTML = `⚡ <b>48-HOUR PASS ACTIVE</b><br>⏱️ <b>${hStr}h ${mStr}m ${sStr}s</b> remaining`;
+    } else if (hasAccess) {
+      banner.style.display = 'block';
+      banner.style.background = '#E8F5E9';
+      banner.style.borderColor = 'var(--success-color)';
+      banner.style.color = 'var(--success-color)';
+      banner.innerHTML = '✅ <b>FULL PREMIUM UNLOCKED</b><br>Unlimited Daily Intercepts';
+    } else {
+      const clicksUsed = getDailyClicksCount();
+      banner.style.display = 'block';
+      banner.style.background = '#FAF7F2';
+      banner.style.borderColor = '#EAE3D9';
+      banner.style.color = '#7A7571';
+      banner.innerHTML = `🌱 <b>Free Account (${clicksUsed}/4 Daily Intercepts Used)</b><br><span style="text-decoration:underline; cursor:pointer; color:var(--text-color); font-weight:700;" onclick="openPaywallModal()">Get 2-Day Pass ($0.99)</span>`;
+    }
+  });
+}
+
+function applyPremiumUIVisuals() {
+  const hasAccess = isUserPremiumOrPass();
+  
+  const dopamineDeck = document.querySelector('.deck-item[data-category="dopamine"]');
+  if (dopamineDeck) {
+    const meta = dopamineDeck.querySelector('.deck-meta');
+    const name = dopamineDeck.querySelector('.deck-name');
+    if (meta) {
+      meta.innerText = hasAccess ? "UNLOCKED PREMIUM AREA" : "PREMIUM UPGRADE";
+      meta.className = hasAccess ? "deck-meta free" : "deck-meta premium";
+      meta.style.color = hasAccess ? "var(--success-color)" : "";
+    }
+    if (name) name.innerHTML = hasAccess ? "✅ The Dopamine Swap Deck" : "⚡ The Dopamine Swap Deck";
+  }
+
+  const overwhelmDeck = document.querySelector('.deck-item[data-category="overwhelm"]');
+  if (overwhelmDeck) {
+    const meta = overwhelmDeck.querySelector('.deck-meta');
+    const name = overwhelmDeck.querySelector('.deck-name');
+    if (meta) {
+      meta.innerText = hasAccess ? "UNLOCKED PREMIUM AREA" : "PREMIUM UPGRADE";
+      meta.className = hasAccess ? "deck-meta free" : "deck-meta premium";
+      meta.style.color = hasAccess ? "var(--success-color)" : "";
+    }
+    if (name) name.innerHTML = hasAccess ? "✅ The Anti-Overwhelm Deck" : "🧠 The Anti-Overwhelm Deck";
+  }
+
+  const customMeta = document.getElementById('custom-intercept-meta');
+  const customText = document.getElementById('custom-intercept-text');
+  if (customMeta) {
+    customMeta.innerText = hasAccess ? "UNLOCKED PREMIUM AREA" : "PREMIUM UPGRADE";
+    customMeta.className = hasAccess ? "deck-meta free" : "deck-meta premium";
+    customMeta.style.color = hasAccess ? "var(--success-color)" : "";
+  }
+  if (customText) {
+    customText.innerHTML = hasAccess ? "✅ + Add Custom Intercept" : "⚡ + Add Custom Intercept";
+  }
+
+  const victoryManageBtn = document.getElementById('btn-victory-manage-subscription');
+  if (victoryManageBtn) {
+    victoryManageBtn.style.display = hasAccess ? 'inline-block' : 'none';
+  }
+}
+
+/* ========================================================
+   CLICK TRACKER (ONLY FOR FREE TIER)
 ======================================================== */
 function getTodayDateString() {
   const d = new Date();
@@ -58,133 +187,36 @@ function incrementDailyClicks() {
   return updated;
 }
 
-function isPassActive() {
-  const expiry = parseInt(localStorage.getItem('nudge_pass_expiry') || '0', 10);
-  return Date.now() < expiry;
-}
-
-function isUserPremiumOrPass() {
-  const isPrem = localStorage.getItem('nudge_premium_user') === 'true';
-  return isPrem || isPassActive();
-}
-
-function startPassTicker() {
-  if (passTickerInterval) clearInterval(passTickerInterval);
-  updatePassCountdown();
-  passTickerInterval = setInterval(updatePassCountdown, 1000);
-}
-
-function updatePassCountdown() {
-  const isPrem = localStorage.getItem('nudge_premium_user') === 'true';
-  const passActive = isPassActive();
-  
-  const banners = [
-    document.getElementById('screen2-status-banner'),
-    document.getElementById('screen3-status-banner')
-  ];
-
-  banners.forEach(banner => {
-    if (!banner) return;
-    
-    if (passActive) {
-      banner.style.display = 'block';
-      banner.style.background = '#FFF8E1';
-      banner.style.borderColor = '#FFB300';
-      banner.style.color = '#B78103';
-      
-      const expiry = parseInt(localStorage.getItem('nudge_pass_expiry') || '0', 10);
-      const diffSec = Math.max(0, Math.floor((expiry - Date.now()) / 1000));
-      const hours = Math.floor(diffSec / 3600);
-      const mins = Math.floor((diffSec % 3600) / 60);
-      const secs = diffSec % 60;
-      
-      const hStr = String(hours).padStart(2, '0');
-      const mStr = String(mins).padStart(2, '0');
-      const sStr = String(secs).padStart(2, '0');
-      
-      // FIX: Added <br> for clean 2-line layout
-      banner.innerHTML = `⚡ <b>2-DAY PASS ACTIVE</b><br>⏱️ <b>${hStr}h ${mStr}m ${sStr}s</b> remaining`;
-    } else if (isPrem) {
-      banner.style.display = 'block';
-      banner.style.background = '#E8F5E9';
-      banner.style.borderColor = 'var(--success-color)';
-      banner.style.color = 'var(--success-color)';
-      // FIX: Added <br> for clean 2-line layout
-      banner.innerHTML = '✅ <b>FULL PREMIUM UNLOCKED</b><br>Unlimited Daily Intercepts';
-    } else {
-      const clicksUsed = getDailyClicksCount();
-      banner.style.display = 'block';
-      banner.style.background = '#FAF7F2';
-      banner.style.borderColor = '#EAE3D9';
-      banner.style.color = '#7A7571';
-      // FIX: Added <br> for clean 2-line layout
-      banner.innerHTML = `🌱 <b>Free Account (${clicksUsed}/4 Daily Intercepts Used)</b><br><span style="text-decoration:underline; cursor:pointer; color:var(--text-color); font-weight:700;" onclick="openPaywallModal()">Get 2-Day Pass ($0.99)</span>`;
-    }
-  });
-}
-
+/* ========================================================
+   APPLICATION BOOT & SUPABASE SYNC
+======================================================== */
 document.addEventListener("DOMContentLoaded", async () => {
-  updateMetricDashboard();
-  await checkStripeRedirectStatus();
-  applyPremiumUIVisuals(); 
   initializeMuteUISystem(); 
   renderCustomIntercepts();
-  startPassTicker();
-
-  const claimed = localStorage.getItem('nudge_promo_claimed') === 'true';
-  const promoInput = document.getElementById('user-promo-code');
-  if (promoInput) {
-    if (!claimed) {
-      promoInput.value = 'PREMIUM99';
-    } else {
-      promoInput.value = '';
-      promoInput.placeholder = 'Promo Code Claimed';
-      promoInput.disabled = true;
-      promoInput.style.opacity = '0.6';
-    }
-  }
+  startBackgroundInterceptMonitor();
 
   const savedEmail = localStorage.getItem('nudge_user_email');
   
   if (savedEmail && savedEmail.includes('@')) {
+    // Verified profile fetch from Supabase before unlocking dashboard
     try {
       const endpoint = getApiUrl(`/api/sync-user?email=${encodeURIComponent(savedEmail)}&action=get_profile`);
       const response = await fetch(endpoint);
-      
       const data = await response.json();
+
       if (response.ok && data.profile) {
+        currentUserProfile = data.profile;
         totalWinsCount = data.profile.total_wins || 0;
         totalFocusReclaimed = data.profile.focus_reclaimed || 0.0;
-        localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
-        localStorage.setItem('nudge_minutes', totalFocusReclaimed.toString());
-
-        if (data.profile.promo_claimed) {
-          localStorage.setItem('nudge_promo_claimed', 'true');
-        }
-
-        if (data.profile.premium_user === true || data.profile.premium_user === 'true') {
-          localStorage.setItem('nudge_premium_user', 'true');
-        } else {
-          localStorage.removeItem('nudge_premium_user');
-        }
-
-        if (data.profile.pass_expires_at) {
-          const safeDateStr = data.profile.pass_expires_at.replace(' ', 'T');
-          const passExp = new Date(safeDateStr).getTime();
-          if (Date.now() < passExp) {
-            localStorage.setItem('nudge_pass_expiry', passExp.toString());
-          } else {
-            localStorage.removeItem('nudge_pass_expiry');
-          }
-        } else {
-          localStorage.removeItem('nudge_pass_expiry');
-        }
       }
-      updateMetricDashboard();
-      switchScreen('screen-dashboard');
     } catch (e) {
-      switchScreen('screen-dashboard');
+      console.warn("Supabase network error, starting offline session", e);
     }
+
+    applyPremiumUIVisuals();
+    updateMetricDashboard();
+    startPassTicker();
+    switchScreen('screen-dashboard');
   } else {
     switchScreen('screen-onboarding-1');
   }
@@ -233,16 +265,13 @@ function switchScreen(screenId) {
     applyPremiumUIVisuals();
     renderCustomIntercepts();
     updatePassCountdown();
+    updateMetricDashboard();
   }
 }
 
 function userLogout() {
   localStorage.removeItem('nudge_user_email');
-  localStorage.removeItem('nudge_premium_user');
-  localStorage.removeItem('nudge_pass_expiry');
-  localStorage.removeItem('nudge_promo_claimed');
-  localStorage.removeItem('nudge_total_wins');
-  localStorage.removeItem('nudge_minutes');
+  currentUserProfile = null;
   totalWinsCount = 0;
   totalFocusReclaimed = 0.0;
   updateMetricDashboard();
@@ -250,12 +279,12 @@ function userLogout() {
 }
 
 /* ========================================================
-   1. AUTHENTICATION & OTP FLOW
+   AUTHENTICATION & OTP (SUPABASE VERIFICATION GATE)
 ======================================================== */
 async function initializeUserProfile() {
   const emailInput = document.getElementById('user-auth-email');
   if (!emailInput || !emailInput.value.includes('@')) {
-    alert("Please enter a valid email address to protect your focus milestones.");
+    alert("Please enter a valid email address.");
     return;
   }
 
@@ -278,10 +307,10 @@ async function initializeUserProfile() {
 
     if (response.ok && data.sent) {
       const noticeEl = document.getElementById('verification-notice-text');
-      if (noticeEl) noticeEl.innerText = `We sent a secure 8-digit access code to ${userEmail}.`;
+      if (noticeEl) noticeEl.innerText = `We sent a secure access code to ${userEmail}.`;
       switchScreen('screen-auth-verify');
     } else {
-      alert(`OTP Request Failed: ${data.error || "Unable to dispatch verification code via Supabase."}`);
+      alert(`OTP Request Failed: ${data.error || "Unable to dispatch verification code."}`);
     }
   } catch (error) {
     alert(`Network Request Error: ${error.message}`);
@@ -311,7 +340,7 @@ async function verifyOTP() {
   const originalText = verifyBtn ? verifyBtn.innerText : "Verify Identity";
   
   if (verifyBtn) {
-    verifyBtn.innerText = "VERIFYING CODE...";
+    verifyBtn.innerText = "VERIFYING WITH SUPABASE...";
     verifyBtn.style.opacity = "0.7";
     verifyBtn.disabled = true;
   }
@@ -321,38 +350,18 @@ async function verifyOTP() {
     const response = await fetch(endpoint);
     const data = await response.json();
 
-    if (response.ok && data.success) {
-      if (data.profile) {
-        totalWinsCount = data.profile.total_wins || 0;
-        totalFocusReclaimed = data.profile.focus_reclaimed || 0.0;
-        localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
-        localStorage.setItem('nudge_minutes', totalFocusReclaimed.toString());
+    if (response.ok && data.success && data.profile) {
+      // 1. Store authoritative database profile in memory
+      currentUserProfile = data.profile;
+      totalWinsCount = data.profile.total_wins || 0;
+      totalFocusReclaimed = data.profile.focus_reclaimed || 0.0;
 
-        if (data.profile.promo_claimed) {
-          localStorage.setItem('nudge_promo_claimed', 'true');
-        }
-
-        if (data.profile.premium_user === true || data.profile.premium_user === 'true') {
-          localStorage.setItem('nudge_premium_user', 'true');
-        } else {
-          localStorage.removeItem('nudge_premium_user');
-        }
-
-        if (data.profile.pass_expires_at) {
-          const safeDateStr = data.profile.pass_expires_at.replace(' ', 'T');
-          const passExp = new Date(safeDateStr).getTime();
-          if (Date.now() < passExp) {
-            localStorage.setItem('nudge_pass_expiry', passExp.toString());
-          } else {
-            localStorage.removeItem('nudge_pass_expiry');
-          }
-        } else {
-          localStorage.removeItem('nudge_pass_expiry');
-        }
-      }
-
+      // 2. Compute subscription state immediately from Supabase response
       applyPremiumUIVisuals();
       updateMetricDashboard();
+      startPassTicker();
+
+      // 3. Navigate into the app
       switchScreen('screen-onboarding-2');
     } else {
       alert(`Verification Error: ${data.error || "Invalid or expired access code."}`);
@@ -372,8 +381,6 @@ async function syncLifetimeProgressToCloud() {
   const userEmail = localStorage.getItem('nudge_user_email');
   if (!userEmail) return;
 
-  const claimed = localStorage.getItem('nudge_promo_claimed') === 'true';
-
   try {
     const response = await fetch(getApiUrl('/api/sync-user'), {
       method: 'POST',
@@ -381,17 +388,22 @@ async function syncLifetimeProgressToCloud() {
       body: JSON.stringify({
         email: userEmail,
         total_wins: totalWinsCount,
-        focus_reclaimed: totalFocusReclaimed,
-        promo_claimed: claimed
+        focus_reclaimed: totalFocusReclaimed
       })
     });
+    const data = await response.json();
+    if (data.profile) {
+      currentUserProfile = data.profile;
+      applyPremiumUIVisuals();
+      updatePassCountdown();
+    }
   } catch (err) {
     console.warn(err);
   }
 }
 
 /* ========================================================
-   2. DASHBOARD & UI SELECTIONS
+   DASHBOARD SELECTION & MODALS
 ======================================================== */
 function selectOption(el, frictionKey) {
   document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
@@ -449,59 +461,14 @@ function toggleAudioMuteSystem() {
   }
 }
 
-function applyPremiumUIVisuals() {
-  const hasAccess = isUserPremiumOrPass();
-  if (hasAccess) {
-    const dopamineDeck = document.querySelector('.deck-item[data-category="dopamine"]');
-    if (dopamineDeck) {
-      const meta = dopamineDeck.querySelector('.deck-meta');
-      const name = dopamineDeck.querySelector('.deck-name');
-      if (meta) {
-        meta.innerText = "UNLOCKED PREMIUM AREA";
-        meta.className = "deck-meta free";
-        meta.style.color = "var(--success-color)";
-      }
-      if (name) name.innerHTML = "✅ The Dopamine Swap Deck";
-    }
-
-    const overwhelmDeck = document.querySelector('.deck-item[data-category="overwhelm"]');
-    if (overwhelmDeck) {
-      const meta = overwhelmDeck.querySelector('.deck-meta');
-      const name = overwhelmDeck.querySelector('.deck-name');
-      if (meta) {
-        meta.innerText = "UNLOCKED PREMIUM AREA";
-        meta.className = "deck-meta free";
-        meta.style.color = "var(--success-color)";
-      }
-      if (name) name.innerHTML = "✅ The Anti-Overwhelm Deck";
-    }
-
-    const customMeta = document.getElementById('custom-intercept-meta');
-    const customText = document.getElementById('custom-intercept-text');
-    if (customMeta) {
-      customMeta.innerText = "UNLOCKED PREMIUM AREA";
-      customMeta.className = "deck-meta free";
-      customMeta.style.color = "var(--success-color)";
-    }
-    if (customText) {
-      customText.innerHTML = "✅ + Add Custom Intercept";
-    }
-
-    const victoryManageBtn = document.getElementById('btn-victory-manage-subscription');
-    if (victoryManageBtn) {
-      victoryManageBtn.style.display = 'inline-block';
-    }
-  }
-}
-
 /* ========================================================
-   3. STRIPE GATEWAY
+   STRIPE GATEWAY
 ======================================================== */
 async function simulatePurchase() {
   const selectedTierBox = document.querySelector('.tier-box.selected');
   if (!selectedTierBox) { alert("Please select an option to continue."); return; }
 
-  const planType = selectedTierBox.getAttribute('data-plan') || (selectedTierBox.innerText.includes("Lifetime") ? 'lifetime' : (selectedTierBox.innerText.includes("Pass") ? 'pass' : 'monthly'));
+  const planType = selectedTierBox.getAttribute('data-plan') || 'monthly';
   const paywallBtn = document.querySelector('.paywall-modal .btn-primary');
   const originalText = paywallBtn ? paywallBtn.innerText : "Unlock Access Now";
   const userEmail = localStorage.getItem('nudge_user_email') || '';
@@ -538,28 +505,10 @@ async function checkStripeRedirectStatus() {
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('session') === 'success') {
     const returnedEmail = urlParams.get('email') || localStorage.getItem('nudge_user_email');
-    const planType = urlParams.get('plan') || 'monthly';
-
     if (returnedEmail) {
-      const cleanEmail = returnedEmail.trim().toLowerCase();
-      localStorage.setItem('nudge_user_email', cleanEmail);
+      localStorage.setItem('nudge_user_email', returnedEmail.trim().toLowerCase());
     }
-
-    if (planType === 'pass' || planType === '2day') {
-      const expiry = Date.now() + (48 * 3600 * 1000);
-      localStorage.setItem('nudge_pass_expiry', expiry.toString());
-      applyPremiumUIVisuals();
-      updatePassCountdown();
-      alert("🎉 2-Day Unlimited Premium Pass Activated! Full access unlocked for 48 hours.");
-    } else {
-      localStorage.setItem('nudge_premium_user', 'true');
-      applyPremiumUIVisuals();
-      await syncLifetimeProgressToCloud();
-      alert("🎉 Premium Area is Now Unlocked!");
-    }
-
     window.history.replaceState({}, document.title, window.location.pathname);
-    switchScreen('screen-dashboard');
   }
 }
 
@@ -584,7 +533,6 @@ async function openCustomerPortal() {
     });
 
     const data = await response.json();
-
     if (response.ok && data.url) {
       window.location.href = data.url;
     } else {
@@ -598,7 +546,7 @@ async function openCustomerPortal() {
 }
 
 /* ========================================================
-   4. TASK EXECUTION & METRICS ENGINE
+   TASK EXECUTION & TIMER
 ======================================================== */
 function renderSingleChallengeRating(label, ratingScore) {
   const labelNode = document.getElementById('target-metric-label');
@@ -606,7 +554,6 @@ function renderSingleChallengeRating(label, ratingScore) {
   
   if (labelNode && starsNode) {
     labelNode.innerText = `${label || "Impact"}:`;
-    
     let starString = '';
     const cleanScore = parseInt(ratingScore, 10) || 3;
     for (let i = 0; i < 5; i++) {
@@ -721,15 +668,13 @@ function triggerVictoryPhase(minutesEarned) {
   
   totalWinsCount += 1;
   totalFocusReclaimed += minutesEarned;
-  localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
-  localStorage.setItem('nudge_minutes', totalFocusReclaimed.toString());
   
   try {
     if (!isAppMuted) {
       const audioNode = document.getElementById('victory-chime');
       if (audioNode) { audioNode.currentTime = 0; audioNode.play().catch(e=>{}); }
     }
-  } catch (e) { console.warn(e); }
+  } catch (e) {}
   
   switchScreen('screen-victory');
   
@@ -737,7 +682,7 @@ function triggerVictoryPhase(minutesEarned) {
     if (typeof confetti === 'function') {
       confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#D4A373', '#4A7C59', '#2D2B2A'] });
     }
-  } catch (e) { console.log(e); }
+  } catch (e) {}
 }
 
 function claimRewardStack() {
@@ -747,7 +692,7 @@ function claimRewardStack() {
 }
 
 /* ========================================================
-   5. CUSTOM INTERCEPTS ENGINE
+   CUSTOM INTERCEPTS & ACTIVE CLOCK ALARM ENGINE
 ======================================================== */
 function openCustomInterceptModal() {
   const hasAccess = isUserPremiumOrPass();
@@ -774,17 +719,30 @@ function saveCustomIntercept() {
     return;
   }
 
-  const newCustom = { time: timeInput, friction: frictionInput, deck: deckInput };
-  let customs = JSON.parse(localStorage.getItem('nudge_custom_intercepts') || localStorage.getItem('nudge_custom_lifelines') || '[]');
+  if ("Notification" in window && Notification.permission === "default") {
+    Notification.requestPermission();
+  }
+
+  const newCustom = { time: timeInput, friction: frictionInput, deck: deckInput, enabled: true };
+  let customs = JSON.parse(localStorage.getItem('nudge_custom_intercepts') || '[]');
   customs.push(newCustom);
   localStorage.setItem('nudge_custom_intercepts', JSON.stringify(customs));
 
   closeCustomInterceptModal();
   renderCustomIntercepts();
+  alert(`⚡ Intercept set for ${timeInput}! The app will actively trigger when this time arrives.`);
+}
+
+function toggleCustomInterceptState(index) {
+  let customs = JSON.parse(localStorage.getItem('nudge_custom_intercepts') || '[]');
+  if (customs[index]) {
+    customs[index].enabled = !customs[index].enabled;
+    localStorage.setItem('nudge_custom_intercepts', JSON.stringify(customs));
+  }
 }
 
 function deleteCustomIntercept(index) {
-  let customs = JSON.parse(localStorage.getItem('nudge_custom_intercepts') || localStorage.getItem('nudge_custom_lifelines') || '[]');
+  let customs = JSON.parse(localStorage.getItem('nudge_custom_intercepts') || '[]');
   customs.splice(index, 1);
   localStorage.setItem('nudge_custom_intercepts', JSON.stringify(customs));
   renderCustomIntercepts();
@@ -795,7 +753,7 @@ function renderCustomIntercepts() {
   if (!injectionPoint) return;
   
   injectionPoint.innerHTML = ''; 
-  const customs = JSON.parse(localStorage.getItem('nudge_custom_intercepts') || localStorage.getItem('nudge_custom_lifelines') || '[]');
+  const customs = JSON.parse(localStorage.getItem('nudge_custom_intercepts') || '[]');
   
   customs.forEach((c, index) => {
     if (!c.time) return;
@@ -805,19 +763,80 @@ function renderCustomIntercepts() {
     const ampm = hour >= 12 ? 'PM' : 'AM';
     hour = hour % 12 || 12;
     const formattedTime = `${hour}:${min} ${ampm}`;
+    const isChecked = c.enabled !== false ? 'checked' : '';
 
     const html = `
       <div class="lifeline-item" style="border-color: var(--accent-color); margin-bottom: 8px;">
         <div>
           <div style="font-weight: 800; font-size: 14px; color: var(--premium-color);">${formattedTime}</div>
-          <div style="font-size: 11px; color: #7A7571; font-weight: 600;">Custom: ${c.friction || 'Intercept'}</div>
+          <div style="font-size: 11px; color: #7A7571; font-weight: 600;">Custom: ${c.friction || 'Intercept'} (${c.deck || 'Deck'})</div>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
-          <label class="toggle-switch"><input type="checkbox" checked><span class="slider"></span></label>
+          <label class="toggle-switch"><input type="checkbox" ${isChecked} onchange="toggleCustomInterceptState(${index})"><span class="slider"></span></label>
           <button onclick="deleteCustomIntercept(${index})" style="background:none; border:none; color:#A8A29E; cursor:pointer; font-size:14px; padding:2px 6px;">✕</button>
         </div>
       </div>
     `;
     injectionPoint.insertAdjacentHTML('beforeend', html);
   });
+}
+
+/* ========================================================
+   ACTIVE BACKGROUND MONITOR (CHECKS SYSTEM CLOCK)
+======================================================== */
+function startBackgroundInterceptMonitor() {
+  if (interceptMonitorInterval) clearInterval(interceptMonitorInterval);
+
+  interceptMonitorInterval = setInterval(() => {
+    const now = new Date();
+    const currentHH = String(now.getHours()).padStart(2, '0');
+    const currentMM = String(now.getMinutes()).padStart(2, '0');
+    const currentTimeStr = `${currentHH}:${currentMM}`;
+
+    if (currentTimeStr === lastTriggeredMinute) return;
+
+    // 1. Check user-defined custom intercepts
+    const customs = JSON.parse(localStorage.getItem('nudge_custom_intercepts') || '[]');
+    for (const c of customs) {
+      if (c.enabled !== false && c.time === currentTimeStr) {
+        lastTriggeredMinute = currentTimeStr;
+        fireInterceptAlarm(c.friction || "Behavioral Circuit Breaker", c.deck || "The Anti-Overwhelm Deck");
+        return;
+      }
+    }
+
+    // 2. Check system default time anchors
+    const defaultAnchors = {
+      "08:15": "Morning Bed-Lock",
+      "09:45": "Workspace Inertia",
+      "15:45": "Willpower Exhaustion",
+      "23:15": "Bedtime Loop"
+    };
+
+    if (defaultAnchors[currentTimeStr]) {
+      lastTriggeredMinute = currentTimeStr;
+      fireInterceptAlarm(defaultAnchors[currentTimeStr], "The Dopamine Swap Deck");
+    }
+  }, 20000);
+}
+
+function fireInterceptAlarm(reason, deckName) {
+  try {
+    if (!isAppMuted) {
+      const audioNode = document.getElementById('victory-chime');
+      if (audioNode) { audioNode.currentTime = 0; audioNode.play().catch(e=>{}); }
+    }
+  } catch (e) {}
+
+  if ("Notification" in window && Notification.permission === "granted") {
+    new Notification("⚡ 120 Reset: Circuit Breaker Triggered", {
+      body: `Slump detected: ${reason}. Bypassing paralysis with ${deckName}.`,
+      icon: "/images/icon-192.png"
+    });
+  }
+
+  const deckTitleEl = document.getElementById('active-deck-title');
+  if (deckTitleEl) deckTitleEl.innerText = deckName;
+  
+  switchScreen('screen-trigger');
 }
