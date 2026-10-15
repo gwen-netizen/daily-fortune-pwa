@@ -1,4 +1,4 @@
-const CACHE_NAME = 'attention-lifeboat-v12';
+const CACHE_NAME = 'attention-lifeboat-v20';
 
 // 1. Force the new service worker to take over immediately
 self.addEventListener('install', event => {
@@ -20,8 +20,7 @@ self.addEventListener('activate', event => {
     );
 });
 
-// 3. Network-First Strategy: Always fetch the newest live code first. 
-// Only use the cache if the user actually loses their internet connection.
+// 3. Network-First Strategy
 self.addEventListener('fetch', event => {
     // Only cache standard GET requests (ignores Stripe/Supabase POST data)
     if (event.request.method !== 'GET') return;
