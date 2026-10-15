@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+
+# Explicitly allow OpenAI (ChatGPT)
+User-agent: OAI-SearchBot
+Allow: /
+User-agent: GPTBot
+Allow: /
+User-agent: ChatGPT-User
+Allow: /
+
+# Explicitly allow Anthropic (Claude)
+User-agent: Claude-SearchBot
+Allow: /
+User-agent: ClaudeBot
+Allow: /
+User-agent: Claude-User
+Allow: /
