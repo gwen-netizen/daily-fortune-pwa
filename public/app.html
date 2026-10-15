@@ -82,14 +82,17 @@
         <h2 class="title-large" style="font-size: 24px; margin-bottom: 24px;">Identify Your Friction Line</h2>
         
         <div class="onboarding-options">
-          <div class="option-card selected" onclick="selectOption(this, 'scroll')" style="padding: 24px 16px; text-align: left;">
-            <div class="option-title" style="font-size: 18px; margin: 0;">Mindless Scrolling</div>
+          <div class="option-card selected" onclick="selectOption(this, 'scroll')" style="padding: 24px 16px; display: flex; justify-content: space-between; align-items: center;">
+            <div class="option-title" style="font-size: 18px; margin: 0; text-align: left;">Mindless Scrolling</div>
+            <div style="font-size: 24px; line-height: 1;">🌀</div>
           </div>
-          <div class="option-card" onclick="selectOption(this, 'paralysis')" style="padding: 24px 16px; text-align: left;">
-            <div class="option-title" style="font-size: 18px; margin: 0;">Task Paralysis</div>
+          <div class="option-card" onclick="selectOption(this, 'paralysis')" style="padding: 24px 16px; display: flex; justify-content: space-between; align-items: center;">
+            <div class="option-title" style="font-size: 18px; margin: 0; text-align: left;">Task Paralysis</div>
+            <div style="font-size: 24px; line-height: 1;">🥶</div>
           </div>
-          <div class="option-card" onclick="selectOption(this, 'routine')" style="padding: 24px 16px; text-align: left;">
-            <div class="option-title" style="font-size: 18px; margin: 0;">Total Lethargy</div>
+          <div class="option-card" onclick="selectOption(this, 'routine')" style="padding: 24px 16px; display: flex; justify-content: space-between; align-items: center;">
+            <div class="option-title" style="font-size: 18px; margin: 0; text-align: left;">Total Lethargy</div>
+            <div style="font-size: 24px; line-height: 1;">🪫</div>
           </div>
         </div>
       </div>
@@ -284,7 +287,7 @@
           <select id="custom-friction-input" style="width:100%; padding: 14px; border: 2px solid #EAE3D9; border-radius: 12px; margin-top: 6px; font-size: 15px; outline: none; background: #FFFFFF; font-weight: 500;">
             <option value="Mindless Scrolling">Mindless Scrolling</option>
             <option value="Task Paralysis">Task Paralysis</option>
-            <option value="Low Presence">Low Physical Presence</option>
+            <option value="Total Lethargy">Total Lethargy</option>
           </select>
         </div>
         
