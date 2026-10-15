@@ -27,13 +27,14 @@ module.exports = async function handler(req, res) {
     const cleanEmail = email ? email.trim().toLowerCase() : '';
 
     if (cleanEmail && cleanEmail !== 'anonymous_tester') {
+      // VITAL FIX: Safely handles case-insensitivity and prevents duplicate row crashes
       const { data } = await supabase
         .from('user_profiles')
         .select('premium_user, pass_expires_at')
-        .eq('email', cleanEmail)
-        .maybeSingle();
+        .ilike('email', cleanEmail)
+        .limit(1);
       
-      userProfile = data;
+      userProfile = data && data.length > 0 ? data[0] : null;
     }
 
     // Supabase 48-Hour Pass Expiration Verification
@@ -43,7 +44,7 @@ module.exports = async function handler(req, res) {
         await supabase
           .from('user_profiles')
           .update({ premium_user: false, pass_expires_at: null })
-          .eq('email', cleanEmail);
+          .ilike('email', cleanEmail);
 
         userProfile.premium_user = false;
         userProfile.pass_expires_at = null;
