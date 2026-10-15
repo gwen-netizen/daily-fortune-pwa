@@ -1,5 +1,5 @@
 {
-  "name": "2min-backend",
+  "name": "120-reset-backend",
   "version": "1.0.0",
   "dependencies": {
     "stripe": "^14.24.0",
