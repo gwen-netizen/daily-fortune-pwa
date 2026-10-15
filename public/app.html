@@ -4,11 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>120 Reset | ADHD & Executive Dysfunction Circuit Breaker</title>
+  <link rel="canonical" href="https://120reset.vercel.app/app.html">
   
   <meta name="theme-color" content="#FAF7F2">
   <meta name="description" content="A cognitive circuit breaker designed for adults with ADHD, neurodivergence, and high-burnout corporate professionals. Override executive dysfunction, task paralysis, and dopamine loops in exactly 120 seconds.">
   <meta name="keywords" content="ADHD app, executive dysfunction, task paralysis, burnout recovery, neurodivergent productivity, dopamine detox, screen addiction, focus tool">
   
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="120 Reset">
@@ -16,7 +18,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="/images/icon-192.png">
   <link rel="apple-touch-icon" href="/images/icon-192.png">
   <link rel="stylesheet" href="styles.css">
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="/manifest.json">
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
   <!-- AI & Search Engine Machine-Readable Context -->
@@ -27,7 +29,7 @@
     "name": "120 Reset",
     "operatingSystem": "Web, Android, iOS",
     "applicationCategory": "HealthAndFitnessApplication",
-    "url": "https://120reset.vercel.app/",
+    "url": "https://120reset.vercel.app/app.html",
     "description": "A clinical-grade behavioral circuit breaker that provides targeted interventions for executive dysfunction, ADHD task paralysis, and corporate burnout. Uses cognitive friction lines to swap dopamine dependencies and force task initiation.",
     "audience": {
       "@type": "Audience",
@@ -64,7 +66,8 @@
 </head>
 <body>
 
-  <audio id="victory-chime" src="https://mixkit.co" preload="auto"></audio>
+  <!-- Working Victory Chime Audio Endpoint -->
+  <audio id="victory-chime" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="none"></audio>
 
   <div class="app-container">
 
@@ -111,7 +114,7 @@
         
         <div style="width: 100%; text-align: left; margin-bottom: 16px;">
           <label style="font-size: 12px; font-weight: 700; color: var(--premium-color); letter-spacing: 0.5px; text-transform: uppercase;">Enter Access Code</label>
-          <input type="number" id="user-otp-input" placeholder="000000" 
+          <input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" id="user-otp-input" placeholder="000000" 
                  style="width: 100%; padding: 16px; border: 2px solid #EAE3D9; border-radius: 16px; font-size: 24px; margin-top: 6px; outline: none; background: #FAF7F2; color: var(--text-color); letter-spacing: 8px; text-align: center;">
         </div>
       </div>
