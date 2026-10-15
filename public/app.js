@@ -86,7 +86,6 @@ function updatePassCountdown() {
   banners.forEach(banner => {
     if (!banner) return;
     
-    // VITAL FIX: Prioritizes the 48-Hour Timer over the Lifetime Banner
     if (passActive) {
       banner.style.display = 'block';
       banner.style.background = '#FFF8E1';
@@ -103,20 +102,23 @@ function updatePassCountdown() {
       const mStr = String(mins).padStart(2, '0');
       const sStr = String(secs).padStart(2, '0');
       
-      banner.innerHTML = `⚡ <b>2-DAY PASS ACTIVE</b> • ⏱️ <b>${hStr}h ${mStr}m ${sStr}s</b> remaining`;
+      // FIX: Added <br> for clean 2-line layout
+      banner.innerHTML = `⚡ <b>2-DAY PASS ACTIVE</b><br>⏱️ <b>${hStr}h ${mStr}m ${sStr}s</b> remaining`;
     } else if (isPrem) {
       banner.style.display = 'block';
       banner.style.background = '#E8F5E9';
       banner.style.borderColor = 'var(--success-color)';
       banner.style.color = 'var(--success-color)';
-      banner.innerHTML = '✅ <b>FULL PREMIUM UNLOCKED</b> • Unlimited Daily Intercepts';
+      // FIX: Added <br> for clean 2-line layout
+      banner.innerHTML = '✅ <b>FULL PREMIUM UNLOCKED</b><br>Unlimited Daily Intercepts';
     } else {
       const clicksUsed = getDailyClicksCount();
       banner.style.display = 'block';
       banner.style.background = '#FAF7F2';
       banner.style.borderColor = '#EAE3D9';
       banner.style.color = '#7A7571';
-      banner.innerHTML = `🌱 <b>Free Account (${clicksUsed}/4 Daily Intercepts Used)</b> • <span style="text-decoration:underline; cursor:pointer; color:var(--text-color); font-weight:700;" onclick="openPaywallModal()">Get 2-Day Pass ($0.99)</span>`;
+      // FIX: Added <br> for clean 2-line layout
+      banner.innerHTML = `🌱 <b>Free Account (${clicksUsed}/4 Daily Intercepts Used)</b><br><span style="text-decoration:underline; cursor:pointer; color:var(--text-color); font-weight:700;" onclick="openPaywallModal()">Get 2-Day Pass ($0.99)</span>`;
     }
   });
 }
@@ -166,7 +168,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           localStorage.removeItem('nudge_premium_user');
         }
 
-        // VITAL FIX: Mobile Safari/Android Timestamp Parsing Protection
         if (data.profile.pass_expires_at) {
           const safeDateStr = data.profile.pass_expires_at.replace(' ', 'T');
           const passExp = new Date(safeDateStr).getTime();
@@ -337,7 +338,6 @@ async function verifyOTP() {
           localStorage.removeItem('nudge_premium_user');
         }
 
-        // VITAL FIX: Mobile Safari/Android Timestamp Parsing Protection
         if (data.profile.pass_expires_at) {
           const safeDateStr = data.profile.pass_expires_at.replace(' ', 'T');
           const passExp = new Date(safeDateStr).getTime();
