@@ -16,3 +16,6 @@ User-agent: ClaudeBot
 Allow: /
 User-agent: Claude-User
 Allow: /
+
+# Point crawlers directly to the sitemap
+Sitemap: https://daily-fortune-pwa-rho.vercel.app/sitemap.xml
