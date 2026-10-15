@@ -1,63 +1,377 @@
-<!-- Core Identity -->
-<title>120 Reset — Behavioral Circuit Breaker</title>
-<meta name="description" content="120 Reset — Behavioral circuit breaker for executive dysfunction and burnout. Intercept mindless scrolling and break task paralysis in 120 seconds.">
-<link rel="canonical" href="https://120reset.vercel.app">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>120 Reset — Behavioral Circuit Breaker</title>
+    <meta name="description" content="120 Reset — Behavioral circuit breaker for executive dysfunction and burnout. Intercept mindless scrolling and break task paralysis in 120 seconds.">
+    <link rel="canonical" href="https://120reset.vercel.app">
 
-<!-- Open Graph / Facebook / Discord / LinkedIn -->
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://120reset.vercel.app">
-<meta property="og:title" content="120 Reset — Behavioral Circuit Breaker">
-<meta property="og:description" content="Intercept mindless scrolling and bypass execution freeze with 120-second micro-resets.">
-<meta property="og:image" content="https://120reset.vercel.app/og-image.png">
+    <!-- Open Graph / Facebook / Discord / LinkedIn -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://120reset.vercel.app">
+    <meta property="og:title" content="120 Reset — Behavioral Circuit Breaker">
+    <meta property="og:description" content="Intercept mindless scrolling and bypass execution freeze with 120-second micro-resets.">
+    <meta property="og:image" content="https://120reset.vercel.app/og-image.png">
 
-<!-- Twitter / X -->
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:url" content="https://120reset.vercel.app">
-<meta name="twitter:title" content="120 Reset — Behavioral Circuit Breaker">
-<meta name="twitter:description" content="Behavioral circuit breaker for executive dysfunction and burnout.">
-<meta name="twitter:image" content="https://120reset.vercel.app/og-image.png">
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://120reset.vercel.app">
+    <meta name="twitter:title" content="120 Reset — Behavioral Circuit Breaker">
+    <meta name="twitter:description" content="Behavioral circuit breaker for executive dysfunction and burnout.">
+    <meta name="twitter:image" content="https://120reset.vercel.app/og-image.png">
 
-<!-- PWA & Mobile Web App Settings -->
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="120 Reset">
-<meta name="application-name" content="120 Reset">
-<meta name="theme-color" content="#000000">
+    <!-- PWA & Mobile Web App Settings -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="120 Reset">
+    <meta name="application-name" content="120 Reset">
+    <meta name="theme-color" content="#000000">
 
-<!-- Web Manifest Link -->
-<link rel="manifest" href="/manifest.json">
-<link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <!-- Web Manifest Link -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/images/icon-192.png">
 
-<!-- Schema.org for LLMs and Search Engine Crawlers (GEO Optimization) -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  "name": "120 Reset",
-  "operatingSystem": "All",
-  "applicationCategory": "HealthApplication",
-  "description": "Behavioral circuit breaker for executive dysfunction and burnout.",
-  "url": "https://120reset.vercel.app",
-  "offers": [
+    <!-- Schema.org for LLMs and Search Engine Crawlers -->
+    <script type="application/ld+json">
     {
-      "@type": "Offer",
-      "name": "48-Hour Pass",
-      "price": "0.99",
-      "priceCurrency": "USD"
-    },
-    {
-      "@type": "Offer",
-      "name": "Monthly Subscription",
-      "price": "2.99",
-      "priceCurrency": "USD"
-    },
-    {
-      "@type": "Offer",
-      "name": "Lifetime Access",
-      "price": "14.99",
-      "priceCurrency": "USD"
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "120 Reset",
+      "operatingSystem": "All",
+      "applicationCategory": "HealthApplication",
+      "description": "Behavioral circuit breaker for executive dysfunction and burnout.",
+      "url": "https://120reset.vercel.app",
+      "offers": [
+        {
+          "@type": "Offer",
+          "name": "48-Hour Pass",
+          "price": "0.99",
+          "priceCurrency": "USD"
+        },
+        {
+          "@type": "Offer",
+          "name": "Monthly Subscription",
+          "price": "2.99",
+          "priceCurrency": "USD"
+        },
+        {
+          "@type": "Offer",
+          "name": "Lifetime Access",
+          "price": "14.99",
+          "priceCurrency": "USD"
+        }
+      ]
     }
-  ]
-}
-</script>
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background-color: #FAFAFA; 
+            color: #0F172A; 
+        }
+
+        .btn-velocity {
+            background-color: #FF5500;
+            color: #FFFFFF;
+            box-shadow: 0 4px 14px rgba(255, 85, 0, 0.3);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-velocity:hover {
+            background-color: #E64D00;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 85, 0, 0.4);
+        }
+        .btn-velocity:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 8px rgba(255, 85, 0, 0.3);
+        }
+
+        .card-utility {
+            background: #FFFFFF;
+            border-radius: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 25px -3px rgba(0, 0, 0, 0.05);
+            border: 1px solid #E2E8F0;
+        }
+        
+        .feature-icon-wrapper {
+            background: #EEF2FF;
+            color: #4F46E5;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans overflow-x-hidden">
+
+    <!-- 1. HERO SECTION (The Hook) -->
+    <section class="w-full px-6 pt-20 pb-24 md:pt-28 md:pb-32 max-w-4xl mx-auto flex flex-col items-center text-center">
+        
+        <h1 class="text-4xl md:text-6xl font-extrabold text-slate-900 leading-[1.1] tracking-tight mb-8 max-w-4xl mx-auto">
+            A web-app that breaks the mental paralysis
+            <span class="block text-2xl md:text-4xl text-slate-400 font-semibold mt-3 md:mt-5">
+                Snap out of the endless mobile scroll in <span class="text-[#FF5500] font-extrabold">120 seconds</span>
+            </span>
+        </h1>
+        
+        <!-- Hero Image -->
+        <div class="relative w-full max-w-xs md:max-w-md mx-auto mb-8 bg-white p-2 md:p-3 rounded-[32px] shadow-2xl border border-slate-100">
+            <div class="w-full aspect-[4/5] md:aspect-square overflow-hidden rounded-[24px]">
+                <img src="images/hero.png" alt="App Interface" class="w-full h-full object-cover object-[68%_top] transform scale-[1.15] md:scale-[1.25]">
+            </div>
+        </div>
+
+        <p class="text-xl md:text-2xl font-medium text-slate-500 mb-10 max-w-2xl mx-auto leading-relaxed">
+            That's probably all you need
+        </p>
+
+        <button onclick="launchApp()" class="btn-velocity w-full md:w-auto text-lg font-bold py-5 px-10 rounded-xl tracking-wide mb-8">
+            CLAIM YOUR FREE PREMIUM PASS NOW
+        </button>
+
+    </section>
+
+    <!-- 2. THE BRIDGE SECTION (Execution) -->
+    <section class="w-full px-6 py-20 md:py-24 bg-slate-50 border-y border-slate-200">
+        <div class="max-w-4xl mx-auto flex flex-col items-center text-center">
+            
+           <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-4">
+                Just enter the app<br>
+                <span class="text-indigo-600">Don't rely on willpower</span>
+            </h2>
+            <p class="text-lg md:text-xl font-medium text-slate-500 mb-14 max-w-2xl mx-auto leading-relaxed">
+                You don't need discipline to force focus. The app rewires your habits using daily, gamified micro-tasks.
+                <br><br>
+                <span class="font-bold text-slate-800">See the progress.<br>Feel the momentum.</span>
+            </p>
+            
+            <!-- Section 2 Image -->
+            <div class="relative w-full max-w-3xl mx-auto">
+                <div class="w-full aspect-[4/3] md:aspect-video overflow-hidden rounded-[24px] shadow-2xl border border-slate-200 bg-white">
+                    <img src="images/Identify%20Friction%20Line.png" alt="Identify your friction line" class="w-full h-full object-cover object-[center_35%] transform scale-[1.35] md:scale-[1.4]">
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- 3. THE SOLUTION SECTION (How it Works) -->
+    <section class="w-full px-6 py-20 md:py-24 max-w-4xl mx-auto flex flex-col gap-12">
+        
+        <!-- Big Impact Statement -->
+        <div class="text-center mb-4">
+            <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-4">
+                400+ unpredictable<br>
+                <span class="text-indigo-600">2-minute micro-tasks</span>
+            </h2>
+        </div>
+
+        <!-- Main Target Area Card -->
+        <div class="card-utility p-8 md:p-14 flex flex-col items-center text-center">
+            
+            <div class="text-center mb-12">
+                <h3 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight mb-4">
+                    Hacked from <span class="text-indigo-600">psychology</span>
+                </h3>
+                <p class="text-lg md:text-xl font-medium text-slate-500 max-w-xl mx-auto leading-relaxed">
+                    Steals the best focus mechanics from top behavioral science books
+                </p>
+            </div>
+
+            <!-- App UI Screenshot -->
+            <div class="relative w-[calc(100%+2rem)] -mx-4 md:w-full md:mx-auto max-w-sm mb-12">
+                <img src="images/Target%20Focus%20Area.png" alt="Select your psychological win" class="w-full h-auto rounded-[24px] md:rounded-[32px] shadow-2xl border border-slate-200 transform hover:scale-[1.02] transition-transform duration-300">
+            </div>
+
+            <div class="text-center mt-4">
+                <h3 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight mb-4">
+                    Weaponized <span class="text-[#FF5500]">gratification</span><br>
+                    in just <span class="text-[#FF5500]">120 seconds</span>
+                </h3>
+                <p class="text-lg md:text-xl font-medium text-slate-500 max-w-xl mx-auto leading-relaxed">
+                    Instant, two-minute wins designed to make you get things done
+                </p>
+            </div>
+        </div>
+
+        <!-- Custom Inputs Feature Card -->
+        <div class="card-utility p-8 md:p-14 flex flex-col items-center text-center">
+            
+            <div class="text-center mb-10 max-w-2xl">
+                <h3 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight mb-4">
+                    Intercept social scrolling before it <span class="text-indigo-600">steals your time</span>
+                </h3>
+                <p class="text-lg md:text-xl font-bold text-slate-700 mb-3">
+                    Don't just set an alarm
+                </p>
+                <p class="text-lg md:text-xl font-medium text-slate-500 leading-relaxed">
+                    Automate custom intercepts for your weakest moments. The web-app automatically assigns a targeted micro-task exactly when you are vulnerable.
+                </p>
+            </div>
+
+            <!-- Custom Inputs Image -->
+            <div class="relative w-[calc(100%+4rem)] -mx-8 md:w-full md:mx-auto max-w-3xl bg-white p-1 md:p-3 rounded-2xl md:rounded-[32px] shadow-xl md:shadow-2xl border border-slate-100 mb-12">
+                <img src="images/Customised%20inputs.png" alt="Customised inputs" class="w-full h-auto rounded-[12px] md:rounded-[24px] object-cover">
+            </div>
+
+            <!-- Grid Layout to Split Paragraph Blocks -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-2xl text-left border-t border-slate-100 pt-10">
+                <div>
+                    <h4 class="text-xl font-bold text-slate-900 mb-2">⏱️ Break the Loop</h4>
+                    <p class="text-base font-medium text-slate-500 leading-relaxed">
+                        Instead of battling screen addiction, the app diverts your focus with a quick digital pattern-interrupt.
+                    </p>
+                </div>
+                <div>
+                    <h4 class="text-xl font-bold text-slate-900 mb-2">🚀 Pick up Momentum</h4>
+                    <p class="text-base font-medium text-slate-500 leading-relaxed">
+                        In just 120 seconds, reset your brain and get right back to being productive without missing a beat.
+                    </p>
+                </div>
+            </div>
+            
+        </div>
+
+    </section>
+
+    <!-- 4. THE PAYOFF SECTION (4 Outcomes Grid) -->
+    <section class="w-full px-6 pb-20 md:pb-24 max-w-4xl mx-auto flex flex-col items-center text-center">
+        
+        <h2 class="text-5xl md:text-6xl font-extrabold text-[#FF5500] tracking-tight mb-12">
+            Be
+        </h2>
+
+        <div class="grid grid-cols-2 gap-6 md:gap-10 w-full max-w-3xl">
+            
+            <!-- Photo 1: Confident -->
+            <div class="flex flex-col items-center">
+                <div class="w-full aspect-square rounded-[24px] overflow-hidden mb-4 bg-white p-2 shadow-lg border border-slate-100">
+                    <img src="images/Football%20Coach.png" alt="Confident Coach" class="w-full h-full object-cover object-center transform scale-[1.15] rounded-[16px]">
+                </div>
+                <h3 class="text-2xl md:text-3xl font-bold text-slate-900">Confident</h3>
+            </div>
+
+            <!-- Photo 2: Guilt-Free -->
+            <div class="flex flex-col items-center">
+                <div class="w-full aspect-square rounded-[24px] overflow-hidden mb-4 bg-white p-2 shadow-lg border border-slate-100 relative">
+                    <img src="images/Guilt-free.png" alt="Guilt-Free" class="w-full h-full object-cover object-[65%_center] transform scale-[1.35] rounded-[16px]">
+                </div>
+                <h3 class="text-2xl md:text-3xl font-bold text-slate-900">Guilt-Free</h3>
+            </div>
+
+            <!-- Photo 3: Unstoppable -->
+            <div class="flex flex-col items-center">
+                <div class="w-full aspect-square rounded-[24px] overflow-hidden mb-4 bg-white p-2 shadow-lg border border-slate-100">
+                    <img src="images/Athlete.png" alt="Unstoppable Athlete" class="w-full h-full object-cover object-[center_top] transform scale-[1.2] rounded-[16px]">
+                </div>
+                <h3 class="text-2xl md:text-3xl font-bold text-slate-900">Unstoppable</h3>
+            </div>
+
+            <!-- Photo 4: Focused -->
+            <div class="flex flex-col items-center">
+                <div class="w-full aspect-square rounded-[24px] overflow-hidden mb-4 bg-white p-2 shadow-lg border border-slate-100">
+                    <img src="images/meditating.png" alt="Focused" class="w-full h-full object-cover object-[left_center] transform scale-[1.15] rounded-[16px]">
+                </div>
+                <h3 class="text-2xl md:text-3xl font-bold text-slate-900">Focused</h3>
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- 5. HOW IT WORKS (PWA SECTION) -->
+    <section class="w-full px-6 py-20 bg-white border-y border-slate-200">
+        <div class="max-w-4xl mx-auto flex flex-col items-center text-center">
+            
+            <div class="mb-12 max-w-2xl mx-auto">
+                <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-4">
+                    Instant access <br>
+                    <span class="text-indigo-600">Zero app store bloat</span>
+                </h2>
+                <p class="text-lg md:text-xl font-medium text-slate-500 leading-relaxed">
+                    Skip the massive downloads. Here is how you access it instantly
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full text-center">
+                <!-- Point 1 -->
+                <div class="flex flex-col items-center gap-4 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                    <div class="feature-icon-wrapper">🌐</div>
+                    <h4 class="text-xl font-bold text-slate-900 mb-2">Works instantly in browser</h4>
+                    <p class="text-base font-medium text-slate-500 leading-relaxed">
+                        Access 120 Reset immediately from Safari or Chrome. No waiting times or heavy installations required.
+                    </p>
+                </div>
+                <!-- Point 2 -->
+                <div class="flex flex-col items-center gap-4 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                    <div class="feature-icon-wrapper">⚡</div>
+                    <h4 class="text-xl font-bold text-slate-900 mb-2">Zero storage space required</h4>
+                    <p class="text-base font-medium text-slate-500 leading-relaxed">
+                        Save your phone storage. It runs perfectly on your native browser engine without eating up gigabytes.
+                    </p>
+                </div>
+                <!-- Point 3 -->
+                <div class="flex flex-col items-center gap-4 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                    <div class="feature-icon-wrapper">📱</div>
+                    <h4 class="text-xl font-bold text-slate-900 mb-2">Install in two taps</h4>
+                    <p class="text-base font-medium text-slate-500 leading-relaxed">
+                        Just tap 'Share' and 'Add to Home Screen'. It sits on your phone and looks exactly like a native app.
+                    </p>
+                </div>
+            </div>
+            
+        </div>
+    </section>
+
+    <!-- 6. FINAL CTA -->
+    <section class="w-full px-6 py-20 text-center max-w-3xl mx-auto">
+        <button onclick="launchApp()" class="btn-velocity w-full md:w-auto text-lg md:text-xl font-bold py-5 px-10 rounded-xl tracking-wide">
+            CLAIM FREE PREMIUM PASS HERE
+        </button>
+        <p class="text-base text-slate-400 font-medium mt-6">Takes 30 seconds to start.<br>No willpower required.</p>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="w-full py-8 bg-white border-t border-slate-200 text-center">
+        <div class="max-w-4xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p class="text-sm text-slate-400 font-medium">
+                &copy; 2026 120 Reset. All&nbsp;rights&nbsp;reserved.
+            </p>
+            <div class="flex gap-6 text-sm text-slate-400 font-medium">
+                <a href="#" class="hover:text-slate-600 transition-colors">Privacy Policy</a>
+                <a href="#" class="hover:text-slate-600 transition-colors">Terms of Service</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // DEVICE SESSION DETECTOR: Skip landing page if already signed up/logged in on this device
+        (function() {
+            const savedEmail = localStorage.getItem('nudge_user_email');
+            if (savedEmail && savedEmail.includes('@')) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const promo = urlParams.get('promo');
+                const targetUrl = promo ? `/app.html?promo=${promo}` : '/app.html';
+                window.location.href = targetUrl;
+            }
+        })();
+
+        // APP LAUNCHER
+        function launchApp() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const promo = urlParams.get('promo') || 'PREMIUM99';
+            window.location.href = `/app.html?promo=${promo}`;
+        }
+    </script>
+</body>
+</html>
