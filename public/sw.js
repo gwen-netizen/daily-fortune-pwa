@@ -1,4 +1,4 @@
-const CACHE_NAME = 'attention-lifeboat-v20';
+const CACHE_NAME = '120reset-v22';
 
 // 1. Force the new service worker to take over immediately
 self.addEventListener('install', event => {
@@ -22,7 +22,6 @@ self.addEventListener('activate', event => {
 
 // 3. Network-First Strategy
 self.addEventListener('fetch', event => {
-    // Only cache standard GET requests (ignores Stripe/Supabase POST data)
     if (event.request.method !== 'GET') return;
 
     event.respondWith(
