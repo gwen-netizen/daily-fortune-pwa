@@ -41,13 +41,14 @@ async function handler(req, res) {
   try {
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
-      const userEmail = session.client_reference_id || session.customer_email;
+      const rawEmail = session.client_reference_id || session.customer_email;
       const planType = session.metadata ? session.metadata.plan_type : null;
 
-      if (userEmail) {
+      if (rawEmail) {
+        const userEmail = rawEmail.trim().toLowerCase();
         let passExpiry = null;
         
-        // VITAL FIX: If they bought the $0.99 pass, set the Supabase expiration to exactly 48 hours from now
+        // 48-Hour Pass Expiration Trigger
         if (planType === 'pass' || planType === '2day') {
           passExpiry = new Date(Date.now() + (48 * 3600 * 1000)).toISOString();
         }
@@ -55,7 +56,7 @@ async function handler(req, res) {
         const { error } = await supabase
           .from('user_profiles')
           .upsert({ 
-            email: userEmail.toLowerCase(), 
+            email: userEmail, 
             premium_user: true,
             pass_expires_at: passExpiry
           }, { onConflict: 'email' });
@@ -66,18 +67,19 @@ async function handler(req, res) {
 
     if (event.type === 'customer.subscription.deleted') {
       const subscription = event.data.object;
-      let userEmail = subscription.customer_email;
+      let rawEmail = subscription.customer_email;
 
-      if (!userEmail && subscription.customer) {
+      if (!rawEmail && subscription.customer) {
         const customer = await stripeClient.customers.retrieve(subscription.customer);
-        userEmail = customer.email;
+        rawEmail = customer.email;
       }
 
-      if (userEmail) {
+      if (rawEmail) {
+        const userEmail = rawEmail.trim().toLowerCase();
         const { error } = await supabase
           .from('user_profiles')
           .update({ premium_user: false, pass_expires_at: null })
-          .eq('email', userEmail.toLowerCase());
+          .eq('email', userEmail);
 
         if (error) throw error;
       }
