@@ -1,5 +1,5 @@
-// app.js - Single Source of Truth Engine (Supabase-Verified)
-let currentUserProfile = null; // Live authoritative record from Supabase
+// app.js - Strict Server-Authoritative Engine (120 Reset)
+let currentUserProfile = null;
 let isPremiumSelected = false;
 let countdownInterval = null;
 let passTickerInterval = null;
@@ -25,7 +25,7 @@ function getApiUrl(path) {
   }
 }
 
-// Universal ISO parser for PostgreSQL timestamptz strings
+// Universal ISO parser for PostgreSQL timestamptz strings (handles Safari/WebKit '+00' offsets)
 function parseDbTimestamp(dateStr) {
   if (!dateStr) return 0;
   try {
@@ -40,18 +40,25 @@ function parseDbTimestamp(dateStr) {
   }
 }
 
+function getDeviceId() {
+  let deviceId = localStorage.getItem('nudge_device_id');
+  if (!deviceId) {
+    deviceId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : 'dev_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+    localStorage.setItem('nudge_device_id', deviceId);
+  }
+  return deviceId;
+}
+
 /* ========================================================
-   LIVE SUBSCRIPTION EVALUATION (ZERO LOCALSTORAGE FLAGS)
+   STRICT SERVER-VERIFIED ACCESS CHECK
 ======================================================== */
 function isUserPremiumOrPass() {
   if (!currentUserProfile) return false;
 
-  // 1. Permanent/Monthly subscriber
   if (currentUserProfile.premium_user === true || currentUserProfile.premium_user === 'true') {
     return true;
   }
 
-  // 2. Active 48-Hour Pass holder
   if (currentUserProfile.pass_expires_at) {
     const expiryMs = parseDbTimestamp(currentUserProfile.pass_expires_at);
     return Date.now() < expiryMs;
@@ -161,7 +168,7 @@ function applyPremiumUIVisuals() {
 }
 
 /* ========================================================
-   CLICK TRACKER (ONLY FOR FREE TIER)
+   CLICK TRACKER (ONLY FOR VERIFIED FREE TIER)
 ======================================================== */
 function getTodayDateString() {
   const d = new Date();
@@ -188,35 +195,60 @@ function incrementDailyClicks() {
 }
 
 /* ========================================================
-   APPLICATION BOOT & SUPABASE SYNC
+   STRICT BOOT & INITIALIZATION (NO FALLBACK)
 ======================================================== */
 document.addEventListener("DOMContentLoaded", async () => {
   initializeMuteUISystem(); 
   renderCustomIntercepts();
   startBackgroundInterceptMonitor();
 
+  const claimed = localStorage.getItem('nudge_promo_claimed') === 'true';
+  const promoInput = document.getElementById('user-promo-code');
+  if (promoInput) {
+    if (!claimed) {
+      promoInput.value = 'PREMIUM99';
+    } else {
+      promoInput.value = '';
+      promoInput.placeholder = 'Promo Code Claimed';
+      promoInput.disabled = true;
+      promoInput.style.opacity = '0.6';
+    }
+  }
+
+  await checkStripeRedirectStatus();
+
   const savedEmail = localStorage.getItem('nudge_user_email');
   
   if (savedEmail && savedEmail.includes('@')) {
-    // Verified profile fetch from Supabase before unlocking dashboard
     try {
       const endpoint = getApiUrl(`/api/sync-user?email=${encodeURIComponent(savedEmail)}&action=get_profile`);
       const response = await fetch(endpoint);
+      
+      if (!response.ok) {
+        throw new Error(`Server returned status ${response.status}`);
+      }
+
       const data = await response.json();
 
-      if (response.ok && data.profile) {
-        currentUserProfile = data.profile;
-        totalWinsCount = data.profile.total_wins || 0;
-        totalFocusReclaimed = data.profile.focus_reclaimed || 0.0;
+      if (!data.profile) {
+        throw new Error("Invalid profile payload from server.");
       }
-    } catch (e) {
-      console.warn("Supabase network error, starting offline session", e);
-    }
 
-    applyPremiumUIVisuals();
-    updateMetricDashboard();
-    startPassTicker();
-    switchScreen('screen-dashboard');
+      // Authoritative state assignment from Supabase
+      currentUserProfile = data.profile;
+      totalWinsCount = parseInt(data.profile.total_wins, 10) || 0;
+      totalFocusReclaimed = parseFloat(data.profile.focus_reclaimed) || 0.0;
+
+      applyPremiumUIVisuals();
+      updateMetricDashboard();
+      startPassTicker();
+      switchScreen('screen-dashboard');
+    } catch (e) {
+      // Network failure: Strictly deny dashboard access. Do not default to Free.
+      console.error("Authentication Gate Block:", e);
+      alert("⚠️ Connection Failure: Unable to verify account credentials with Supabase. Please check your internet connection and reload.");
+      switchScreen('screen-onboarding-1');
+    }
   } else {
     switchScreen('screen-onboarding-1');
   }
@@ -227,13 +259,16 @@ function updateMetricDashboard() {
   const focusEl = document.getElementById('stat-focus');
   const dailyUsesEl = document.getElementById('stat-daily-uses');
   
-  if (streaksEl && focusEl) {
+  if (streaksEl) {
     streaksEl.innerText = totalWinsCount;
+  }
+
+  if (focusEl) {
     if (totalFocusReclaimed < 60) {
-      focusEl.innerText = totalFocusReclaimed.toFixed(1) + ' min';
+      focusEl.innerText = totalFocusReclaimed.toFixed(1) + 'm';
     } else {
       const hoursScaled = totalFocusReclaimed / 60;
-      focusEl.innerText = hoursScaled.toFixed(1) + ' hr';
+      focusEl.innerText = hoursScaled.toFixed(1) + 'h';
     }
   }
 
@@ -279,7 +314,7 @@ function userLogout() {
 }
 
 /* ========================================================
-   AUTHENTICATION & OTP (SUPABASE VERIFICATION GATE)
+   STRICT AUTHENTICATION GATE (NO ENTRY ON ERROR)
 ======================================================== */
 async function initializeUserProfile() {
   const emailInput = document.getElementById('user-auth-email');
@@ -289,7 +324,6 @@ async function initializeUserProfile() {
   }
 
   const userEmail = emailInput.value.trim().toLowerCase();
-  localStorage.setItem('nudge_user_email', userEmail);
 
   const loginBtn = document.getElementById('btn-take-control');
   const originalText = loginBtn ? loginBtn.innerText : "Take Control";
@@ -306,14 +340,15 @@ async function initializeUserProfile() {
     const data = await response.json();
 
     if (response.ok && data.sent) {
+      localStorage.setItem('nudge_user_email', userEmail);
       const noticeEl = document.getElementById('verification-notice-text');
       if (noticeEl) noticeEl.innerText = `We sent a secure access code to ${userEmail}.`;
       switchScreen('screen-auth-verify');
     } else {
-      alert(`OTP Request Failed: ${data.error || "Unable to dispatch verification code."}`);
+      alert(`OTP Request Failed: ${data.error || "Unable to dispatch verification code via Supabase."}`);
     }
   } catch (error) {
-    alert(`Network Request Error: ${error.message}`);
+    alert("Connection Error: Unable to communicate with the verification server. Please check your connection.");
   } finally {
     if (loginBtn) {
       loginBtn.innerText = originalText;
@@ -348,26 +383,39 @@ async function verifyOTP() {
   try {
     const endpoint = getApiUrl(`/api/sync-user?email=${encodeURIComponent(userEmail)}&action=verify_otp&token=${encodeURIComponent(token)}&promo_code=${encodeURIComponent(promoCode)}`);
     const response = await fetch(endpoint);
+    
+    if (!response.ok) {
+      const errPayload = await response.json().catch(() => ({}));
+      throw new Error(errPayload.error || `Server verification rejected (HTTP ${response.status})`);
+    }
+
     const data = await response.json();
 
-    if (response.ok && data.success && data.profile) {
-      // 1. Store authoritative database profile in memory
+    if (data.success && data.profile) {
       currentUserProfile = data.profile;
-      totalWinsCount = data.profile.total_wins || 0;
-      totalFocusReclaimed = data.profile.focus_reclaimed || 0.0;
+      
+      totalWinsCount = parseInt(data.profile.total_wins, 10) || 0;
+      totalFocusReclaimed = parseFloat(data.profile.focus_reclaimed) || 0.0;
 
-      // 2. Compute subscription state immediately from Supabase response
+      if (data.profile.promo_claimed) {
+        localStorage.setItem('nudge_promo_claimed', 'true');
+      }
+
       applyPremiumUIVisuals();
       updateMetricDashboard();
       startPassTicker();
 
-      // 3. Navigate into the app
-      switchScreen('screen-onboarding-2');
+      if (totalWinsCount > 0) {
+        switchScreen('screen-dashboard');
+      } else {
+        switchScreen('screen-onboarding-2');
+      }
     } else {
       alert(`Verification Error: ${data.error || "Invalid or expired access code."}`);
     }
   } catch (err) {
-    alert(`Network Request Error: ${err.message}`);
+    // Strictly forbid login on connection failure
+    alert(`Login Failed: ${err.message}. Connection could not be verified.`);
   } finally {
     if (verifyBtn) {
       verifyBtn.innerText = originalText;
@@ -381,6 +429,8 @@ async function syncLifetimeProgressToCloud() {
   const userEmail = localStorage.getItem('nudge_user_email');
   if (!userEmail) return;
 
+  const claimed = localStorage.getItem('nudge_promo_claimed') === 'true';
+
   try {
     const response = await fetch(getApiUrl('/api/sync-user'), {
       method: 'POST',
@@ -388,7 +438,8 @@ async function syncLifetimeProgressToCloud() {
       body: JSON.stringify({
         email: userEmail,
         total_wins: totalWinsCount,
-        focus_reclaimed: totalFocusReclaimed
+        focus_reclaimed: totalFocusReclaimed,
+        promo_claimed: claimed
       })
     });
     const data = await response.json();
@@ -398,7 +449,7 @@ async function syncLifetimeProgressToCloud() {
       updatePassCountdown();
     }
   } catch (err) {
-    console.warn(err);
+    console.warn("Cloud synchronization paused: Network unavailable.", err);
   }
 }
 
@@ -669,12 +720,14 @@ function triggerVictoryPhase(minutesEarned) {
   totalWinsCount += 1;
   totalFocusReclaimed += minutesEarned;
   
+  updateMetricDashboard();
+  
   try {
     if (!isAppMuted) {
       const audioNode = document.getElementById('victory-chime');
       if (audioNode) { audioNode.currentTime = 0; audioNode.play().catch(e=>{}); }
     }
-  } catch (e) {}
+  } catch (e) { console.warn(e); }
   
   switchScreen('screen-victory');
   
@@ -682,7 +735,7 @@ function triggerVictoryPhase(minutesEarned) {
     if (typeof confetti === 'function') {
       confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#D4A373', '#4A7C59', '#2D2B2A'] });
     }
-  } catch (e) {}
+  } catch (e) { console.log(e); }
 }
 
 function claimRewardStack() {
@@ -795,7 +848,6 @@ function startBackgroundInterceptMonitor() {
 
     if (currentTimeStr === lastTriggeredMinute) return;
 
-    // 1. Check user-defined custom intercepts
     const customs = JSON.parse(localStorage.getItem('nudge_custom_intercepts') || '[]');
     for (const c of customs) {
       if (c.enabled !== false && c.time === currentTimeStr) {
@@ -805,7 +857,6 @@ function startBackgroundInterceptMonitor() {
       }
     }
 
-    // 2. Check system default time anchors
     const defaultAnchors = {
       "08:15": "Morning Bed-Lock",
       "09:45": "Workspace Inertia",
