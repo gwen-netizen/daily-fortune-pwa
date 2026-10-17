@@ -311,7 +311,7 @@ function userLogout() {
 }
 
 /* ========================================================
-   STRICT AUTHENTICATION GATE (NO ENTRY ON ERROR)
+   AUTHENTICATION & OTP FLOW
 ======================================================== */
 async function initializeUserProfile() {
   const emailInput = document.getElementById('user-auth-email');
@@ -610,9 +610,14 @@ async function executeTurnaroundSpin() {
 
   const activeDeckName = document.getElementById('active-deck-title').innerText.toLowerCase();
   let categoryKey = 'charisma';
-  if (activeDeckName.includes("wealth")) categoryKey = 'wealth';
-  else if (activeDeckName.includes("dopamine")) categoryKey = 'dopamine';
-  else if (activeDeckName.includes("overwhelm")) categoryKey = 'overwhelm';
+  // Supports "financial", "freeze", or legacy "wealth"
+  if (activeDeckName.includes("financial") || activeDeckName.includes("freeze") || activeDeckName.includes("wealth")) {
+    categoryKey = 'wealth';
+  } else if (activeDeckName.includes("dopamine")) {
+    categoryKey = 'dopamine';
+  } else if (activeDeckName.includes("overwhelm")) {
+    categoryKey = 'overwhelm';
+  }
 
   const userEmail = localStorage.getItem('nudge_user_email') || 'anonymous_tester';
 
