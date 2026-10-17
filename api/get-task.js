@@ -27,7 +27,6 @@ module.exports = async function handler(req, res) {
     const cleanEmail = email ? email.trim().toLowerCase() : '';
 
     if (cleanEmail && cleanEmail !== 'anonymous_tester') {
-      // Safely handles case-insensitivity and prevents duplicate row crashes
       const { data } = await supabase
         .from('user_profiles')
         .select('premium_user, pass_expires_at')
@@ -37,7 +36,7 @@ module.exports = async function handler(req, res) {
       userProfile = data && data.length > 0 ? data[0] : null;
     }
 
-    // PASS EXPIRATION CHECK: Only demote if the user is NOT permanently premium
+    // PASS EXPIRATION CHECK: Never demote permanent premium users
     if (userProfile && userProfile.pass_expires_at) {
       const expiresAt = new Date(userProfile.pass_expires_at).getTime();
       if (Date.now() >= expiresAt) {
@@ -49,7 +48,6 @@ module.exports = async function handler(req, res) {
 
           userProfile.premium_user = false;
         } else {
-          // If already premium_user = true, only clear the expired pass date
           await supabase
             .from('user_profiles')
             .update({ pass_expires_at: null })
@@ -70,21 +68,15 @@ module.exports = async function handler(req, res) {
       return res.status(404).json({ error: "Focus Area pool mapping mismatch." });
     }
 
+    // Pick randomized task from target deck
     const randomTaskIndex = Math.floor(Math.random() * targetPool.length);
-    let selectedTaskData = targetPool[randomTaskIndex];
-
-    let finalTaskText = selectedTaskData.text;
-    if (friction === 'scroll' && lowerCategory === 'charisma') {
-      finalTaskText = "⚡ INTERCEPTION: " + finalTaskText + " Look up from the rectangle right now and engage your physical reality.";
-    } else if (friction === 'paralysis' && lowerCategory === 'overwhelm') {
-      finalTaskText = "🧠 BREAK OUT: " + finalTaskText + " Bypassing decision paralysis starts with executing this 120-second step.";
-    }
+    const selectedTaskData = targetPool[randomTaskIndex];
 
     return res.status(200).json({ 
       task: {
-        text: finalTaskText,
-        metricLabel: selectedTaskData.label || selectedTaskData.metricLabel || "Impact",
-        rating: selectedTaskData.rating || 3
+        text: selectedTaskData.text,
+        focusArea: selectedTaskData.focusArea || selectedTaskData.label || "Core Biomechanics",
+        affirmation: selectedTaskData.affirmation || selectedTaskData.text
       }
     });
   } catch (error) {
