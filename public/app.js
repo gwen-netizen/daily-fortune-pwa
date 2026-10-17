@@ -1,5 +1,6 @@
 // app.js - Strict Server-Authoritative Engine (120 Reset)
 let currentUserProfile = null;
+let currentActiveTask = null; // Authoritative reference for active micro-task
 let isPremiumSelected = false;
 let countdownInterval = null;
 let passTickerInterval = null;
@@ -10,12 +11,6 @@ let isAppMuted = localStorage.getItem('nudge_app_muted') === 'true';
 
 let totalWinsCount = 0;
 let totalFocusReclaimed = 0.0;
-
-const victoryValidationStrings = [
-  "You chose active alignment while the rest of the world remained paralyzed scrolling algorithms. Focus Reclaimed.",
-  "Friction broken. By taking action for 120 seconds, you proved to your brain that execution is safe.",
-  "The dopamine loop has been successfully redirected. You are now running on clean execution energy."
-];
 
 function getApiUrl(path) {
   try {
@@ -596,23 +591,8 @@ async function openCustomerPortal() {
 }
 
 /* ========================================================
-   TASK EXECUTION & FORCED PHYSICAL INTERVENTION
+   TASK EXECUTION & TWO-STAGE EXPERIENCE ENGINE
 ======================================================== */
-function renderSingleChallengeRating(label, ratingScore) {
-  const labelNode = document.getElementById('target-metric-label');
-  const starsNode = document.getElementById('target-metric-stars');
-  
-  if (labelNode && starsNode) {
-    labelNode.innerText = `${label || "Impact"}:`;
-    let starString = '';
-    const cleanScore = parseInt(ratingScore, 10) || 3;
-    for (let i = 0; i < 5; i++) {
-      starString += i < cleanScore ? '★' : '☆';
-    }
-    starsNode.innerText = starString;
-  }
-}
-
 async function executeTurnaroundSpin() {
   const hasUnlimitedAccess = isUserPremiumOrPass();
   const dailyClicks = getDailyClicksCount();
@@ -628,7 +608,26 @@ async function executeTurnaroundSpin() {
   if (btn) { btn.innerText = "HOLD..."; btn.style.opacity = "0.6"; }
   if (instruction) instruction.innerText = "Exhale slowly... allowing your focus to narrow down completely.";
 
+  const activeDeckName = document.getElementById('active-deck-title').innerText.toLowerCase();
+  let categoryKey = 'charisma';
+  if (activeDeckName.includes("wealth")) categoryKey = 'wealth';
+  else if (activeDeckName.includes("dopamine")) categoryKey = 'dopamine';
+  else if (activeDeckName.includes("overwhelm")) categoryKey = 'overwhelm';
+
+  const userEmail = localStorage.getItem('nudge_user_email') || 'anonymous_tester';
+
   try {
+    const endpoint = getApiUrl(`/api/get-task?category=${categoryKey}&friction=${mindFrictionStyle}&email=${encodeURIComponent(userEmail)}`);
+    const response = await fetch(endpoint);
+    
+    if (!response.ok) {
+      const serverErr = await response.json();
+      throw new Error(serverErr.error || "Server validation failure.");
+    }
+    
+    const data = await response.json();
+    currentActiveTask = data.task; // Save current task for affirmation screen
+
     if (!hasUnlimitedAccess) {
       incrementDailyClicks();
     }
@@ -637,17 +636,17 @@ async function executeTurnaroundSpin() {
       if (btn) { btn.innerText = "START"; btn.style.opacity = "1"; }
       
       const taskDisplayEl = document.getElementById('target-task-text');
-      if (taskDisplayEl) {
-        taskDisplayEl.innerHTML = `
-          <div style="font-weight: 700; margin-bottom: 14px; line-height: 1.45; color: var(--text-color);">
-            Squeeze your stomach and thigh muscles as hard as you can without moving. Hold it for 15 seconds, then relax for 5 seconds. Repeat this 4 times. Squeezing your muscles wakes up your brain and breaks your scrolling habit.
-          </div>
-          <div style="font-size: 13px; color: #6E6A67; font-weight: 500; line-height: 1.4; border-top: 1px dashed #EAE3D9; padding-top: 12px; text-align: left;">
-            💡 <b>Why it works:</b> It proves that the app uses physical, biological hacks rather than demanding mental willpower.
-          </div>
-        `;
-
-        renderSingleChallengeRating("Bio-Hack", 5);
+      const focusAreaEl = document.getElementById('target-task-focus-area');
+      
+      // Clean, bold directive (max 20 words)
+      if (taskDisplayEl && currentActiveTask) {
+        taskDisplayEl.innerText = currentActiveTask.text;
+      }
+      
+      // Focus area subtitle (Pillar 1 to 3B)
+      if (focusAreaEl && currentActiveTask) {
+        const areaLabel = currentActiveTask.focusArea || "Pillar 3B: Physical Posture & Biomechanics";
+        focusAreaEl.innerText = areaLabel.startsWith("Focus Area:") ? areaLabel : `Focus Area: ${areaLabel}`;
       }
       
       switchScreen('screen-countdown');
@@ -702,9 +701,15 @@ function cancelTimer() {
 }
 
 function triggerVictoryPhase(minutesEarned) {
-  const copy = victoryValidationStrings[Math.floor(Math.random() * victoryValidationStrings.length)];
+  // Render the specific psychological/biological affirmation for this task
   const validationCopyEl = document.getElementById('victory-validation-copy');
-  if (validationCopyEl) validationCopyEl.innerText = copy;
+  if (validationCopyEl) {
+    if (currentActiveTask && currentActiveTask.affirmation) {
+      validationCopyEl.innerText = currentActiveTask.affirmation;
+    } else {
+      validationCopyEl.innerText = "Primates hunch forward to protect vital organs when under threat; charismatic leaders expose their torso because they fear nothing in the room.";
+    }
+  }
   
   totalWinsCount += 1;
   totalFocusReclaimed += minutesEarned;
@@ -731,6 +736,14 @@ function claimRewardStack() {
   updateMetricDashboard();
   syncLifetimeProgressToCloud();
   switchScreen('screen-dashboard');
+}
+
+// Seamlessly loops into another micro-task within the exact same deck
+function runAnotherRound() {
+  updateMetricDashboard();
+  syncLifetimeProgressToCloud();
+  switchScreen('screen-trigger');
+  executeTurnaroundSpin();
 }
 
 /* ========================================================
