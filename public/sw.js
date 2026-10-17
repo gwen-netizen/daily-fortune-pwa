@@ -1,4 +1,4 @@
-const CACHE_NAME = '120reset-v32';
+const CACHE_NAME = '120reset-v33';
 
 // 1. Force the new service worker to take over immediately
 self.addEventListener('install', event => {
