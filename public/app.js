@@ -597,7 +597,7 @@ async function openCustomerPortal() {
 }
 
 /* ========================================================
-   TASK EXECUTION & TIMER
+   TASK EXECUTION & TIMER (FORCED BIOLOGICAL INTERVENTION)
 ======================================================== */
 function renderSingleChallengeRating(label, ratingScore) {
   const labelNode = document.getElementById('target-metric-label');
@@ -629,25 +629,7 @@ async function executeTurnaroundSpin() {
   if (btn) { btn.innerText = "HOLD..."; btn.style.opacity = "0.6"; }
   if (instruction) instruction.innerText = "Exhale slowly... allowing your focus to narrow down completely.";
 
-  const activeDeckName = document.getElementById('active-deck-title').innerText.toLowerCase();
-  let categoryKey = 'charisma';
-  if (activeDeckName.includes("wealth")) categoryKey = 'wealth';
-  else if (activeDeckName.includes("dopamine")) categoryKey = 'dopamine';
-  else if (activeDeckName.includes("overwhelm")) categoryKey = 'overwhelm';
-
-  const userEmail = localStorage.getItem('nudge_user_email') || 'anonymous_tester';
-
   try {
-    const endpoint = getApiUrl(`/api/get-task?category=${categoryKey}&friction=${mindFrictionStyle}&email=${encodeURIComponent(userEmail)}`);
-    const response = await fetch(endpoint);
-    
-    if (!response.ok) {
-      const serverErr = await response.json();
-      throw new Error(serverErr.error || "Server validation failure.");
-    }
-    
-    const data = await response.json();
-
     if (!hasUnlimitedAccess) {
       incrementDailyClicks();
     }
@@ -656,9 +638,17 @@ async function executeTurnaroundSpin() {
       if (btn) { btn.innerText = "START"; btn.style.opacity = "1"; }
       
       const taskDisplayEl = document.getElementById('target-task-text');
-      if (taskDisplayEl && data.task) {
-        taskDisplayEl.innerText = data.task.text;
-        renderSingleChallengeRating(data.task.metricLabel, data.task.rating);
+      if (taskDisplayEl) {
+        taskDisplayEl.innerHTML = `
+          <div style="font-weight: 700; margin-bottom: 14px; line-height: 1.45; color: var(--text-color);">
+            Squeeze your stomach and thigh muscles as hard as you can without moving. Hold it for 15 seconds, then relax for 5 seconds. Repeat this 4 times. Squeezing your muscles wakes up your brain and breaks your scrolling habit.
+          </div>
+          <div style="font-size: 13px; color: #6E6A67; font-weight: 500; line-height: 1.4; border-top: 1px dashed #EAE3D9; padding-top: 12px; text-align: left;">
+            💡 <b>Why it works:</b> It proves that the app uses physical, biological hacks rather than demanding mental willpower.
+          </div>
+        `;
+
+        renderSingleChallengeRating("Bio-Hack", 5);
       }
       
       switchScreen('screen-countdown');
