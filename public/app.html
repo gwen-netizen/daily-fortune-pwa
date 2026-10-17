@@ -248,36 +248,43 @@
       </div>
     </div>
 
-    <!-- SCREEN 5: COUNTDOWN -->
+    <!-- SCREEN 5: CLEAN COUNTDOWN (NO ANXIETY TEXT) -->
     <div id="screen-countdown" class="screen">
-      <div class="title-deck" style="color: var(--timer-color); font-size: 14px; letter-spacing: 1px;">⚡ ACTIVE CONSTRAINTS IN EFFECT</div>
-      <div class="task-display-card">
-        <p id="target-task-text" class="task-display-text">Loading baseline alignment task...</p>
-        
-        <div id="single-metric-holder" style="margin-top: 20px; display: flex; justify-content: center; align-items: center; gap: 8px; padding-top: 14px; border-top: 1px dashed #EAE3D9;">
-          <span id="target-metric-label" style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: #555250; letter-spacing: 0.5px;"></span>
-          <span id="target-metric-stars" style="color: #FFD166; font-size: 14px; font-weight: 800; letter-spacing: 1px;"></span>
+      <div style="width: 100%; margin: auto 0;">
+        <div class="task-display-card" style="padding: 28px 22px; border-radius: 24px; box-shadow: 0 12px 36px rgba(45, 43, 42, 0.04); background: #FFFFFF; border: 1px solid #EAE3D9;">
+          <!-- Bold primary directive (max 20 words for easy reading) -->
+          <p id="target-task-text" style="font-weight: 800; font-size: 19px; line-height: 1.45; color: var(--text-color); margin-bottom: 12px;"></p>
+          <!-- Smaller focus area subtitle -->
+          <p id="target-task-focus-area" style="font-size: 13px; font-weight: 600; color: #8A735D; margin: 0;"></p>
         </div>
       </div>
+
       <div style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 8px;">
         <div id="timer-display" class="timer-ring">02:00</div>
-        <button class="btn-primary btn-success-action" onclick="finishEarly()">Complete Early</button>
-        <button class="btn-bypass" onclick="cancelTimer()">Abort Task</button>
+        <button class="btn-primary btn-success-action" onclick="finishEarly()">Complete Task</button>
+        <button class="btn-bypass" onclick="cancelTimer()">Abort</button>
       </div>
     </div>
 
-    <!-- SCREEN 6: VICTORY -->
+    <!-- SCREEN 6: VICTORY & AFFIRMATION (WHY IT WORKS) -->
     <div id="screen-victory" class="screen">
       <div style="margin: auto 0; width: 100%;">
         <div class="victory-crown">🏆</div>
-        <h2 class="title-large" style="color: var(--success-color); margin-bottom: 8px;">Identity Calibrated.</h2>
-        <p class="body-text" style="margin-top: 8px;" id="victory-validation-copy">You chose action while the world chose mindless distraction. Your forward momentum is locked in.</p>
+        <h2 class="title-large" style="color: var(--success-color); margin-bottom: 12px; font-size: 24px;">Impact Calibrated.</h2>
+        
+        <!-- Biological affirmation & explanation -->
+        <div style="background: #FAF7F2; border: 1px solid #EAE3D9; border-radius: 18px; padding: 18px 16px; margin-top: 8px; text-align: left;">
+          <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--premium-color); letter-spacing: 0.5px; margin-bottom: 6px;">🧠 Neurological Insight</div>
+          <p class="body-text" style="font-size: 14px; line-height: 1.5; color: var(--text-color); margin: 0;" id="victory-validation-copy"></p>
+        </div>
       </div>
       
-      <div style="width: 100%;">
+      <div style="width: 100%; display: flex; flex-direction: column; gap: 8px;">
         <button class="btn-primary" style="background-color: var(--success-color);" onclick="claimRewardStack()">Claim Reward Stack</button>
+        <!-- Loop continuation button -->
+        <button class="btn-bypass" style="width: 100%; padding: 14px; border: 2px solid #EAE3D9; border-radius: 14px; font-size: 14px; font-weight: 700; color: var(--text-color); background: #FAF7F2; cursor: pointer;" onclick="runAnotherRound()">Not enough? Run another round</button>
         
-        <div style="width: 100%; text-align: right; margin-top: 12px; padding-right: 2px;">
+        <div style="width: 100%; text-align: right; margin-top: 4px; padding-right: 2px;">
           <button id="btn-victory-manage-subscription" onclick="openCustomerPortal()" style="display: none; background: none; border: none; color: #A8A29E; font-size: 11px; font-weight: 500; text-decoration: underline; cursor: pointer; opacity: 0.6;">Manage Subscription</button>
         </div>
       </div>
