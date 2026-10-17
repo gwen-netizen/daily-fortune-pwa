@@ -27,7 +27,7 @@ module.exports = async function handler(req, res) {
     const cleanEmail = email ? email.trim().toLowerCase() : '';
 
     if (cleanEmail && cleanEmail !== 'anonymous_tester') {
-      // VITAL FIX: Safely handles case-insensitivity and prevents duplicate row crashes
+      // Safely handles case-insensitivity and prevents duplicate row crashes
       const { data } = await supabase
         .from('user_profiles')
         .select('premium_user, pass_expires_at')
@@ -37,16 +37,24 @@ module.exports = async function handler(req, res) {
       userProfile = data && data.length > 0 ? data[0] : null;
     }
 
-    // Supabase 48-Hour Pass Expiration Verification
+    // PASS EXPIRATION CHECK: Only demote if the user is NOT permanently premium
     if (userProfile && userProfile.pass_expires_at) {
       const expiresAt = new Date(userProfile.pass_expires_at).getTime();
       if (Date.now() >= expiresAt) {
-        await supabase
-          .from('user_profiles')
-          .update({ premium_user: false, pass_expires_at: null })
-          .ilike('email', cleanEmail);
+        if (userProfile.premium_user !== true) {
+          await supabase
+            .from('user_profiles')
+            .update({ premium_user: false, pass_expires_at: null })
+            .ilike('email', cleanEmail);
 
-        userProfile.premium_user = false;
+          userProfile.premium_user = false;
+        } else {
+          // If already premium_user = true, only clear the expired pass date
+          await supabase
+            .from('user_profiles')
+            .update({ pass_expires_at: null })
+            .ilike('email', cleanEmail);
+        }
         userProfile.pass_expires_at = null;
       }
     }
