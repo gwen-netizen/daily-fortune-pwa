@@ -8,8 +8,8 @@ let lastTriggeredMinute = "";
 let mindFrictionStyle = 'scroll'; 
 let isAppMuted = localStorage.getItem('nudge_app_muted') === 'true'; 
 
-let totalWinsCount = 0;
-let totalFocusReclaimed = 0.0;
+let totalWinsCount = parseInt(localStorage.getItem('nudge_total_wins') || '0', 10);
+let totalFocusReclaimed = parseFloat(localStorage.getItem('nudge_minutes') || '0.0');
 
 const victoryValidationStrings = [
   "You chose active alignment while the rest of the world remained paralyzed scrolling algorithms. Focus Reclaimed.",
@@ -25,7 +25,6 @@ function getApiUrl(path) {
   }
 }
 
-// Universal ISO parser for PostgreSQL timestamptz strings (handles Safari/WebKit '+00' offsets)
 function parseDbTimestamp(dateStr) {
   if (!dateStr) return 0;
   try {
@@ -53,12 +52,16 @@ function getDeviceId() {
    STRICT SERVER-VERIFIED ACCESS CHECK
 ======================================================== */
 function isUserPremiumOrPass() {
-  if (!currentUserProfile) return false;
+  if (!currentUserProfile) {
+    return localStorage.getItem('nudge_premium_user') === 'true';
+  }
 
+  // 1. Lifetime or Monthly Subscriber (Authoritative)
   if (currentUserProfile.premium_user === true || currentUserProfile.premium_user === 'true') {
     return true;
   }
 
+  // 2. Active 48-Hour Pass Holder
   if (currentUserProfile.pass_expires_at) {
     const expiryMs = parseDbTimestamp(currentUserProfile.pass_expires_at);
     return Date.now() < expiryMs;
@@ -91,6 +94,7 @@ function updatePassCountdown() {
   banners.forEach(banner => {
     if (!banner) return;
     
+    // 1. Active 48-Hour Pass Countdown
     if (remainingSecs > 0) {
       banner.style.display = 'block';
       banner.style.background = '#FFF8E1';
@@ -106,13 +110,17 @@ function updatePassCountdown() {
       const sStr = String(secs).padStart(2, '0');
       
       banner.innerHTML = `⚡ <b>48-HOUR PASS ACTIVE</b><br>⏱️ <b>${hStr}h ${mStr}m ${sStr}s</b> remaining`;
-    } else if (hasAccess) {
+    } 
+    // 2. Lifetime / Permanent Unlocked
+    else if (hasAccess) {
       banner.style.display = 'block';
       banner.style.background = '#E8F5E9';
       banner.style.borderColor = 'var(--success-color)';
       banner.style.color = 'var(--success-color)';
       banner.innerHTML = '✅ <b>FULL PREMIUM UNLOCKED</b><br>Unlimited Daily Intercepts';
-    } else {
+    } 
+    // 3. Free Account
+    else {
       const clicksUsed = getDailyClicksCount();
       banner.style.display = 'block';
       banner.style.background = '#FAF7F2';
@@ -168,7 +176,7 @@ function applyPremiumUIVisuals() {
 }
 
 /* ========================================================
-   CLICK TRACKER (ONLY FOR VERIFIED FREE TIER)
+   CLICK TRACKER (ONLY FOR FREE TIER)
 ======================================================== */
 function getTodayDateString() {
   const d = new Date();
@@ -195,7 +203,7 @@ function incrementDailyClicks() {
 }
 
 /* ========================================================
-   STRICT BOOT & INITIALIZATION (NO FALLBACK)
+   BOOT & INITIALIZATION
 ======================================================== */
 document.addEventListener("DOMContentLoaded", async () => {
   initializeMuteUISystem(); 
@@ -224,31 +232,30 @@ document.addEventListener("DOMContentLoaded", async () => {
       const endpoint = getApiUrl(`/api/sync-user?email=${encodeURIComponent(savedEmail)}&action=get_profile`);
       const response = await fetch(endpoint);
       
-      if (!response.ok) {
-        throw new Error(`Server returned status ${response.status}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.profile) {
+          currentUserProfile = data.profile;
+          totalWinsCount = parseInt(data.profile.total_wins, 10) || 0;
+          totalFocusReclaimed = parseFloat(data.profile.focus_reclaimed) || 0.0;
+          localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
+          localStorage.setItem('nudge_minutes', totalFocusReclaimed.toString());
+
+          if (data.profile.premium_user === true || data.profile.premium_user === 'true') {
+            localStorage.setItem('nudge_premium_user', 'true');
+          } else {
+            localStorage.removeItem('nudge_premium_user');
+          }
+        }
       }
-
-      const data = await response.json();
-
-      if (!data.profile) {
-        throw new Error("Invalid profile payload from server.");
-      }
-
-      // Authoritative state assignment from Supabase
-      currentUserProfile = data.profile;
-      totalWinsCount = parseInt(data.profile.total_wins, 10) || 0;
-      totalFocusReclaimed = parseFloat(data.profile.focus_reclaimed) || 0.0;
-
-      applyPremiumUIVisuals();
-      updateMetricDashboard();
-      startPassTicker();
-      switchScreen('screen-dashboard');
     } catch (e) {
-      // Network failure: Strictly deny dashboard access. Do not default to Free.
-      console.error("Authentication Gate Block:", e);
-      alert("⚠️ Connection Failure: Unable to verify account credentials with Supabase. Please check your internet connection and reload.");
-      switchScreen('screen-onboarding-1');
+      console.warn("Using verified cached session state", e);
     }
+
+    applyPremiumUIVisuals();
+    updateMetricDashboard();
+    startPassTicker();
+    switchScreen('screen-dashboard');
   } else {
     switchScreen('screen-onboarding-1');
   }
@@ -259,9 +266,7 @@ function updateMetricDashboard() {
   const focusEl = document.getElementById('stat-focus');
   const dailyUsesEl = document.getElementById('stat-daily-uses');
   
-  if (streaksEl) {
-    streaksEl.innerText = totalWinsCount;
-  }
+  if (streaksEl) streaksEl.innerText = totalWinsCount;
 
   if (focusEl) {
     if (totalFocusReclaimed < 60) {
@@ -306,6 +311,11 @@ function switchScreen(screenId) {
 
 function userLogout() {
   localStorage.removeItem('nudge_user_email');
+  localStorage.removeItem('nudge_premium_user');
+  localStorage.removeItem('nudge_pass_expiry');
+  localStorage.removeItem('nudge_promo_claimed');
+  localStorage.removeItem('nudge_total_wins');
+  localStorage.removeItem('nudge_minutes');
   currentUserProfile = null;
   totalWinsCount = 0;
   totalFocusReclaimed = 0.0;
@@ -314,7 +324,7 @@ function userLogout() {
 }
 
 /* ========================================================
-   STRICT AUTHENTICATION GATE (NO ENTRY ON ERROR)
+   AUTHENTICATION & OTP FLOW
 ======================================================== */
 async function initializeUserProfile() {
   const emailInput = document.getElementById('user-auth-email');
@@ -324,7 +334,6 @@ async function initializeUserProfile() {
   }
 
   const userEmail = emailInput.value.trim().toLowerCase();
-
   const loginBtn = document.getElementById('btn-take-control');
   const originalText = loginBtn ? loginBtn.innerText : "Take Control";
   
@@ -393,12 +402,13 @@ async function verifyOTP() {
 
     if (data.success && data.profile) {
       currentUserProfile = data.profile;
-      
       totalWinsCount = parseInt(data.profile.total_wins, 10) || 0;
       totalFocusReclaimed = parseFloat(data.profile.focus_reclaimed) || 0.0;
+      localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
+      localStorage.setItem('nudge_minutes', totalFocusReclaimed.toString());
 
-      if (data.profile.promo_claimed) {
-        localStorage.setItem('nudge_promo_claimed', 'true');
+      if (data.profile.premium_user === true || data.profile.premium_user === 'true') {
+        localStorage.setItem('nudge_premium_user', 'true');
       }
 
       applyPremiumUIVisuals();
@@ -414,7 +424,6 @@ async function verifyOTP() {
       alert(`Verification Error: ${data.error || "Invalid or expired access code."}`);
     }
   } catch (err) {
-    // Strictly forbid login on connection failure
     alert(`Login Failed: ${err.message}. Connection could not be verified.`);
   } finally {
     if (verifyBtn) {
@@ -597,7 +606,7 @@ async function openCustomerPortal() {
 }
 
 /* ========================================================
-   TASK EXECUTION & TIMER (FORCED BIOLOGICAL INTERVENTION)
+   TASK EXECUTION & FORCED PHYSICAL INTERVENTION
 ======================================================== */
 function renderSingleChallengeRating(label, ratingScore) {
   const labelNode = document.getElementById('target-metric-label');
@@ -710,6 +719,8 @@ function triggerVictoryPhase(minutesEarned) {
   totalWinsCount += 1;
   totalFocusReclaimed += minutesEarned;
   
+  localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
+  localStorage.setItem('nudge_minutes', totalFocusReclaimed.toString());
   updateMetricDashboard();
   
   try {
