@@ -11,9 +11,16 @@ module.exports = async function handler(req, res) {
 
   const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
+  // SANITIZER: Respects premium_user = true unconditionally
   async function sanitizePassStatus(profile) {
     if (!profile) return profile;
 
+    // If the database has premium_user = true, they are a permanent/lifetime user. Never demote them.
+    if (profile.premium_user === true) {
+      return profile;
+    }
+
+    // Only temporary pass users with an active pass_expires_at can expire
     if (profile.pass_expires_at) {
       const expiresAt = new Date(profile.pass_expires_at).getTime();
       const now = Date.now();
@@ -31,7 +38,7 @@ module.exports = async function handler(req, res) {
     return profile;
   }
 
-  // Prevents crashes from duplicate rows and matches regardless of upper/lowercase
+  // Prevents crashes from duplicate rows and matches case-insensitively
   async function getProfileSafely(email) {
     const { data } = await supabase
       .from('user_profiles')
@@ -41,6 +48,9 @@ module.exports = async function handler(req, res) {
     return data && data.length > 0 ? data[0] : null;
   }
 
+  /* ========================================================
+     POST: PROGRESS & METRIC SYNCHRONIZATION
+  ======================================================== */
   if (req.method === 'POST') {
     try {
       const { email, total_wins, focus_reclaimed, promo_claimed } = req.body;
@@ -80,6 +90,9 @@ module.exports = async function handler(req, res) {
     }
   }
 
+  /* ========================================================
+     GET: AUTHENTICATION, OTP VERIFICATION, PROFILE RETRIEVAL
+  ======================================================== */
   if (req.method === 'GET') {
     const { email, action, token, promo_code } = req.query;
     if (!email) return res.status(400).json({ error: "Email parameter missing" });
