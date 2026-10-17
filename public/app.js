@@ -8,8 +8,8 @@ let lastTriggeredMinute = "";
 let mindFrictionStyle = 'scroll'; 
 let isAppMuted = localStorage.getItem('nudge_app_muted') === 'true'; 
 
-let totalWinsCount = parseInt(localStorage.getItem('nudge_total_wins') || '0', 10);
-let totalFocusReclaimed = parseFloat(localStorage.getItem('nudge_minutes') || '0.0');
+let totalWinsCount = 0;
+let totalFocusReclaimed = 0.0;
 
 const victoryValidationStrings = [
   "You chose active alignment while the rest of the world remained paralyzed scrolling algorithms. Focus Reclaimed.",
@@ -52,16 +52,14 @@ function getDeviceId() {
    STRICT SERVER-VERIFIED ACCESS CHECK
 ======================================================== */
 function isUserPremiumOrPass() {
-  if (!currentUserProfile) {
-    return localStorage.getItem('nudge_premium_user') === 'true';
-  }
+  if (!currentUserProfile) return false;
 
-  // 1. Lifetime or Monthly Subscriber (Authoritative)
+  // 1. Authoritative check: if Supabase says true, user is 100% premium
   if (currentUserProfile.premium_user === true || currentUserProfile.premium_user === 'true') {
     return true;
   }
 
-  // 2. Active 48-Hour Pass Holder
+  // 2. Active 48-Hour Pass check
   if (currentUserProfile.pass_expires_at) {
     const expiryMs = parseDbTimestamp(currentUserProfile.pass_expires_at);
     return Date.now() < expiryMs;
@@ -94,8 +92,16 @@ function updatePassCountdown() {
   banners.forEach(banner => {
     if (!banner) return;
     
-    // 1. Active 48-Hour Pass Countdown
-    if (remainingSecs > 0) {
+    // 1. Permanent / Lifetime Unlocked from Supabase
+    if (currentUserProfile && (currentUserProfile.premium_user === true || currentUserProfile.premium_user === 'true')) {
+      banner.style.display = 'block';
+      banner.style.background = '#E8F5E9';
+      banner.style.borderColor = 'var(--success-color)';
+      banner.style.color = 'var(--success-color)';
+      banner.innerHTML = '✅ <b>FULL PREMIUM UNLOCKED</b><br>Unlimited Daily Intercepts';
+    }
+    // 2. 48-Hour Pass Countdown
+    else if (remainingSecs > 0) {
       banner.style.display = 'block';
       banner.style.background = '#FFF8E1';
       banner.style.borderColor = '#FFB300';
@@ -110,14 +116,6 @@ function updatePassCountdown() {
       const sStr = String(secs).padStart(2, '0');
       
       banner.innerHTML = `⚡ <b>48-HOUR PASS ACTIVE</b><br>⏱️ <b>${hStr}h ${mStr}m ${sStr}s</b> remaining`;
-    } 
-    // 2. Lifetime / Permanent Unlocked
-    else if (hasAccess) {
-      banner.style.display = 'block';
-      banner.style.background = '#E8F5E9';
-      banner.style.borderColor = 'var(--success-color)';
-      banner.style.color = 'var(--success-color)';
-      banner.innerHTML = '✅ <b>FULL PREMIUM UNLOCKED</b><br>Unlimited Daily Intercepts';
     } 
     // 3. Free Account
     else {
@@ -176,7 +174,7 @@ function applyPremiumUIVisuals() {
 }
 
 /* ========================================================
-   CLICK TRACKER (ONLY FOR FREE TIER)
+   CLICK TRACKER (ONLY FOR VERIFIED FREE TIER)
 ======================================================== */
 function getTodayDateString() {
   const d = new Date();
@@ -203,7 +201,7 @@ function incrementDailyClicks() {
 }
 
 /* ========================================================
-   BOOT & INITIALIZATION
+   STRICT BOOT GATE (NO ENTRY WITHOUT SUPABASE)
 ======================================================== */
 document.addEventListener("DOMContentLoaded", async () => {
   initializeMuteUISystem(); 
@@ -232,30 +230,29 @@ document.addEventListener("DOMContentLoaded", async () => {
       const endpoint = getApiUrl(`/api/sync-user?email=${encodeURIComponent(savedEmail)}&action=get_profile`);
       const response = await fetch(endpoint);
       
-      if (response.ok) {
-        const data = await response.json();
-        if (data.profile) {
-          currentUserProfile = data.profile;
-          totalWinsCount = parseInt(data.profile.total_wins, 10) || 0;
-          totalFocusReclaimed = parseFloat(data.profile.focus_reclaimed) || 0.0;
-          localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
-          localStorage.setItem('nudge_minutes', totalFocusReclaimed.toString());
-
-          if (data.profile.premium_user === true || data.profile.premium_user === 'true') {
-            localStorage.setItem('nudge_premium_user', 'true');
-          } else {
-            localStorage.removeItem('nudge_premium_user');
-          }
-        }
+      if (!response.ok) {
+        throw new Error(`Server returned HTTP ${response.status}`);
       }
-    } catch (e) {
-      console.warn("Using verified cached session state", e);
-    }
 
-    applyPremiumUIVisuals();
-    updateMetricDashboard();
-    startPassTicker();
-    switchScreen('screen-dashboard');
+      const data = await response.json();
+
+      if (!data || !data.profile) {
+        throw new Error("Missing profile from Supabase verification gate.");
+      }
+
+      currentUserProfile = data.profile;
+      totalWinsCount = parseInt(data.profile.total_wins, 10) || 0;
+      totalFocusReclaimed = parseFloat(data.profile.focus_reclaimed) || 0.0;
+
+      applyPremiumUIVisuals();
+      updateMetricDashboard();
+      startPassTicker();
+      switchScreen('screen-dashboard');
+    } catch (e) {
+      console.error("Strict Login Gate Block:", e);
+      alert("⚠️ Connection Failure: Unable to verify account credentials with Supabase. Please check your internet connection.");
+      switchScreen('screen-onboarding-1');
+    }
   } else {
     switchScreen('screen-onboarding-1');
   }
@@ -311,11 +308,6 @@ function switchScreen(screenId) {
 
 function userLogout() {
   localStorage.removeItem('nudge_user_email');
-  localStorage.removeItem('nudge_premium_user');
-  localStorage.removeItem('nudge_pass_expiry');
-  localStorage.removeItem('nudge_promo_claimed');
-  localStorage.removeItem('nudge_total_wins');
-  localStorage.removeItem('nudge_minutes');
   currentUserProfile = null;
   totalWinsCount = 0;
   totalFocusReclaimed = 0.0;
@@ -324,7 +316,7 @@ function userLogout() {
 }
 
 /* ========================================================
-   AUTHENTICATION & OTP FLOW
+   STRICT AUTHENTICATION GATE (NO ENTRY ON ERROR)
 ======================================================== */
 async function initializeUserProfile() {
   const emailInput = document.getElementById('user-auth-email');
@@ -404,11 +396,9 @@ async function verifyOTP() {
       currentUserProfile = data.profile;
       totalWinsCount = parseInt(data.profile.total_wins, 10) || 0;
       totalFocusReclaimed = parseFloat(data.profile.focus_reclaimed) || 0.0;
-      localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
-      localStorage.setItem('nudge_minutes', totalFocusReclaimed.toString());
 
-      if (data.profile.premium_user === true || data.profile.premium_user === 'true') {
-        localStorage.setItem('nudge_premium_user', 'true');
+      if (data.profile.promo_claimed) {
+        localStorage.setItem('nudge_promo_claimed', 'true');
       }
 
       applyPremiumUIVisuals();
@@ -719,8 +709,6 @@ function triggerVictoryPhase(minutesEarned) {
   totalWinsCount += 1;
   totalFocusReclaimed += minutesEarned;
   
-  localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
-  localStorage.setItem('nudge_minutes', totalFocusReclaimed.toString());
   updateMetricDashboard();
   
   try {
