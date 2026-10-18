@@ -1,4 +1,3 @@
-// api/get-task.js
 const { createClient } = require('@supabase/supabase-js');
 const taskMatrix = require('../lib/tasks.js');
 
@@ -37,6 +36,7 @@ module.exports = async function handler(req, res) {
       userProfile = data && data.length > 0 ? data[0] : null;
     }
 
+    // PASS EXPIRATION CHECK: Never demote permanent premium users
     if (userProfile && userProfile.pass_expires_at) {
       const expiresAt = new Date(userProfile.pass_expires_at).getTime();
       if (Date.now() >= expiresAt) {
@@ -70,20 +70,21 @@ module.exports = async function handler(req, res) {
 
     let selectedTaskData;
 
-    // --- OVERWHELM DECK SEQUENTIAL ENGINE (CARDS 1-4) ---
+    // --- OVERWHELM DECK SEQUENTIAL ENGINE (CARDS 1 TO 4) ---
     if (lowerCategory === 'overwhelm') {
       const targetStep = parseInt(step, 10) || 1;
       
-      // Match friction track if provided (e.g. task_paralysis, mindless_scrolling)
       let pool = targetPool;
       if (friction) {
         const filtered = targetPool.filter(t => t.frictionTags && t.frictionTags.includes(friction));
-        if (filtered.length > 0) pool = filtered;
+        if (filtered.length > 0) {
+          pool = filtered;
+        }
       }
       
       selectedTaskData = pool.find(t => t.step === targetStep) || pool[targetStep - 1] || pool[0];
     } else {
-      // Standard random draw for all other decks
+      // Standard randomized draw for all other decks
       const randomTaskIndex = Math.floor(Math.random() * targetPool.length);
       selectedTaskData = targetPool[randomTaskIndex];
     }
