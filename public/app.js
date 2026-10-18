@@ -122,10 +122,10 @@ function finishOnboarding() {
 }
 
 /* ========================================================
-   DECK SELECTION & TRIGGER PHASE (Requirement 3)
+   DECK SELECTION & TRIGGER PHASE
 ======================================================== */
 function selectDeck(el, isPremium, categoryKey) {
-  // Normalize legacy naming
+  // Normalize naming aliases
   if (categoryKey === 'financial_freeze_impulse' || categoryKey === 'financial-reset' || categoryKey === 'financial_reset') {
     categoryKey = 'wealth';
   }
@@ -139,7 +139,7 @@ function selectDeck(el, isPremium, categoryKey) {
     overwhelmCurrentStep = 1; // Always start Overwhelm Deck at Move 1
   }
 
-  // Requirement 3: Rename Start Button Screen Heading to the exact deck sub-heading
+  // Update Start Screen Heading to the exact deck sub-heading
   updateStartScreenHeading(categoryKey);
 
   startTriggerPhase();
@@ -148,7 +148,6 @@ function selectDeck(el, isPremium, categoryKey) {
 function updateStartScreenHeading(categoryKey) {
   const deckTitleEl = document.getElementById('active-deck-title');
   if (deckTitleEl) {
-    // Displays "Command the room.", "Unlock financial clarity.", etc.
     deckTitleEl.innerText = DECK_SUBHEADINGS[categoryKey] || "Command the room.";
   }
 }
@@ -164,7 +163,7 @@ function startTriggerPhase() {
 }
 
 /* ========================================================
-   TASK RETRIEVAL & COUNTDOWN ENGINE (Requirements 2, 3 & 4)
+   TASK RETRIEVAL & COUNTDOWN ENGINE
 ======================================================== */
 async function executeTurnaroundSpin() {
   const hasUnlimitedAccess = isUserPremiumOrPass();
@@ -186,7 +185,6 @@ async function executeTurnaroundSpin() {
   const userEmail = localStorage.getItem('nudge_user_email') || 'anonymous_tester';
 
   try {
-    // Requirement 2: Query includes both selected category and friction line
     let endpoint = getApiUrl(`/api/get-task?category=${encodeURIComponent(categoryKey)}&friction=${encodeURIComponent(frictionKey)}&email=${encodeURIComponent(userEmail)}`);
     
     if (categoryKey === 'overwhelm') {
@@ -279,18 +277,18 @@ function cancelTimer() {
 }
 
 /* ========================================================
-   VICTORY & 4X OVERWHELM POINT SYSTEM (Requirement 4)
+   VICTORY & 4X OVERWHELM POINT SYSTEM
 ======================================================== */
 function triggerVictoryPhase(minutesEarned) {
   const isOverwhelm = currentActiveTask && currentActiveTask.deck === 'overwhelm';
 
-  // Requirement 4: Overwhelm Deck completion grants 4x points (8.0 minutes / 480 sec)
+  // Overwhelm Deck completion grants 4x points (8.0 minutes / 480 sec) across 4 rounds
   if (isOverwhelm && overwhelmCurrentStep >= 4) {
     totalWinsCount += 1;
-    totalFocusReclaimed += 8.0; // 4x 120 sec (480 sec = 8.0 min)
+    totalFocusReclaimed += 8.0;
   } else if (!isOverwhelm) {
     totalWinsCount += 1;
-    totalFocusReclaimed += minutesEarned; // Standard 2.0 min (120 sec)
+    totalFocusReclaimed += minutesEarned;
   }
 
   localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
@@ -326,7 +324,6 @@ function triggerVictoryPhase(minutesEarned) {
       }
       if (btnReset) btnReset.style.display = 'none';
     } else {
-      // Completed Round 4: 4x Focus points applied
       if (titleEl) titleEl.innerText = `4-Round Protocol Complete`;
       if (crownEl) crownEl.innerText = "🎯";
       if (badgeEl) badgeEl.innerText = "+480s Focus Reclaimed (4x Protocol)";
@@ -334,7 +331,6 @@ function triggerVictoryPhase(minutesEarned) {
       if (btnReset) btnReset.style.display = 'block';
     }
   } else {
-    // Normal Decks: 120s standard
     if (standardActions) standardActions.style.display = 'flex';
     if (overwhelmActions) overwhelmActions.style.display = 'none';
     if (titleEl) titleEl.innerText = "Impact Calibrated.";
@@ -485,7 +481,7 @@ function initScheduledAlarmsWatcher() {
 }
 
 /* ========================================================
-   PAYWALL & SUBSCRIPTION HELPERS
+   PAYWALL & CHECKOUT
 ======================================================== */
 let selectedProductToBuy = 'lifetime';
 
