@@ -20,7 +20,12 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: "Missing required category parameter." });
     }
 
-    const lowerCategory = category.toLowerCase();
+    let lowerCategory = category.toLowerCase();
+    // Normalize aliases
+    if (lowerCategory === 'financial-reset' || lowerCategory === 'financial_freeze_impulse' || lowerCategory === 'financial_freeze' || lowerCategory === 'financial_reset') {
+      lowerCategory = 'wealth';
+    }
+
     const isPremiumDeck = (lowerCategory === 'dopamine' || lowerCategory === 'overwhelm');
 
     let userProfile = null;
@@ -36,7 +41,7 @@ module.exports = async function handler(req, res) {
       userProfile = data && data.length > 0 ? data[0] : null;
     }
 
-    // PASS EXPIRATION CHECK: Never demote permanent premium users
+    // Pass expiration check
     if (userProfile && userProfile.pass_expires_at) {
       const expiresAt = new Date(userProfile.pass_expires_at).getTime();
       if (Date.now() >= expiresAt) {
@@ -70,23 +75,21 @@ module.exports = async function handler(req, res) {
 
     let selectedTaskData;
 
-    // --- OVERWHELM DECK SEQUENTIAL ENGINE (CARDS 1 TO 4) ---
+    // Link friction line to task extraction
+    let pool = targetPool;
+    if (friction) {
+      const filtered = targetPool.filter(t => Array.isArray(t.frictionTags) && t.frictionTags.includes(friction));
+      if (filtered.length > 0) {
+        pool = filtered;
+      }
+    }
+
     if (lowerCategory === 'overwhelm') {
       const targetStep = parseInt(step, 10) || 1;
-      
-      let pool = targetPool;
-      if (friction) {
-        const filtered = targetPool.filter(t => t.frictionTags && t.frictionTags.includes(friction));
-        if (filtered.length > 0) {
-          pool = filtered;
-        }
-      }
-      
       selectedTaskData = pool.find(t => t.step === targetStep) || pool[targetStep - 1] || pool[0];
     } else {
-      // Standard randomized draw for all other decks
-      const randomTaskIndex = Math.floor(Math.random() * targetPool.length);
-      selectedTaskData = targetPool[randomTaskIndex];
+      const randomTaskIndex = Math.floor(Math.random() * pool.length);
+      selectedTaskData = pool[randomTaskIndex];
     }
 
     return res.status(200).json({ 
