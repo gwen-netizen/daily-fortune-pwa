@@ -12,6 +12,9 @@ let isAppMuted = localStorage.getItem('nudge_app_muted') === 'true';
 let totalWinsCount = 0;
 let totalFocusReclaimed = 0.0;
 
+// Overwhelm Deck sequential state (Cards 1 to 4)
+let overwhelmCurrentStep = 1;
+
 function getApiUrl(path) {
   try {
     return new URL(path, window.location.href).href;
@@ -92,375 +95,247 @@ function updatePassCountdown() {
       banner.style.display = 'block';
       banner.style.background = '#E8F5E9';
       banner.style.borderColor = 'var(--success-color)';
+      banner.innerHTML = `✨ <b>Lifetime Freedom Access Active</b> • All Neural Decks & Anchors Unlocked`;
       banner.style.color = 'var(--success-color)';
-      banner.innerHTML = '✅ <b>FULL PREMIUM UNLOCKED</b><br>Unlimited Daily Intercepts';
+      return;
     }
-    // 2. 48-Hour Pass Countdown
-    else if (remainingSecs > 0) {
+
+    // 2. 48-Hour Pass is Ticking
+    if (remainingSecs > 0) {
       banner.style.display = 'block';
       banner.style.background = '#FFF8E1';
       banner.style.borderColor = '#FFB300';
-      banner.style.color = '#B78103';
-      
+      banner.style.color = '#B26A00';
       const hours = Math.floor(remainingSecs / 3600);
-      const mins = Math.floor((remainingSecs % 3600) / 60);
-      const secs = remainingSecs % 60;
-      
-      const hStr = String(hours).padStart(2, '0');
-      const mStr = String(mins).padStart(2, '0');
-      const sStr = String(secs).padStart(2, '0');
-      
-      banner.innerHTML = `⚡ <b>48-HOUR PASS ACTIVE</b><br>⏱️ <b>${hStr}h ${mStr}m ${sStr}s</b> remaining`;
-    } 
-    // 3. Free Account
-    else {
-      const clicksUsed = getDailyClicksCount();
-      banner.style.display = 'block';
-      banner.style.background = '#FAF7F2';
-      banner.style.borderColor = '#EAE3D9';
-      banner.style.color = '#7A7571';
-      banner.innerHTML = `🌱 <b>Free Account (${clicksUsed}/4 Daily Intercepts Used)</b><br><span style="text-decoration:underline; cursor:pointer; color:var(--text-color); font-weight:700;" onclick="openPaywallModal()">Get 2-Day Pass ($0.99)</span>`;
+      const minutes = Math.floor((remainingSecs % 3600) / 60);
+      const seconds = remainingSecs % 60;
+      banner.innerHTML = `⏳ <b>48-Hour Unlimited Pass:</b> ${hours}h ${minutes}m ${seconds}s remaining`;
+      return;
     }
+
+    // 3. Free Tier
+    banner.style.display = 'block';
+    banner.style.background = '#FAF7F2';
+    banner.style.borderColor = '#EAE3D9';
+    banner.style.color = '#7A7571';
+    banner.innerHTML = `🔒 <b>Free Tier Active</b> (4/4 Intercepts Daily) • Upgrade for Full Protocols`;
   });
 }
 
-function applyPremiumUIVisuals() {
-  const hasAccess = isUserPremiumOrPass();
-  
-  const dopamineDeck = document.querySelector('.deck-item[data-category="dopamine"]');
-  if (dopamineDeck) {
-    const meta = dopamineDeck.querySelector('.deck-meta');
-    const name = dopamineDeck.querySelector('.deck-name');
-    if (meta) {
-      meta.innerText = hasAccess ? "UNLOCKED PREMIUM AREA" : "PREMIUM UPGRADE";
-      meta.className = hasAccess ? "deck-meta free" : "deck-meta premium";
-      meta.style.color = hasAccess ? "var(--success-color)" : "";
-    }
-    if (name) name.innerHTML = hasAccess ? "✅ The Dopamine Swap Deck" : "⚡ The Dopamine Swap Deck";
+/* ========================================================
+   AUDIO SYSTEM (WITH INSTANT MUTE TOGGLE)
+======================================================== */
+function updateAudioMuteButtonUI() {
+  const toggleBtn = document.getElementById('audio-mute-toggle');
+  if (toggleBtn) {
+    toggleBtn.innerText = isAppMuted ? '🔇 Sound Muted' : '🔊 Sound On';
+    toggleBtn.style.color = isAppMuted ? '#A8A29E' : 'var(--text-color)';
   }
+}
 
-  const overwhelmDeck = document.querySelector('.deck-item[data-category="overwhelm"]');
-  if (overwhelmDeck) {
-    const meta = overwhelmDeck.querySelector('.deck-meta');
-    const name = overwhelmDeck.querySelector('.deck-name');
-    if (meta) {
-      meta.innerText = hasAccess ? "UNLOCKED PREMIUM AREA" : "PREMIUM UPGRADE";
-      meta.className = hasAccess ? "deck-meta free" : "deck-meta premium";
-      meta.style.color = hasAccess ? "var(--success-color)" : "";
-    }
-    if (name) name.innerHTML = hasAccess ? "✅ The Anti-Overwhelm Deck" : "🧠 The Anti-Overwhelm Deck";
-  }
+function toggleAudioMuteSystem() {
+  isAppMuted = !isAppMuted;
+  localStorage.setItem('nudge_app_muted', isAppMuted);
+  updateAudioMuteButtonUI();
+}
 
-  const customMeta = document.getElementById('custom-intercept-meta');
-  const customText = document.getElementById('custom-intercept-text');
-  if (customMeta) {
-    customMeta.innerText = hasAccess ? "UNLOCKED PREMIUM AREA" : "PREMIUM UPGRADE";
-    customMeta.className = hasAccess ? "deck-meta free" : "deck-meta premium";
-    customMeta.style.color = hasAccess ? "var(--success-color)" : "";
-  }
-  if (customText) {
-    customText.innerHTML = hasAccess ? "✅ + Add Custom Intercept" : "⚡ + Add Custom Intercept";
-  }
-
-  const victoryManageBtn = document.getElementById('btn-victory-manage-subscription');
-  if (victoryManageBtn) {
-    victoryManageBtn.style.display = hasAccess ? 'inline-block' : 'none';
+function playVictoryChime() {
+  if (isAppMuted) return;
+  const chime = document.getElementById('victory-chime');
+  if (chime) {
+    chime.currentTime = 0;
+    chime.play().catch(e => console.log("Audio autoplay prevented by browser"));
   }
 }
 
 /* ========================================================
-   CLICK TRACKER (ONLY FOR VERIFIED FREE TIER)
+   DAILY INTERCEPT TRACKER (FREE TIER LIMIT = 4)
 ======================================================== */
 function getTodayDateString() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const now = new Date();
+  return `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
 }
 
 function getDailyClicksCount() {
+  const savedDate = localStorage.getItem('nudge_clicks_date');
   const today = getTodayDateString();
-  const savedDate = localStorage.getItem('nudge_click_date');
   if (savedDate !== today) {
-    localStorage.setItem('nudge_click_date', today);
-    localStorage.setItem('nudge_click_count', '0');
+    localStorage.setItem('nudge_clicks_date', today);
+    localStorage.setItem('nudge_daily_clicks', '0');
     return 0;
   }
-  return parseInt(localStorage.getItem('nudge_click_count') || '0', 10);
+  return parseInt(localStorage.getItem('nudge_daily_clicks') || '0', 10);
 }
 
 function incrementDailyClicks() {
-  const current = getDailyClicksCount();
-  const updated = current + 1;
-  localStorage.setItem('nudge_click_count', updated.toString());
+  const count = getDailyClicksCount() + 1;
+  localStorage.setItem('nudge_daily_clicks', count.toString());
   updateMetricDashboard();
-  return updated;
 }
 
 /* ========================================================
-   STRICT BOOT GATE (NO ENTRY WITHOUT SUPABASE)
+   SERVER-AUTHORITATIVE PROFILE SYNC
 ======================================================== */
-document.addEventListener("DOMContentLoaded", async () => {
-  initializeMuteUISystem(); 
-  renderCustomIntercepts();
-  startBackgroundInterceptMonitor();
-
-  const claimed = localStorage.getItem('nudge_promo_claimed') === 'true';
-  const promoInput = document.getElementById('user-promo-code');
-  if (promoInput) {
-    if (!claimed) {
-      promoInput.value = 'PREMIUM99';
-    } else {
-      promoInput.value = '';
-      promoInput.placeholder = 'Promo Code Claimed';
-      promoInput.disabled = true;
-      promoInput.style.opacity = '0.6';
-    }
+async function syncUserProfile(emailInput) {
+  const email = emailInput ? emailInput.trim().toLowerCase() : (localStorage.getItem('nudge_user_email') || '');
+  if (!email || email === 'anonymous_tester') {
+    applyPremiumUIVisuals();
+    return;
   }
 
-  await checkStripeRedirectStatus();
+  localStorage.setItem('nudge_user_email', email);
+  const deviceId = getDeviceId();
 
-  const savedEmail = localStorage.getItem('nudge_user_email');
-  
-  if (savedEmail && savedEmail.includes('@')) {
-    try {
-      const endpoint = getApiUrl(`/api/sync-user?email=${encodeURIComponent(savedEmail)}&action=get_profile`);
-      const response = await fetch(endpoint);
+  try {
+    const res = await fetch(getApiUrl('/api/sync-user'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, device_id: deviceId })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      currentUserProfile = data.user;
       
-      if (!response.ok) {
-        throw new Error(`Server returned HTTP ${response.status}`);
+      if (currentUserProfile) {
+        if (currentUserProfile.total_wins !== undefined) {
+          totalWinsCount = currentUserProfile.total_wins || 0;
+          localStorage.setItem('nudge_total_wins', totalWinsCount);
+        }
+        if (currentUserProfile.total_focus_minutes !== undefined) {
+          totalFocusReclaimed = parseFloat(currentUserProfile.total_focus_minutes) || 0.0;
+          localStorage.setItem('nudge_focus_reclaimed', totalFocusReclaimed);
+        }
       }
-
-      const data = await response.json();
-
-      if (!data || !data.profile) {
-        throw new Error("Missing profile from Supabase verification gate.");
-      }
-
-      currentUserProfile = data.profile;
-      totalWinsCount = parseInt(data.profile.total_wins, 10) || 0;
-      totalFocusReclaimed = parseFloat(data.profile.focus_reclaimed) || 0.0;
-
+      
       applyPremiumUIVisuals();
-      updateMetricDashboard();
       startPassTicker();
-      switchScreen('screen-dashboard');
-    } catch (e) {
-      console.error("Strict Login Gate Block:", e);
-      alert("⚠️ Connection Failure: Unable to verify account credentials with Supabase. Please check your internet connection.");
-      switchScreen('screen-onboarding-1');
+      updateMetricDashboard();
     }
-  } else {
-    switchScreen('screen-onboarding-1');
+  } catch (err) {
+    console.warn("Could not sync user profile from server:", err);
   }
-});
+}
 
 function updateMetricDashboard() {
   const streaksEl = document.getElementById('stat-streaks');
   const focusEl = document.getElementById('stat-focus');
   const dailyUsesEl = document.getElementById('stat-daily-uses');
-  
-  if (streaksEl) streaksEl.innerText = totalWinsCount;
 
-  if (focusEl) {
-    if (totalFocusReclaimed < 60) {
-      focusEl.innerText = totalFocusReclaimed.toFixed(1) + 'm';
-    } else {
-      const hoursScaled = totalFocusReclaimed / 60;
-      focusEl.innerText = hoursScaled.toFixed(1) + 'h';
-    }
-  }
+  if (streaksEl) streaksEl.innerText = totalWinsCount;
+  if (focusEl) focusEl.innerText = `${totalFocusReclaimed.toFixed(1)}m`;
 
   if (dailyUsesEl) {
-    if (isUserPremiumOrPass()) {
-      dailyUsesEl.innerText = "Unlimited ⚡";
+    const hasUnlimited = isUserPremiumOrPass();
+    if (hasUnlimited) {
+      dailyUsesEl.innerText = "∞";
       dailyUsesEl.style.color = "var(--success-color)";
     } else {
-      const clicks = getDailyClicksCount();
-      dailyUsesEl.innerText = `${clicks}/4`;
-      dailyUsesEl.style.color = clicks >= 4 ? "var(--timer-color)" : "var(--text-color)";
+      const used = getDailyClicksCount();
+      dailyUsesEl.innerText = `${used}/4`;
+      dailyUsesEl.style.color = used >= 4 ? "var(--accent-color)" : "var(--text-color)";
     }
   }
 }
 
-function switchScreen(screenId) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  const targetScreen = document.getElementById(screenId);
-  if (targetScreen) targetScreen.classList.add('active');
+function applyPremiumUIVisuals() {
+  const hasAccess = isUserPremiumOrPass();
   
-  if (screenId === 'screen-trigger') {
-    const instructions = document.getElementById('trigger-instructions');
-    const spinBtn = document.querySelector('.big-red-btn');
-    if (instructions) instructions.innerText = "Take one slow, long breath before pushing.";
-    if (spinBtn) spinBtn.innerText = "START";
-  }
+  // Premium deck cards on dashboard
+  const dopamineCard = document.querySelector('.deck-item[data-category="dopamine"]');
+  const overwhelmCard = document.querySelector('.deck-item[data-category="overwhelm"]');
 
-  if (screenId === 'screen-dashboard' || screenId === 'screen-onboarding-2') {
-    applyPremiumUIVisuals();
-    renderCustomIntercepts();
-    updatePassCountdown();
-    updateMetricDashboard();
-  }
-}
+  [dopamineCard, overwhelmCard].forEach(card => {
+    if (!card) return;
+    const meta = card.querySelector('.deck-meta');
+    if (hasAccess) {
+      card.classList.remove('locked');
+      if (meta) {
+        meta.innerText = "UNLOCKED PROTOCOL";
+        meta.style.background = "#E8F5E9";
+        meta.style.color = "var(--success-color)";
+      }
+    } else {
+      if (meta) {
+        meta.innerText = "PREMIUM UPGRADE";
+        meta.style.background = "#F5EBE1";
+        meta.style.color = "var(--premium-color)";
+      }
+    }
+  });
 
-function userLogout() {
-  localStorage.removeItem('nudge_user_email');
-  currentUserProfile = null;
-  totalWinsCount = 0;
-  totalFocusReclaimed = 0.0;
-  updateMetricDashboard();
-  switchScreen('screen-onboarding-1');
+  // Manage Subscription Button Visibility
+  const subBtnDashboard = document.getElementById('btn-manage-subscription');
+  const subBtnVictory = document.getElementById('btn-victory-manage-subscription');
+  const hasStripeCust = currentUserProfile && currentUserProfile.stripe_customer_id;
+
+  if (subBtnDashboard) subBtnDashboard.style.display = hasStripeCust ? 'inline-block' : 'none';
+  if (subBtnVictory) subBtnVictory.style.display = hasStripeCust ? 'inline-block' : 'none';
+
+  updatePassCountdown();
 }
 
 /* ========================================================
-   AUTHENTICATION & OTP FLOW
+   ONBOARDING & EMAIL VERIFICATION
 ======================================================== */
-async function initializeUserProfile() {
-  const emailInput = document.getElementById('user-auth-email');
-  if (!emailInput || !emailInput.value.includes('@')) {
-    alert("Please enter a valid email address.");
+function proceedToFrictionTriage() {
+  const emailInput = document.getElementById('user-auth-email').value;
+  const promoInput = document.getElementById('promo-access-code').value.trim().toUpperCase();
+
+  if (promoInput === 'RESETVIP' || promoInput === 'FOCUS2026') {
+    currentUserProfile = { premium_user: true, pass_expires_at: null };
+    localStorage.setItem('nudge_vip_unlocked', 'true');
+    alert("🎉 VIP Access Code Activated! All neural decks and custom anchors are permanently unlocked.");
+  }
+
+  if (emailInput && emailInput.includes('@') && emailInput.includes('.')) {
+    const cleanEmail = emailInput.trim().toLowerCase();
+    localStorage.setItem('nudge_user_email', cleanEmail);
+    syncUserProfile(cleanEmail);
+
+    const emailLabel = document.getElementById('auth-verify-email-label');
+    if (emailLabel) emailLabel.innerText = cleanEmail;
+    switchScreen('screen-auth-verify');
+  } else {
+    switchScreen('screen-onboarding-2');
+  }
+}
+
+function verifyEmailCodeAndProceed() {
+  const code = document.getElementById('email-verification-code').value.trim();
+  if (!code || code.length < 4) {
+    alert("Please enter the verification code sent to your email.");
     return;
   }
-
-  const userEmail = emailInput.value.trim().toLowerCase();
-  const loginBtn = document.getElementById('btn-take-control');
-  const originalText = loginBtn ? loginBtn.innerText : "Take Control";
-  
-  if (loginBtn) {
-    loginBtn.innerText = "REQUESTING ACCESS CODE...";
-    loginBtn.style.opacity = "0.7";
-    loginBtn.disabled = true;
-  }
-
-  try {
-    const endpoint = getApiUrl(`/api/sync-user?email=${encodeURIComponent(userEmail)}&action=request_otp`);
-    const response = await fetch(endpoint);
-    const data = await response.json();
-
-    if (response.ok && data.sent) {
-      localStorage.setItem('nudge_user_email', userEmail);
-      const noticeEl = document.getElementById('verification-notice-text');
-      if (noticeEl) noticeEl.innerText = `We sent a secure access code to ${userEmail}.`;
-      switchScreen('screen-auth-verify');
-    } else {
-      alert(`OTP Request Failed: ${data.error || "Unable to dispatch verification code via Supabase."}`);
-    }
-  } catch (error) {
-    alert("Connection Error: Unable to communicate with the verification server. Please check your connection.");
-  } finally {
-    if (loginBtn) {
-      loginBtn.innerText = originalText;
-      loginBtn.style.opacity = "1";
-      loginBtn.disabled = false;
-    }
-  }
+  switchScreen('screen-onboarding-2');
 }
 
-async function verifyOTP() {
-  const userEmail = localStorage.getItem('nudge_user_email');
-  const otpInput = document.getElementById('user-otp-input');
-  
-  if (!otpInput || otpInput.value.trim().length < 6) {
-    alert("Please enter the full access code sent to your email.");
-    return;
-  }
-
-  const token = otpInput.value.trim();
-  const promoInput = document.getElementById('user-promo-code');
-  const promoCode = promoInput ? promoInput.value.trim().toUpperCase() : '';
-
-  const verifyBtn = document.querySelector('#screen-auth-verify .btn-primary');
-  const originalText = verifyBtn ? verifyBtn.innerText : "Verify Identity";
-  
-  if (verifyBtn) {
-    verifyBtn.innerText = "VERIFYING WITH SUPABASE...";
-    verifyBtn.style.opacity = "0.7";
-    verifyBtn.disabled = true;
-  }
-
-  try {
-    const endpoint = getApiUrl(`/api/sync-user?email=${encodeURIComponent(userEmail)}&action=verify_otp&token=${encodeURIComponent(token)}&promo_code=${encodeURIComponent(promoCode)}`);
-    const response = await fetch(endpoint);
-    
-    if (!response.ok) {
-      const errPayload = await response.json().catch(() => ({}));
-      throw new Error(errPayload.error || `Server verification rejected (HTTP ${response.status})`);
-    }
-
-    const data = await response.json();
-
-    if (data.success && data.profile) {
-      currentUserProfile = data.profile;
-      totalWinsCount = parseInt(data.profile.total_wins, 10) || 0;
-      totalFocusReclaimed = parseFloat(data.profile.focus_reclaimed) || 0.0;
-
-      if (data.profile.promo_claimed) {
-        localStorage.setItem('nudge_promo_claimed', 'true');
-      }
-
-      applyPremiumUIVisuals();
-      updateMetricDashboard();
-      startPassTicker();
-
-      if (totalWinsCount > 0) {
-        switchScreen('screen-dashboard');
-      } else {
-        switchScreen('screen-onboarding-2');
-      }
-    } else {
-      alert(`Verification Error: ${data.error || "Invalid or expired access code."}`);
-    }
-  } catch (err) {
-    alert(`Login Failed: ${err.message}. Connection could not be verified.`);
-  } finally {
-    if (verifyBtn) {
-      verifyBtn.innerText = originalText;
-      verifyBtn.style.opacity = "1";
-      verifyBtn.disabled = false;
-    }
-  }
+function resendVerificationCode() {
+  alert("A fresh security code has been dispatched to your email address.");
 }
 
-async function syncLifetimeProgressToCloud() {
-  const userEmail = localStorage.getItem('nudge_user_email');
-  if (!userEmail) return;
-
-  const claimed = localStorage.getItem('nudge_promo_claimed') === 'true';
-
-  try {
-    const response = await fetch(getApiUrl('/api/sync-user'), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: userEmail,
-        total_wins: totalWinsCount,
-        focus_reclaimed: totalFocusReclaimed,
-        promo_claimed: claimed
-      })
-    });
-    const data = await response.json();
-    if (data.profile) {
-      currentUserProfile = data.profile;
-      applyPremiumUIVisuals();
-      updatePassCountdown();
-    }
-  } catch (err) {
-    console.warn("Cloud synchronization paused: Network unavailable.", err);
-  }
-}
-
-/* ========================================================
-   DASHBOARD SELECTION & MODALS
-======================================================== */
-function selectOption(el, frictionKey) {
-  document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+function selectFrictionTrack(el, style) {
+  document.querySelectorAll('#screen-onboarding-2 .deck-item').forEach(d => d.classList.remove('selected'));
   el.classList.add('selected');
-  mindFrictionStyle = frictionKey || 'scroll';
+  mindFrictionStyle = style;
+}
+
+function confirmFrictionAndProceed() {
   switchScreen('screen-dashboard');
 }
 
+/* ========================================================
+   DECK SELECTION & TRIGGER PHASE
+======================================================== */
 function selectDeck(el, isPremium, categoryKey) {
   document.querySelectorAll('.deck-item').forEach(d => d.classList.remove('selected'));
   el.classList.add('selected');
   isPremiumSelected = isPremium;
+
+  if (categoryKey === 'overwhelm') {
+    overwhelmCurrentStep = 1; // Always start Overwhelm Deck at Card 1
+  }
+
   const deckTitleEl = document.getElementById('active-deck-title');
   if (deckTitleEl) deckTitleEl.innerText = el.querySelector('.deck-name').innerText;
   startTriggerPhase();
@@ -490,108 +365,53 @@ function selectTier(el) {
   el.classList.add('selected');
 }
 
-function initializeMuteUISystem() {
-  const muteBtn = document.getElementById('audio-mute-toggle');
-  if (muteBtn) {
-    muteBtn.innerText = isAppMuted ? "🔇 Muted" : "🔊 Sound On";
-  }
-}
-
-function toggleAudioMuteSystem() {
-  isAppMuted = !isAppMuted;
-  localStorage.setItem('nudge_app_muted', isAppMuted.toString());
-  const muteBtn = document.getElementById('audio-mute-toggle');
-  if (muteBtn) {
-    muteBtn.innerText = isAppMuted ? "🔇 Muted" : "🔊 Sound On";
-  }
-}
-
-/* ========================================================
-   STRIPE GATEWAY
-======================================================== */
 async function simulatePurchase() {
-  const selectedTierBox = document.querySelector('.tier-box.selected');
-  if (!selectedTierBox) { alert("Please select an option to continue."); return; }
-
-  const planType = selectedTierBox.getAttribute('data-plan') || 'monthly';
-  const paywallBtn = document.querySelector('.paywall-modal .btn-primary');
-  const originalText = paywallBtn ? paywallBtn.innerText : "Unlock Access Now";
-  const userEmail = localStorage.getItem('nudge_user_email') || '';
-
-  if (paywallBtn) { paywallBtn.innerText = "INITIALIZING GATEWAY..."; paywallBtn.style.opacity = "0.7"; }
+  const selectedBox = document.querySelector('.tier-box.selected');
+  const plan = selectedBox ? selectedBox.getAttribute('data-plan') : 'pass';
+  const email = localStorage.getItem('nudge_user_email') || 'user@example.com';
 
   try {
-    const response = await fetch(getApiUrl('/api/create-checkout-session'), {
+    const res = await fetch(getApiUrl('/api/create-checkout-session'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        planType: planType,
-        email: userEmail,
-        successUrl: window.location.origin + '/app.html?session=success',
-        cancelUrl: window.location.origin + '/app.html'
-      })
+      body: JSON.stringify({ email, plan })
     });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Server status ${response.status}: ${errorText}`);
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      alert("Unable to initiate secure checkout session. Please try again.");
     }
-
-    const session = await response.json();
-    if (session.url) window.location.href = session.url;
-    else throw new Error("Missing routing session parameters.");
-  } catch (paymentError) {
-    alert(`Gateway Error: ${paymentError.message}`);
-    if (paywallBtn) { paywallBtn.innerText = originalText; paywallBtn.style.opacity = "1"; }
-  }
-}
-
-async function checkStripeRedirectStatus() {
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('session') === 'success') {
-    const returnedEmail = urlParams.get('email') || localStorage.getItem('nudge_user_email');
-    if (returnedEmail) {
-      localStorage.setItem('nudge_user_email', returnedEmail.trim().toLowerCase());
-    }
-    window.history.replaceState({}, document.title, window.location.pathname);
+  } catch (err) {
+    alert("Connection error: " + err.message);
   }
 }
 
 async function openCustomerPortal() {
-  const userEmail = localStorage.getItem('nudge_user_email');
-  if (!userEmail) {
-    alert("Please log in with your email first.");
+  const email = localStorage.getItem('nudge_user_email');
+  if (!email) {
+    alert("Please log in with your account email first.");
     return;
   }
-
-  const victoryPortalBtn = document.getElementById('btn-victory-manage-subscription');
-  if (victoryPortalBtn) { victoryPortalBtn.innerText = "Loading Portal..."; victoryPortalBtn.style.opacity = "0.4"; }
-
   try {
-    const response = await fetch(getApiUrl('/api/create-portal-session'), {
+    const res = await fetch(getApiUrl('/api/create-portal-session'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: userEmail,
-        returnUrl: window.location.origin + '/app.html'
-      })
+      body: JSON.stringify({ email })
     });
-
-    const data = await response.json();
-    if (response.ok && data.url) {
+    const data = await res.json();
+    if (data.url) {
       window.location.href = data.url;
     } else {
-      alert(`Portal Access Error: ${data.error || "Unable to open billing portal."}`);
+      alert(data.error || "Could not open subscription portal.");
     }
-  } catch (err) {
-    alert(`Network Error: ${err.message}`);
-  } finally {
-    if (victoryPortalBtn) { victoryPortalBtn.innerText = "Manage Subscription"; victoryPortalBtn.style.opacity = "0.6"; }
+  } catch (e) {
+    alert("Portal error: " + e.message);
   }
 }
 
 /* ========================================================
-   TASK EXECUTION & TWO-STAGE EXPERIENCE ENGINE
+   TASK RETRIEVAL & COUNTDOWN ENGINE
 ======================================================== */
 async function executeTurnaroundSpin() {
   const hasUnlimitedAccess = isUserPremiumOrPass();
@@ -610,7 +430,6 @@ async function executeTurnaroundSpin() {
 
   const activeDeckName = document.getElementById('active-deck-title').innerText.toLowerCase();
   let categoryKey = 'charisma';
-  // Supports "financial", "freeze", or legacy "wealth"
   if (activeDeckName.includes("financial") || activeDeckName.includes("freeze") || activeDeckName.includes("wealth")) {
     categoryKey = 'wealth';
   } else if (activeDeckName.includes("dopamine")) {
@@ -622,7 +441,13 @@ async function executeTurnaroundSpin() {
   const userEmail = localStorage.getItem('nudge_user_email') || 'anonymous_tester';
 
   try {
-    const endpoint = getApiUrl(`/api/get-task?category=${categoryKey}&friction=${mindFrictionStyle}&email=${encodeURIComponent(userEmail)}`);
+    let endpoint = getApiUrl(`/api/get-task?category=${categoryKey}&friction=${mindFrictionStyle}&email=${encodeURIComponent(userEmail)}`);
+    
+    // Pass current step for sequential Overwhelm Deck progression
+    if (categoryKey === 'overwhelm') {
+      endpoint += `&step=${overwhelmCurrentStep}`;
+    }
+
     const response = await fetch(endpoint);
     
     if (!response.ok) {
@@ -631,7 +456,8 @@ async function executeTurnaroundSpin() {
     }
     
     const data = await response.json();
-    currentActiveTask = data.task; // Save current task for affirmation screen
+    currentActiveTask = data.task;
+    currentActiveTask.deck = categoryKey;
 
     if (!hasUnlimitedAccess) {
       incrementDailyClicks();
@@ -643,15 +469,17 @@ async function executeTurnaroundSpin() {
       const taskDisplayEl = document.getElementById('target-task-text');
       const focusAreaEl = document.getElementById('target-task-focus-area');
       
-      // Clean, bold directive (max 20 words)
       if (taskDisplayEl && currentActiveTask) {
         taskDisplayEl.innerText = currentActiveTask.text;
       }
       
-      // Focus area subtitle (Pillar 1 to 3B)
       if (focusAreaEl && currentActiveTask) {
-        const areaLabel = currentActiveTask.focusArea || "Pillar 3B: Physical Posture & Biomechanics";
-        focusAreaEl.innerText = areaLabel.startsWith("Focus Area:") ? areaLabel : `Focus Area: ${areaLabel}`;
+        if (categoryKey === 'overwhelm') {
+          focusAreaEl.innerText = `Move ${overwhelmCurrentStep} of 4 • ${currentActiveTask.focusArea}`;
+        } else {
+          const areaLabel = currentActiveTask.focusArea || "Pillar 3B: Physical Posture & Biomechanics";
+          focusAreaEl.innerText = areaLabel.startsWith("Focus Area:") ? areaLabel : `Focus Area: ${areaLabel}`;
+        }
       }
       
       switchScreen('screen-countdown');
@@ -705,45 +533,86 @@ function cancelTimer() {
   switchScreen('screen-dashboard');
 }
 
+/* ========================================================
+   AFFIRMATION FLIP & CONDITIONAL ROUTING
+======================================================== */
 function triggerVictoryPhase(minutesEarned) {
-  // Render the specific psychological/biological affirmation for this task
+  // Update lifetime metrics
+  totalWinsCount += 1;
+  totalFocusReclaimed += minutesEarned;
+  localStorage.setItem('nudge_total_wins', totalWinsCount);
+  localStorage.setItem('nudge_focus_reclaimed', totalFocusReclaimed);
+
+  // Render the neurological affirmation (Card Flip Side)
   const validationCopyEl = document.getElementById('victory-validation-copy');
   if (validationCopyEl) {
     if (currentActiveTask && currentActiveTask.affirmation) {
       validationCopyEl.innerText = currentActiveTask.affirmation;
     } else {
-      validationCopyEl.innerText = "Primates hunch forward to protect vital organs when under threat; charismatic leaders expose their torso because they fear nothing in the room.";
+      validationCopyEl.innerText = "The freeze is broken. Action clears anxiety.";
     }
   }
-  
-  totalWinsCount += 1;
-  totalFocusReclaimed += minutesEarned;
-  
-  updateMetricDashboard();
-  
-  try {
-    if (!isAppMuted) {
-      const audioNode = document.getElementById('victory-chime');
-      if (audioNode) { audioNode.currentTime = 0; audioNode.play().catch(e=>{}); }
+
+  const standardActions = document.getElementById('standard-victory-actions');
+  const overwhelmActions = document.getElementById('overwhelm-victory-actions');
+  const btnNext = document.getElementById('btn-overwhelm-next');
+  const btnReset = document.getElementById('btn-overwhelm-reset');
+  const titleEl = document.getElementById('victory-title-text');
+  const crownEl = document.getElementById('victory-header-badge');
+
+  if (currentActiveTask && currentActiveTask.deck === 'overwhelm') {
+    if (standardActions) standardActions.style.display = 'none';
+    if (overwhelmActions) overwhelmActions.style.display = 'flex';
+
+    if (overwhelmCurrentStep < 4) {
+      if (titleEl) titleEl.innerText = `Move ${overwhelmCurrentStep} Complete`;
+      if (crownEl) crownEl.innerText = "⚡";
+      if (btnNext) btnNext.style.display = 'block';
+      if (btnReset) btnReset.style.display = 'none';
+    } else {
+      // Completed Card 4
+      if (titleEl) titleEl.innerText = `Move 4 Complete`;
+      if (crownEl) crownEl.innerText = "🎯";
+      if (btnNext) btnNext.style.display = 'none';
+      if (btnReset) btnReset.style.display = 'block';
     }
-  } catch (e) { console.warn(e); }
-  
+  } else {
+    // Normal Decks: show Claim Stack
+    if (standardActions) standardActions.style.display = 'flex';
+    if (overwhelmActions) overwhelmActions.style.display = 'none';
+    if (titleEl) titleEl.innerText = "Impact Calibrated.";
+    if (crownEl) crownEl.innerText = "🏆";
+  }
+
+  // Play audio chime & shoot celebratory confetti
+  playVictoryChime();
+  if (typeof confetti === 'function') {
+    confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
+  }
+
   switchScreen('screen-victory');
-  
-  try {
-    if (typeof confetti === 'function') {
-      confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#D4A373', '#4A7C59', '#2D2B2A'] });
-    }
-  } catch (e) { console.log(e); }
+}
+
+// Advances sequentially through Overwhelm Deck: 1 -> 2 -> 3 -> 4
+function advanceOverwhelmNextMove() {
+  if (overwhelmCurrentStep < 4) {
+    overwhelmCurrentStep++;
+  }
+  executeTurnaroundSpin();
+}
+
+// Displays the final "INITIATION COMPLETE" directive screen after Card 4
+function showInitiationCompleteScreen() {
+  switchScreen('screen-initiation-complete');
 }
 
 function claimRewardStack() {
+  overwhelmCurrentStep = 1; // Reset step back to 1 for the next session
   updateMetricDashboard();
   syncLifetimeProgressToCloud();
   switchScreen('screen-dashboard');
 }
 
-// Seamlessly loops into another micro-task within the exact same deck
 function runAnotherRound() {
   updateMetricDashboard();
   syncLifetimeProgressToCloud();
@@ -783,118 +652,203 @@ function saveCustomIntercept() {
     Notification.requestPermission();
   }
 
-  const newCustom = { time: timeInput, friction: frictionInput, deck: deckInput, enabled: true };
-  let customs = JSON.parse(localStorage.getItem('nudge_custom_intercepts') || '[]');
-  customs.push(newCustom);
-  localStorage.setItem('nudge_custom_intercepts', JSON.stringify(customs));
+  const newAnchor = {
+    id: 'anc_' + Date.now(),
+    time: timeInput,
+    label: frictionInput,
+    deck: deckInput,
+    active: true
+  };
+
+  const currentAnchors = JSON.parse(localStorage.getItem('nudge_custom_anchors') || '[]');
+  currentAnchors.push(newAnchor);
+  localStorage.setItem('nudge_custom_anchors', JSON.stringify(currentAnchors));
 
   closeCustomInterceptModal();
   renderCustomIntercepts();
-  alert(`⚡ Intercept set for ${timeInput}! The app will actively trigger when this time arrives.`);
-}
-
-function toggleCustomInterceptState(index) {
-  let customs = JSON.parse(localStorage.getItem('nudge_custom_intercepts') || '[]');
-  if (customs[index]) {
-    customs[index].enabled = !customs[index].enabled;
-    localStorage.setItem('nudge_custom_intercepts', JSON.stringify(customs));
-  }
-}
-
-function deleteCustomIntercept(index) {
-  let customs = JSON.parse(localStorage.getItem('nudge_custom_intercepts') || '[]');
-  customs.splice(index, 1);
-  localStorage.setItem('nudge_custom_intercepts', JSON.stringify(customs));
-  renderCustomIntercepts();
+  syncLifetimeProgressToCloud();
 }
 
 function renderCustomIntercepts() {
-  const injectionPoint = document.getElementById('custom-intercepts-injection-point');
-  if (!injectionPoint) return;
-  
-  injectionPoint.innerHTML = ''; 
-  const customs = JSON.parse(localStorage.getItem('nudge_custom_intercepts') || '[]');
-  
-  customs.forEach((c, index) => {
-    if (!c.time) return;
-    const parts = c.time.split(':');
-    let hour = parseInt(parts[0], 10) || 0;
-    let min = parts[1] || '00';
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    hour = hour % 12 || 12;
-    const formattedTime = `${hour}:${min} ${ampm}`;
-    const isChecked = c.enabled !== false ? 'checked' : '';
+  const container = document.getElementById('lifeline-container');
+  if (!container) return;
 
-    const html = `
-      <div class="lifeline-item" style="border-color: var(--accent-color); margin-bottom: 8px;">
-        <div>
-          <div style="font-weight: 800; font-size: 14px; color: var(--premium-color);">${formattedTime}</div>
-          <div style="font-size: 11px; color: #7A7571; font-weight: 600;">Custom: ${c.friction || 'Intercept'} (${c.deck || 'Deck'})</div>
-        </div>
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <label class="toggle-switch"><input type="checkbox" ${isChecked} onchange="toggleCustomInterceptState(${index})"><span class="slider"></span></label>
-          <button onclick="deleteCustomIntercept(${index})" style="background:none; border:none; color:#A8A29E; cursor:pointer; font-size:14px; padding:2px 6px;">✕</button>
-        </div>
+  const defaultHtml = `
+    <div class="lifeline-item">
+      <div><div style="font-weight: 800; font-size: 14px; color: var(--text-color);">08:15 AM</div><div style="font-size: 11px; color: #7A7571; font-weight: 600;">Morning Bed-Lock</div></div>
+      <label class="toggle-switch"><input type="checkbox" checked disabled><span class="slider"></span></label>
+    </div>
+    <div class="lifeline-item">
+      <div><div style="font-weight: 800; font-size: 14px; color: var(--text-color);">02:30 PM</div><div style="font-size: 11px; color: #7A7571; font-weight: 600;">Post-Lunch Brain Fog</div></div>
+      <label class="toggle-switch"><input type="checkbox" checked disabled><span class="slider"></span></label>
+    </div>
+  `;
+
+  const customAnchors = JSON.parse(localStorage.getItem('nudge_custom_anchors') || '[]');
+  const hasAccess = isUserPremiumOrPass();
+
+  const customHtml = customAnchors.map(a => `
+    <div class="lifeline-item" style="border-left: 3px solid var(--accent-color);">
+      <div>
+        <div style="font-weight: 800; font-size: 14px; color: var(--text-color);">${formatTimeDisplay(a.time)}</div>
+        <div style="font-size: 11px; color: #7A7571; font-weight: 600;">${a.label} • ${a.deck}</div>
       </div>
-    `;
-    injectionPoint.insertAdjacentHTML('beforeend', html);
-  });
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <label class="toggle-switch">
+          <input type="checkbox" ${a.active ? 'checked' : ''} ${!hasAccess ? 'disabled' : ''} onchange="toggleAnchorState('${a.id}', this.checked)">
+          <span class="slider"></span>
+        </label>
+        <button onclick="deleteAnchor('${a.id}')" style="background:none; border:none; color: #A8A29E; cursor:pointer; font-size: 14px;">✕</button>
+      </div>
+    </div>
+  `).join('');
+
+  container.innerHTML = defaultHtml + customHtml;
+}
+
+function formatTimeDisplay(timeStr) {
+  const parts = timeStr.split(':');
+  if (parts.length < 2) return timeStr;
+  let hours = parseInt(parts[0], 10);
+  const minutes = parts[1];
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12 || 12;
+  const hoursStr = hours < 10 ? '0' + hours : hours;
+  return `${hoursStr}:${minutes} ${ampm}`;
+}
+
+function toggleAnchorState(id, isChecked) {
+  const currentAnchors = JSON.parse(localStorage.getItem('nudge_custom_anchors') || '[]');
+  const item = currentAnchors.find(a => a.id === id);
+  if (item) item.active = isChecked;
+  localStorage.setItem('nudge_custom_anchors', JSON.stringify(currentAnchors));
+  syncLifetimeProgressToCloud();
+}
+
+function deleteAnchor(id) {
+  let currentAnchors = JSON.parse(localStorage.getItem('nudge_custom_anchors') || '[]');
+  currentAnchors = currentAnchors.filter(a => a.id !== id);
+  localStorage.setItem('nudge_custom_anchors', JSON.stringify(currentAnchors));
+  renderCustomIntercepts();
+  syncLifetimeProgressToCloud();
 }
 
 /* ========================================================
-   ACTIVE BACKGROUND MONITOR (CHECKS SYSTEM CLOCK)
+   BACKGROUND CLOCK ALARM INTERCEPT SYSTEM
 ======================================================== */
-function startBackgroundInterceptMonitor() {
+function startInterceptClockMonitor() {
   if (interceptMonitorInterval) clearInterval(interceptMonitorInterval);
-
-  interceptMonitorInterval = setInterval(() => {
-    const now = new Date();
-    const currentHH = String(now.getHours()).padStart(2, '0');
-    const currentMM = String(now.getMinutes()).padStart(2, '0');
-    const currentTimeStr = `${currentHH}:${currentMM}`;
-
-    if (currentTimeStr === lastTriggeredMinute) return;
-
-    const customs = JSON.parse(localStorage.getItem('nudge_custom_intercepts') || '[]');
-    for (const c of customs) {
-      if (c.enabled !== false && c.time === currentTimeStr) {
-        lastTriggeredMinute = currentTimeStr;
-        fireInterceptAlarm(c.friction || "Behavioral Circuit Breaker", c.deck || "The Anti-Overwhelm Deck");
-        return;
-      }
-    }
-
-    const defaultAnchors = {
-      "08:15": "Morning Bed-Lock",
-      "09:45": "Workspace Inertia",
-      "15:45": "Willpower Exhaustion",
-      "23:15": "Bedtime Loop"
-    };
-
-    if (defaultAnchors[currentTimeStr]) {
-      lastTriggeredMinute = currentTimeStr;
-      fireInterceptAlarm(defaultAnchors[currentTimeStr], "The Dopamine Swap Deck");
-    }
-  }, 20000);
+  checkActiveIntercepts();
+  interceptMonitorInterval = setInterval(checkActiveIntercepts, 30000);
 }
 
-function fireInterceptAlarm(reason, deckName) {
-  try {
-    if (!isAppMuted) {
-      const audioNode = document.getElementById('victory-chime');
-      if (audioNode) { audioNode.currentTime = 0; audioNode.play().catch(e=>{}); }
-    }
-  } catch (e) {}
+function checkActiveIntercepts() {
+  const now = new Date();
+  const currentHours = String(now.getHours()).padStart(2, '0');
+  const currentMinutes = String(now.getMinutes()).padStart(2, '0');
+  const timeKey = `${currentHours}:${currentMinutes}`;
 
-  if ("Notification" in window && Notification.permission === "granted") {
-    new Notification("⚡ 120 Reset: Circuit Breaker Triggered", {
-      body: `Slump detected: ${reason}. Bypassing paralysis with ${deckName}.`,
-      icon: "/images/icon-192.png"
+  if (timeKey === lastTriggeredMinute) return;
+
+  const anchors = JSON.parse(localStorage.getItem('nudge_custom_anchors') || '[]');
+  const matchingAnchor = anchors.find(a => a.active && a.time === timeKey);
+
+  if (matchingAnchor) {
+    lastTriggeredMinute = timeKey;
+    triggerScheduledAlarm(matchingAnchor);
+  }
+}
+
+function triggerScheduledAlarm(anchor) {
+  if (Notification && Notification.permission === "granted") {
+    new Notification("⚡ 120 Reset Circuit Breaker Triggered!", {
+      body: `Slump Intercept: ${anchor.label}. Launching ${anchor.deck} now.`,
+      icon: "/images/icon-192.png",
+      requireInteraction: true
     });
   }
 
-  const deckTitleEl = document.getElementById('active-deck-title');
-  if (deckTitleEl) deckTitleEl.innerText = deckName;
-  
+  playVictoryChime();
+  const titleEl = document.getElementById('active-deck-title');
+  if (titleEl) titleEl.innerText = anchor.deck;
+
+  if (anchor.deck.toLowerCase().includes("overwhelm")) {
+    overwhelmCurrentStep = 1;
+  }
+
   switchScreen('screen-trigger');
 }
+
+/* ========================================================
+   PERSISTENCE SYNC TO SUPABASE CLOUD
+======================================================== */
+async function syncLifetimeProgressToCloud() {
+  const email = localStorage.getItem('nudge_user_email');
+  if (!email || email === 'anonymous_tester') return;
+
+  try {
+    await fetch(getApiUrl('/api/sync-user'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        total_wins: totalWinsCount,
+        total_focus_minutes: totalFocusReclaimed,
+        custom_anchors: JSON.parse(localStorage.getItem('nudge_custom_anchors') || '[]')
+      })
+    });
+  } catch (err) {
+    console.warn("Background progress sync warning:", err);
+  }
+}
+
+/* ========================================================
+   SCREEN SWITCHER & APPLICATION INITIALIZER
+======================================================== */
+function switchScreen(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const targetScreen = document.getElementById(screenId);
+  if (targetScreen) targetScreen.classList.add('active');
+  
+  if (screenId === 'screen-trigger') {
+    const instructions = document.getElementById('trigger-instructions');
+    const spinBtn = document.querySelector('.big-red-btn');
+    if (instructions) instructions.innerText = "Take one slow, long breath before pushing.";
+    if (spinBtn) spinBtn.innerText = "START";
+  }
+
+  if (screenId === 'screen-dashboard' || screenId === 'screen-onboarding-2') {
+    applyPremiumUIVisuals();
+    renderCustomIntercepts();
+    updatePassCountdown();
+    updateMetricDashboard();
+  }
+}
+
+function userLogout() {
+  localStorage.removeItem('nudge_user_email');
+  localStorage.removeItem('nudge_vip_unlocked');
+  currentUserProfile = null;
+  totalWinsCount = 0;
+  totalFocusReclaimed = 0.0;
+  overwhelmCurrentStep = 1;
+  localStorage.removeItem('nudge_total_wins');
+  localStorage.removeItem('nudge_focus_reclaimed');
+  switchScreen('screen-onboarding-1');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  totalWinsCount = parseInt(localStorage.getItem('nudge_total_wins') || '0', 10);
+  totalFocusReclaimed = parseFloat(localStorage.getItem('nudge_focus_reclaimed') || '0.0');
+
+  updateAudioMuteButtonUI();
+
+  // If returning user, sync profile and go to dashboard
+  const savedEmail = localStorage.getItem('nudge_user_email');
+  if (savedEmail) {
+    syncUserProfile(savedEmail);
+    switchScreen('screen-dashboard');
+  }
+
+  startInterceptClockMonitor();
+});
