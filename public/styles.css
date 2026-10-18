@@ -26,12 +26,13 @@ body {
   min-height: 100vh; 
   margin: 0;
   padding: 0;
+  overflow: hidden; 
   touch-action: manipulation;
   user-select: none; 
   -webkit-user-select: none;
 }
 
-/* Mobile Frame Anchor: Constrains widescreen stretch to a centered phone silhouette */
+/* Constrains widescreen desktop viewports to a centered mobile canvas */
 .app-container,
 .mobile-container {
   width: 100%; 
@@ -45,35 +46,12 @@ body {
   flex-direction: column;
 }
 
-.app-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 12px 14px 12px;
-  z-index: 20;
-}
-
-.app-header .logo {
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  font-size: 14px;
-  color: var(--text-color);
-}
-
-.icon-btn-header {
-  background: none;
-  border: none;
-  font-size: 18px;
-  cursor: pointer;
-  color: var(--text-color);
-}
-
 .screen {
   background-color: var(--card-bg); 
   border-radius: 32px; 
-  padding: 28px 20px; 
+  padding: 32px 22px; 
   text-align: center;
-  box-shadow: 0 20px 50px rgba(45, 43, 42, 0.06); 
+  box-shadow: 0 24px 60px rgba(45, 43, 42, 0.06); 
   width: calc(100% - 32px); 
   height: calc(100% - 32px); 
   position: absolute; 
@@ -81,7 +59,7 @@ body {
   left: 16px; 
   opacity: 0; 
   visibility: hidden; 
-  transform: translateY(16px); 
+  transform: translateY(20px); 
   transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.35s;
   display: flex; 
   flex-direction: column; 
@@ -100,24 +78,31 @@ body {
 
 .title-large { 
   font-weight: 800; 
-  font-size: 26px; 
+  font-size: 28px; 
   line-height: 1.2; 
   color: var(--text-color); 
-  letter-spacing: -0.4px; 
+  letter-spacing: -0.5px; 
 }
 
 .title-deck { 
   font-weight: 800; 
   font-size: 22px; 
-  color: var(--text-color); 
+  color: var(--accent-color); 
   letter-spacing: -0.3px; 
 }
 
 .body-text { 
   font-size: 14px; 
-  line-height: 1.45; 
+  line-height: 1.5; 
   color: #6E6A67; 
   margin-top: 6px; 
+}
+
+.italic-hint { 
+  font-size: 13px; 
+  color: #9C8E80; 
+  font-style: italic; 
+  line-height: 1.4; 
 }
 
 .badge {
@@ -132,40 +117,47 @@ body {
   color: var(--premium-color);
 }
 
-.stats-card {
-  width: 100%;
-  background: var(--bg-color);
+.metric-ribbon {
+  display: flex; 
+  width: 100%; 
+  background: var(--bg-color); 
   border: 1px solid var(--border-color);
-  border-radius: 18px;
-  padding: 14px 16px;
-  margin-bottom: 14px;
+  border-radius: 20px; 
+  padding: 14px; 
+  gap: 10px; 
+  margin-bottom: 12px;
 }
 
-.stats-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.metric-block { 
+  flex: 1; 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  justify-content: center; 
 }
 
-.metric-val {
-  font-size: 26px;
-  font-weight: 900;
-  color: var(--text-color);
+.metric-num { 
+  font-size: 24px; 
+  font-weight: 900; 
+  color: var(--text-color); 
 }
 
-.metric-unit {
-  font-size: 14px;
-  font-weight: 700;
-  margin-left: 2px;
+.metric-lbl { 
+  font-size: 11px; 
+  font-weight: 700; 
+  color: #9C8E80; 
+  text-transform: uppercase; 
+  letter-spacing: 0.5px; 
+  margin-top: 2px;
 }
 
 .btn-primary {
   width: 100%;
-  background: var(--text-color);
+  background-color: var(--text-color);
   color: #FFFFFF;
   border: none;
-  border-radius: 16px;
-  padding: 15px;
+  border-radius: 18px;
+  padding: 16px;
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
@@ -191,11 +183,20 @@ body {
 .btn-bypass {
   background: none;
   border: none;
-  color: #7A7571;
+  color: #9C8E80;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   padding: 8px;
+}
+
+.btn-text-nav {
+  background: none;
+  border: none;
+  color: var(--premium-color);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .deck-list {
@@ -209,7 +210,7 @@ body {
   width: 100%;
   background: #FFFFFF;
   border: 2px solid var(--border-color);
-  border-radius: 16px;
+  border-radius: 18px;
   padding: 12px 14px;
   text-align: left;
   cursor: pointer;
@@ -224,7 +225,7 @@ body {
 .deck-meta {
   font-size: 10px;
   font-weight: 800;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
   margin-bottom: 2px;
 }
@@ -244,7 +245,7 @@ body {
   margin-top: 2px;
 }
 
-/* Intercept List Items */
+/* Daily Intercepts List */
 .lifeline-list {
   display: flex;
   flex-direction: column;
@@ -262,19 +263,48 @@ body {
   padding: 10px 14px;
 }
 
-.time-badge {
-  font-weight: 800;
-  font-size: 14px;
-  color: var(--text-color);
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 24px;
 }
 
-.label-sub {
-  font-size: 11px;
-  color: #7A7571;
-  font-weight: 600;
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
 }
 
-/* Big Button Ring */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #D6D0C7;
+  transition: 0.2s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.2s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: var(--success-color);
+}
+
+input:checked + .slider:before {
+  transform: translateX(16px);
+}
+
 .spin-outer-ring {
   width: 190px;
   height: 190px;
@@ -308,6 +338,7 @@ body {
 }
 
 /* Modals */
+.paywall-modal,
 .modal-backdrop {
   display: none;
   position: fixed;
@@ -320,6 +351,7 @@ body {
   padding: 16px;
 }
 
+.paywall-modal.active,
 .modal-backdrop.active {
   display: flex;
 }
@@ -331,4 +363,21 @@ body {
   width: 100%;
   max-width: 380px;
   box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+}
+
+.paywall-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border: 2px solid var(--border-color);
+  border-radius: 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.paywall-option.selected {
+  border-color: var(--accent-color);
+  background: #FFFDF9;
 }
