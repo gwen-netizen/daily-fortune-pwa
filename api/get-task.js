@@ -1,3 +1,4 @@
+// api/get-task.js
 const { createClient } = require('@supabase/supabase-js');
 const taskMatrix = require('../lib/tasks.js');
 
@@ -14,7 +15,7 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
-    const { category, friction, email } = req.query;
+    const { category, friction, email, step } = req.query;
     
     if (!category) {
       return res.status(400).json({ error: "Missing required category parameter." });
@@ -36,7 +37,6 @@ module.exports = async function handler(req, res) {
       userProfile = data && data.length > 0 ? data[0] : null;
     }
 
-    // PASS EXPIRATION CHECK: Never demote permanent premium users
     if (userProfile && userProfile.pass_expires_at) {
       const expiresAt = new Date(userProfile.pass_expires_at).getTime();
       if (Date.now() >= expiresAt) {
@@ -68,15 +68,32 @@ module.exports = async function handler(req, res) {
       return res.status(404).json({ error: "Focus Area pool mapping mismatch." });
     }
 
-    // Pick randomized task from target deck
-    const randomTaskIndex = Math.floor(Math.random() * targetPool.length);
-    const selectedTaskData = targetPool[randomTaskIndex];
+    let selectedTaskData;
+
+    // --- OVERWHELM DECK SEQUENTIAL ENGINE (CARDS 1-4) ---
+    if (lowerCategory === 'overwhelm') {
+      const targetStep = parseInt(step, 10) || 1;
+      
+      // Match friction track if provided (e.g. task_paralysis, mindless_scrolling)
+      let pool = targetPool;
+      if (friction) {
+        const filtered = targetPool.filter(t => t.frictionTags && t.frictionTags.includes(friction));
+        if (filtered.length > 0) pool = filtered;
+      }
+      
+      selectedTaskData = pool.find(t => t.step === targetStep) || pool[targetStep - 1] || pool[0];
+    } else {
+      // Standard random draw for all other decks
+      const randomTaskIndex = Math.floor(Math.random() * targetPool.length);
+      selectedTaskData = targetPool[randomTaskIndex];
+    }
 
     return res.status(200).json({ 
       task: {
         text: selectedTaskData.text,
         focusArea: selectedTaskData.focusArea || selectedTaskData.label || "Core Biomechanics",
-        affirmation: selectedTaskData.affirmation || selectedTaskData.text
+        affirmation: selectedTaskData.affirmation || selectedTaskData.text,
+        step: selectedTaskData.step || 1
       }
     });
   } catch (error) {
