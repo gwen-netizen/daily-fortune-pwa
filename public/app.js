@@ -269,6 +269,9 @@ function applyPremiumUIVisuals(hasAccess) {
   }
 }
 
+/* ========================================================
+   SCREEN SWITCHER (WITH RELIABLE SLIDE-UP NOTIFICATION)
+======================================================== */
 function switchScreen(screenId, shouldPushHistory = true) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const target = document.getElementById(screenId);
@@ -280,12 +283,18 @@ function switchScreen(screenId, shouldPushHistory = true) {
       pushNavigationState(screenId);
     }
 
+    // RELIABLE SLIDE-UP ANIMATION TRIGGER
+    const toast = document.getElementById('trigger-slideup-notification');
     if (screenId === 'screen-trigger') {
-      const toast = document.getElementById('trigger-slideup-notification');
       if (toast) {
-        toast.style.animation = 'none';
-        toast.offsetHeight;
-        toast.style.animation = '';
+        toast.classList.remove('slide-up-active');
+        setTimeout(() => {
+          toast.classList.add('slide-up-active');
+        }, 100);
+      }
+    } else {
+      if (toast) {
+        toast.classList.remove('slide-up-active');
       }
     }
 
@@ -392,12 +401,16 @@ async function executeTurnaroundSpin() {
       if (taskDisplayEl && currentActiveTask) {
         taskDisplayEl.innerText = currentActiveTask.text;
       }
+      
+      // STRIP "FOCUS AREA:" TO PREVENT ANY DUPLICATE VISUAL TEXT ON ALL DECKS
       if (focusAreaEl && currentActiveTask) {
-        const areaName = currentActiveTask.focusArea || "Energy Surge";
+        const rawArea = currentActiveTask.focusArea || "Energy Surge";
+        const cleanArea = rawArea.replace(/^focus\s*area\s*:\s*/i, '').trim();
+
         if (categoryKey === 'overwhelm') {
-          focusAreaEl.innerText = `FOCUS AREA: MOVE ${overwhelmCurrentStep} OF 4 • ${areaName.toUpperCase()}`;
+          focusAreaEl.innerText = `FOCUS AREA: MOVE ${overwhelmCurrentStep} OF 4 • ${cleanArea.toUpperCase()}`;
         } else {
-          focusAreaEl.innerText = `FOCUS AREA: ${areaName.toUpperCase()}`;
+          focusAreaEl.innerText = `FOCUS AREA: ${cleanArea.toUpperCase()}`;
         }
       }
       
@@ -556,7 +569,7 @@ function runAnotherRound() {
 }
 
 /* ========================================================
-   CUSTOM INTERCEPTS & TIMING RENDERER
+   CUSTOM & PRESET INTERCEPTS MONITOR
 ======================================================== */
 function formatTime12h(time24) {
   if (!time24) return "12:00 PM";
@@ -658,11 +671,28 @@ function renderCustomIntercepts() {
 }
 
 function startBackgroundInterceptMonitor() {
+  const presets = [
+    { time: '08:15', label: 'Morning Bed-Lock', deck: 'The Charisma Deck' },
+    { time: '14:30', label: 'Post-Lunch Brain Fog', deck: 'The Financial Reset Deck' },
+    { time: '23:15', label: 'Bedtime Loop', deck: 'The Anti-Overwhelm Deck' }
+  ];
+
   setInterval(() => {
     const now = new Date();
     const hours = String(now.getHours()).padStart(2, '0');
     const minutes = String(now.getMinutes()).padStart(2, '0');
     const currentTimeStr = `${hours}:${minutes}`;
+
+    presets.forEach(p => {
+      if (p.time === currentTimeStr && !p.triggeredToday) {
+        p.triggeredToday = true;
+        if ("Notification" in window && Notification.permission === "granted") {
+          new Notification("120 Reset Circuit Breaker", {
+            body: `Scheduled Intercept: ${p.label}. Tap to break the loop.`
+          });
+        }
+      }
+    });
 
     const customs = JSON.parse(localStorage.getItem('nudge_custom_intercepts') || '[]');
     customs.forEach(c => {
