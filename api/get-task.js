@@ -21,7 +21,6 @@ module.exports = async function handler(req, res) {
     }
 
     let lowerCategory = category.toLowerCase();
-    // Normalize aliases
     if (lowerCategory === 'financial-reset' || lowerCategory === 'financial_freeze_impulse' || lowerCategory === 'financial_freeze' || lowerCategory === 'financial_reset') {
       lowerCategory = 'wealth';
     }
@@ -41,24 +40,19 @@ module.exports = async function handler(req, res) {
       userProfile = data && data.length > 0 ? data[0] : null;
     }
 
-    // Pass expiration check
+    // PASS EXPIRATION CHECK: Check temporary pass timestamp first
     if (userProfile && userProfile.pass_expires_at) {
       const expiresAt = new Date(userProfile.pass_expires_at).getTime();
       if (Date.now() >= expiresAt) {
-        if (userProfile.premium_user !== true) {
-          await supabase
-            .from('user_profiles')
-            .update({ premium_user: false, pass_expires_at: null })
-            .ilike('email', cleanEmail);
+        await supabase
+          .from('user_profiles')
+          .update({ premium_user: false, pass_expires_at: null })
+          .ilike('email', cleanEmail);
 
-          userProfile.premium_user = false;
-        } else {
-          await supabase
-            .from('user_profiles')
-            .update({ pass_expires_at: null })
-            .ilike('email', cleanEmail);
-        }
+        userProfile.premium_user = false;
         userProfile.pass_expires_at = null;
+      } else {
+        userProfile.premium_user = true;
       }
     }
 
@@ -73,17 +67,13 @@ module.exports = async function handler(req, res) {
       return res.status(404).json({ error: "Focus Area pool mapping mismatch." });
     }
 
-    let selectedTaskData;
-
-    // Link friction line to task extraction
     let pool = targetPool;
     if (friction) {
       const filtered = targetPool.filter(t => Array.isArray(t.frictionTags) && t.frictionTags.includes(friction));
-      if (filtered.length > 0) {
-        pool = filtered;
-      }
+      if (filtered.length > 0) pool = filtered;
     }
 
+    let selectedTaskData;
     if (lowerCategory === 'overwhelm') {
       const targetStep = parseInt(step, 10) || 1;
       selectedTaskData = pool.find(t => t.step === targetStep) || pool[targetStep - 1] || pool[0];
