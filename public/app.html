@@ -18,9 +18,8 @@
 
   <div class="app-container">
 
-    <!-- SCREEN 0: IMMERSIVE PROTOCOL WELCOME SCREEN -->
-    <div id="screen-welcome" class="screen active welcome-screen-styled">
-      
+    <!-- SCREEN 0: WELCOME SCREEN (SHOWN TO EXISTING LOGGED IN USERS) -->
+    <div id="screen-welcome" class="screen welcome-screen-styled">
       <div class="welcome-header-zone">
         <div class="kicker-wrapper">
           <span class="brand-kicker-glow">120RESET</span>
@@ -56,34 +55,46 @@
       </div>
 
       <div class="welcome-action-zone">
-        <button class="btn-primary btn-launch-pulse" onclick="switchScreen('screen-onboarding-2')">
+        <button class="btn-primary btn-launch-pulse" onclick="handleWelcomeContinue()">
           TAP TO CONTINUE &rarr;
         </button>
       </div>
-
     </div>
 
-    <!-- SCREEN 1: ONBOARDING & LOGIN ENTRY -->
+    <!-- SCREEN 1: ONBOARDING & 2-STEP EMAIL + OTP AUTHENTICATION SCREEN -->
     <div id="screen-onboarding-1" class="screen">
       <div style="margin: auto 0; width: 100%;">
         <span class="badge" style="margin-bottom: 12px;">CLINICALLY BACKED PROTOCOL</span>
         <h1 class="title-large" style="margin-bottom: 8px;">120<br>Reset</h1>
         <p class="body-text" style="margin-bottom: 16px;">The behavioral circuit breaker. Interrupt screen addiction and task paralysis instantly in exactly 120 seconds.</p>
         
-        <div style="width: 100%; text-align: left; margin-bottom: 10px;">
+        <!-- STEP 1: EMAIL & PROMO INPUTS -->
+        <div id="auth-email-group" style="width: 100%; text-align: left; margin-bottom: 10px;">
           <label style="font-size: 11px; font-weight: 700; color: var(--premium-color); letter-spacing: 0.5px; text-transform: uppercase;">Focus Email Identity</label>
           <input type="email" id="user-auth-email" placeholder="name@example.com" 
                  style="width: 100%; padding: 14px; border: 2px solid var(--border-color); border-radius: 14px; font-size: 15px; margin-top: 4px; outline: none; background: #FAF7F2; color: var(--text-color);">
         </div>
 
-        <div style="width: 100%; text-align: left; margin-bottom: 16px;">
+        <div id="auth-promo-group" style="width: 100%; text-align: left; margin-bottom: 14px;">
           <label style="font-size: 11px; font-weight: 700; color: #9C8E80; letter-spacing: 0.5px; text-transform: uppercase;">Promotional Pass Code (Optional)</label>
-          <input type="text" id="user-promo-code" placeholder="e.g. LIFETIME" oninput="this.value = this.value.toUpperCase();"
+          <input type="text" id="user-promo-code" placeholder="e.g. PREMIUM99" oninput="this.value = this.value.toUpperCase();"
                  style="width: 100%; padding: 12px 14px; border: 2px dashed var(--border-color); border-radius: 14px; font-size: 14px; margin-top: 4px; outline: none; background: #FFFFFF; color: var(--text-color); font-weight: 700; letter-spacing: 1px;">
         </div>
+
+        <!-- STEP 2: 6-DIGIT OTP ACCESS CODE INPUT -->
+        <div id="auth-otp-group" style="display: none; width: 100%; text-align: left; margin-bottom: 14px;">
+          <label style="font-size: 11px; font-weight: 700; color: #DC2626; letter-spacing: 0.5px; text-transform: uppercase;">Enter 6-Digit Access Code</label>
+          <input type="text" id="user-auth-otp" placeholder="123456" maxlength="6" inputmode="numeric"
+                 style="width: 100%; padding: 14px; border: 2px solid #DC2626; border-radius: 14px; font-size: 20px; font-weight: 800; letter-spacing: 6px; text-align: center; margin-top: 4px; outline: none; background: #FFF8F8; color: var(--text-color);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+            <span style="font-size: 11px; color: #7A7571;">Check your email inbox for code</span>
+            <button type="button" onclick="resendOtpCode()" style="background: none; border: none; font-size: 11px; font-weight: 700; color: var(--premium-color); text-decoration: underline; cursor: pointer;">Resend</button>
+          </div>
+        </div>
       </div>
+
       <div style="width: 100%; margin-top: auto;">
-        <button class="btn-primary" onclick="initializeUserProfile()">Continue &rarr;</button>
+        <button id="btn-auth-action" class="btn-primary" onclick="handleAuthAction()">Send Access Code &rarr;</button>
       </div>
     </div>
 
@@ -186,7 +197,7 @@
       </div>
     </div>
 
-    <!-- SCREEN 4: TRIGGER SCREEN (3.0s SLOW-MOTION SLIDE UP DIVERSION) -->
+    <!-- SCREEN 4: TRIGGER SCREEN -->
     <div id="screen-trigger" class="screen">
       <div style="margin-top: 6px; width: 100%; text-align: center;">
         <h2 class="title-deck" id="active-deck-title" style="font-size: 24px; font-weight: 800; line-height: 1.25;">Command the room.</h2>
@@ -230,7 +241,7 @@
       </div>
     </div>
 
-    <!-- SCREEN 6: VICTORY / CLAIM STACK SCREEN -->
+    <!-- SCREEN 6: VICTORY SCREEN -->
     <div id="screen-victory" class="screen">
       <div style="margin: auto 0; width: 100%;">
         <div style="font-size: 40px; margin-bottom: 6px;" id="victory-header-badge">🏆</div>
@@ -255,7 +266,6 @@
         <button class="btn-secondary" onclick="runAnotherRound()">Run Another 120s Circuit</button>
       </div>
 
-      <!-- MANAGE SUBSCRIPTION (RESTORED AT BOTTOM OF CLAIM STACK PAGE) -->
       <div style="width: 100%; text-align: center; margin-top: 14px;">
         <button id="btn-victory-manage-subscription" onclick="openCustomerPortal()" style="display: none; background: none; border: none; color: #9C8E80; font-size: 11.5px; font-weight: 600; text-decoration: underline; cursor: pointer; padding: 4px;">
           Manage Subscription
@@ -301,7 +311,7 @@
       </div>
     </div>
 
-    <!-- REDESIGNED UNCLUTTERED SUBSCRIPTION MODAL -->
+    <!-- REORDERED PRICING MODAL: $0.99 -> $2.99/mo -> $14.99[cite: 9] -->
     <div id="paywall-overlay" class="paywall-modal">
       <div class="paywall-sheet">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -312,7 +322,7 @@
         <p class="body-text" style="margin-bottom: 18px; font-size: 13px;">Unlock behavioral overrides modeled on clinical executive functioning systems.</p>
         
         <div class="tier-card-stack">
-          <!-- TIER 1: 48-Hour Pass ($0.99) -->
+          <!-- CARD 1: 48-Hour Pass ($0.99)[cite: 9] -->
           <div class="tier-card selected" data-plan="pass" onclick="selectTier(this)">
             <div class="tier-card-content">
               <div class="tier-top-row">
@@ -323,9 +333,20 @@
             </div>
           </div>
 
-          <!-- TIER 2: Lifetime Freedom ($29.99 Slashed to $14.99) -->
+          <!-- CARD 2: Continuous Momentum Monthly ($2.99/mo)[cite: 9] -->
+          <div class="tier-card" data-plan="monthly" onclick="selectTier(this)">
+            <div class="tier-card-content">
+              <div class="tier-top-row">
+                <span class="tier-plan-title">Continuous Momentum</span>
+                <span class="tier-price-highlight">$2.99<span class="tier-unit">/mo</span></span>
+              </div>
+              <div class="tier-sub-caption">Billed monthly. Cancel anytime with zero friction.</div>
+            </div>
+          </div>
+
+          <!-- CARD 3: Lifetime Freedom ($29.99 Slashed to $14.99)[cite: 9] -->
           <div class="tier-card tier-card-featured" data-plan="lifetime" onclick="selectTier(this)">
-            <div class="tier-floating-pill">LIMITED TIME &bull; SAVE 50%</div>
+            <div class="tier-floating-pill">LIMITED TIME ONLY</div>
             <div class="tier-card-content">
               <div class="tier-top-row">
                 <span class="tier-plan-title">Lifetime Freedom Access</span>
@@ -335,17 +356,6 @@
                 </div>
               </div>
               <div class="tier-sub-caption">One-time payment. Permanent access forever.</div>
-            </div>
-          </div>
-
-          <!-- TIER 3: Continuous Momentum Monthly ($2.99/mo) -->
-          <div class="tier-card" data-plan="monthly" onclick="selectTier(this)">
-            <div class="tier-card-content">
-              <div class="tier-top-row">
-                <span class="tier-plan-title">Continuous Momentum</span>
-                <span class="tier-price-highlight">$2.99<span class="tier-unit">/mo</span></span>
-              </div>
-              <div class="tier-sub-caption">Billed monthly. Cancel anytime with zero friction.</div>
             </div>
           </div>
         </div>
