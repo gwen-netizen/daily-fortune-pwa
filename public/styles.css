@@ -48,7 +48,7 @@ body {
 .screen {
   background-color: var(--card-bg); 
   border-radius: 32px; 
-  padding: 30px 22px; 
+  padding: 26px 20px; 
   text-align: center;
   box-shadow: 0 24px 60px rgba(45, 43, 42, 0.06); 
   width: calc(100% - 32px); 
@@ -198,7 +198,7 @@ body {
   cursor: pointer;
 }
 
-/* ENLARGED CHANGE FOCUS AREA BUTTON BELOW START */
+/* ENLARGED CHANGE FOCUS AREA BUTTON DIRECTLY BELOW START */
 .btn-back-focus {
   display: inline-flex;
   align-items: center;
@@ -214,7 +214,7 @@ body {
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(45, 43, 42, 0.05);
   transition: all 0.2s ease;
-  margin-top: 6px;
+  margin-top: 4px;
 }
 
 .btn-back-focus:active {
@@ -222,28 +222,24 @@ body {
   background: #F7F4EE;
 }
 
-/* SLIDE-UP NOTIFICATION CARD */
+/* DYNAMIC SLIDE-UP NOTIFICATION CARD */
 .slideup-notification-card {
   width: 100%;
-  background: var(--bg-color);
+  background: #FFFFFF;
   border: 1.5px solid var(--border-color);
   border-radius: 18px;
-  padding: 13px 16px;
+  padding: 12px 16px;
   text-align: center;
+  box-shadow: 0 4px 18px rgba(45, 43, 42, 0.06);
   margin-top: auto;
-  box-shadow: 0 4px 16px rgba(45, 43, 42, 0.04);
-  animation: slideUpToast 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+  transform: translateY(35px);
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.45s ease;
 }
 
-@keyframes slideUpToast {
-  from {
-    opacity: 0;
-    transform: translateY(28px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.slideup-notification-card.slide-up-active {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .notification-line-1 {
@@ -262,23 +258,25 @@ body {
   line-height: 1.3;
 }
 
-/* TASK DISPLAY CARD REORDER */
-.task-display-card {
-  background: var(--bg-color);
-  border: 1.5px solid var(--border-color);
-  padding: 22px 18px;
-  border-radius: 20px;
+/* HERO TASK DISPLAY CARD */
+.task-hero-card {
+  background: #FFFFFF;
+  border: 2px solid var(--border-color);
+  padding: 24px 20px;
+  border-radius: 22px;
   text-align: left;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
+  box-shadow: 0 8px 24px rgba(45, 43, 42, 0.05);
 }
 
 .task-headline-text {
-  font-size: 18px;
+  font-size: 22px;
   line-height: 1.45;
-  font-weight: 700;
-  color: var(--text-color);
+  font-weight: 800;
+  color: #1A1918;
+  letter-spacing: -0.3px;
 }
 
 .focus-area-badge {
@@ -288,9 +286,51 @@ body {
   color: var(--premium-color);
   letter-spacing: 0.06em;
   background: rgba(212, 163, 115, 0.15);
-  padding: 5px 10px;
+  padding: 6px 12px;
   border-radius: 8px;
   width: fit-content;
+}
+
+/* CALM ASSISTIVE COUNTDOWN TIMER (NON-STRESSFUL PILL) */
+.timer-assist-container {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #F5EFE6;
+  border: 1px solid var(--border-color);
+  border-radius: 30px;
+  padding: 8px 18px;
+  margin: 22px auto 10px auto;
+}
+
+.timer-assist-icon {
+  font-size: 16px;
+}
+
+.timer-assist-digits {
+  font-size: 22px;
+  font-weight: 800;
+  color: #4A4643;
+  letter-spacing: 0.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-assist-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #9C8E80;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.timer-assist-subtext {
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: #7A7571;
+  font-weight: 600;
+  text-align: center;
+  margin: 0 auto;
 }
 
 .deck-list {
@@ -305,7 +345,7 @@ body {
   background: #FFFFFF;
   border: 2px solid var(--border-color);
   border-radius: 18px;
-  padding: 12px 14px;
+  padding: 14px 16px;
   text-align: left;
   cursor: pointer;
   transition: border-color 0.2s ease, transform 0.1s ease;
@@ -321,7 +361,7 @@ body {
   font-weight: 800;
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  margin-bottom: 2px;
+  margin-bottom: 3px;
 }
 
 .deck-meta.free { color: var(--success-color); }
@@ -399,19 +439,19 @@ input:checked + .slider:before {
 }
 
 .spin-outer-ring {
-  width: 190px;
-  height: 190px;
+  width: 180px;
+  height: 180px;
   border-radius: 50%;
   border: 4px solid var(--border-color);
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 30px auto;
+  margin: 18px auto 12px auto;
 }
 
 .big-red-btn {
-  width: 156px;
-  height: 156px;
+  width: 148px;
+  height: 148px;
   border-radius: 50%;
   background: #C85A32;
   color: #FFFFFF;
@@ -421,13 +461,6 @@ input:checked + .slider:before {
   border: none;
   cursor: pointer;
   box-shadow: 0 10px 24px rgba(200, 90, 50, 0.35);
-}
-
-.timer-large {
-  font-size: 64px;
-  font-weight: 900;
-  letter-spacing: -1px;
-  color: var(--timer-color);
 }
 
 /* Modals */
