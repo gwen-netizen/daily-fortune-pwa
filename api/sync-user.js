@@ -111,7 +111,6 @@ module.exports = async function handler(req, res) {
     try {
       let profileData = await getProfileSafely(lowerEmail);
 
-      // Initialize entry if profile does not exist yet
       if (!profileData) {
         const { data: newProfile, error: insertError } = await supabase
           .from('user_profiles')
@@ -130,7 +129,6 @@ module.exports = async function handler(req, res) {
         }
       }
 
-      // Handle promotional bypasses
       if (profileData && promo_code === 'PREMIUM99' && !profileData.premium_user && !profileData.promo_claimed) {
         const passExpiry = new Date(Date.now() + (48 * 3600 * 1000)).toISOString();
         const { data: updated } = await supabase
