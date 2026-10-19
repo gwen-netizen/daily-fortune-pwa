@@ -161,17 +161,15 @@ async function initializeUserProfile() {
 function isUserPremiumOrPass() {
   if (!currentUserProfile) return false;
 
-  // 1. Temporary Pass Check FIRST: If a pass timestamp exists, it governs validity
   if (currentUserProfile.pass_expires_at) {
     const expiryMs = parseDbTimestamp(currentUserProfile.pass_expires_at);
     if (Date.now() < expiryMs) {
-      return true; // Pass is ACTIVE
+      return true;
     } else {
-      return false; // Pass has EXPIRED
+      return false;
     }
   }
 
-  // 2. Permanent/Monthly Subscription check (pass_expires_at is null)
   if (currentUserProfile.premium_user === true || currentUserProfile.premium_user === 'true') {
     return true;
   }
@@ -286,7 +284,7 @@ function switchScreen(screenId, shouldPushHistory = true) {
       const toast = document.getElementById('trigger-slideup-notification');
       if (toast) {
         toast.style.animation = 'none';
-        toast.offsetHeight; // Force DOM reflow
+        toast.offsetHeight;
         toast.style.animation = '';
       }
     }
@@ -352,7 +350,7 @@ async function executeTurnaroundSpin() {
     return;
   }
 
-  // PRE-INITIALIZE TIMER TO PREVENT 01:46 FLASH
+  // Pre-initialize timer to 02:00 synchronously so 01:46 is never displayed
   const timerDisplayEl = document.getElementById('timer-display');
   if (timerDisplayEl) timerDisplayEl.innerText = "02:00";
 
@@ -426,7 +424,6 @@ function startActionTimer(seconds) {
     }
   };
 
-  // Paint 02:00 synchronously before first tick
   renderTime(timeLeft);
   
   countdownInterval = setInterval(() => {
