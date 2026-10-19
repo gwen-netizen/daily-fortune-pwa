@@ -75,32 +75,189 @@ body {
   z-index: 10; 
 }
 
-/* BRAND KICKER PILL (EXACT SPECIFICATION) */
-.brand-kicker-pill {
+/* ========================================================
+   WELCOME SCREEN IMMERSIVE DESIGN
+======================================================== */
+.welcome-screen-styled {
+  background: radial-gradient(circle at 50% 25%, rgba(220, 38, 38, 0.06) 0%, rgba(212, 163, 115, 0.05) 50%, #FFFFFF 85%);
+  padding: 32px 22px 24px 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.welcome-header-zone {
+  width: 100%;
+  text-align: center;
+}
+
+.kicker-wrapper {
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.brand-kicker-glow {
   display: inline-block;
-  background-color: #DC2626; /* Tailwind bg-red-600 */
+  background-color: #DC2626;
   color: #FFFFFF;
   font-size: 13px;
   font-weight: 800;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  padding: 8px 22px;
+  padding: 7px 22px;
   border-radius: 9999px;
-  box-shadow: 0 0 20px rgba(220, 38, 38, 0.4);
+  box-shadow: 0 0 22px rgba(220, 38, 38, 0.45);
 }
 
-/* WELCOME HEADLINE */
-.welcome-main-text {
-  font-size: 30px;
+.welcome-hero-title {
+  font-size: 27px;
   font-weight: 800;
   line-height: 1.25;
-  color: var(--text-color);
+  color: #1F1E1D;
   letter-spacing: -0.5px;
-  text-align: center;
   max-width: 320px;
   margin: 0 auto;
 }
 
+.highlight-text {
+  color: #DC2626;
+  position: relative;
+}
+
+/* KINETIC CENTERPIECE ORB */
+.welcome-centerpiece {
+  margin: auto 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pulse-outer-aura {
+  width: 168px;
+  height: 168px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(220, 38, 38, 0.12) 0%, rgba(212, 163, 115, 0.08) 60%, transparent 70%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: breathingOrb 3.2s ease-in-out infinite;
+}
+
+@keyframes breathingOrb {
+  0%, 100% {
+    transform: scale(0.96);
+    box-shadow: 0 0 30px rgba(220, 38, 38, 0.15);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 50px rgba(220, 38, 38, 0.28);
+  }
+}
+
+.kinetic-core-circle {
+  width: 134px;
+  height: 134px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  border: 2px solid var(--border-color);
+  box-shadow: 0 12px 32px rgba(45, 43, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.core-spark-icon {
+  font-size: 20px;
+  margin-bottom: 2px;
+}
+
+.core-number {
+  font-size: 34px;
+  font-weight: 900;
+  color: var(--text-color);
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.core-unit {
+  font-size: 18px;
+  font-weight: 700;
+  color: #DC2626;
+  margin-left: 2px;
+}
+
+.core-status-pill {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #9C8E80;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+/* PROTOCOL STATS ROW */
+.welcome-perks-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.perk-chip {
+  flex: 1;
+  background: #FAF7F2;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 10px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.perk-icon {
+  font-size: 16px;
+}
+
+.perk-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-color);
+  line-height: 1.2;
+}
+
+/* BOTTOM ACTION ZONE */
+.welcome-action-zone {
+  width: 100%;
+  text-align: center;
+}
+
+.btn-launch-pulse {
+  box-shadow: 0 10px 24px rgba(45, 43, 42, 0.2);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-launch-pulse:active {
+  transform: scale(0.97);
+}
+
+.welcome-subhint {
+  font-size: 12px;
+  font-weight: 600;
+  color: #9C8E80;
+  margin-top: 10px;
+  letter-spacing: 0.2px;
+}
+
+/* ========================================================
+   GLOBAL TYPOGRAPHY & INTERFACES
+======================================================== */
 .title-large { 
   font-weight: 800; 
   font-size: 28px; 
