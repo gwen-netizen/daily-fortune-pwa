@@ -40,7 +40,7 @@
       </div>
     </div>
 
-    <!-- SCREEN 2: IDENTIFY PAIN POINT (CLEANED CARDS & TITLES) -->
+    <!-- SCREEN 2: IDENTIFY PAIN POINT (CLEAN CARDS & REMOVED SUBTEXT) -->
     <div id="screen-onboarding-2" class="screen">
       <div style="width: 100%; margin-bottom: 12px;">
         <div id="screen2-status-banner" style="width: 100%; padding: 10px 14px; border-radius: 14px; font-size: 12px; margin-bottom: 14px; border: 1.5px solid var(--border-color); text-align: center;"></div>
@@ -150,7 +150,7 @@
       </div>
     </div>
 
-    <!-- SCREEN 4: TRIGGER SCREEN (REORDERED BACK BUTTON & ANIMATED SLIDE-UP NOTIFICATION) -->
+    <!-- SCREEN 4: TRIGGER SCREEN (SLOW-MOTION SLIDE-UP NOTIFICATION) -->
     <div id="screen-trigger" class="screen">
       <div style="margin-top: 6px; width: 100%; text-align: center;">
         <h2 class="title-deck" id="active-deck-title" style="font-size: 24px; font-weight: 800; line-height: 1.25;">Command the room.</h2>
@@ -167,14 +167,14 @@
         </button>
       </div>
 
-      <!-- BOTTOM: RELIABLE SLIDE-UP NOTIFICATION CARD -->
+      <!-- BOTTOM: RELIABLE SLOW-MOTION SLIDE-UP NOTIFICATION CARD -->
       <div id="trigger-slideup-notification" class="slideup-notification-card">
         <div class="notification-line-1" id="trigger-instructions">Take one slow breath before pushing.</div>
         <div class="notification-line-2">Commit to the next 120 seconds completely.</div>
       </div>
     </div>
 
-    <!-- SCREEN 5: COUNTDOWN SCREEN (HIGH-CONTRAST TEXT & CALM ASSISTIVE TIMER) -->
+    <!-- SCREEN 5: COUNTDOWN SCREEN (HIGH CONTRAST & CALM ASSISTING TIMER) -->
     <div id="screen-countdown" class="screen">
       <div style="width: 100%; margin: auto 0;">
         
@@ -184,14 +184,13 @@
           <div id="target-task-focus-area" class="focus-area-badge">FOCUS AREA: CORE BIOMECHANICS</div>
         </div>
 
-        <!-- CALM ASSISTIVE COUNTDOWN BADGE (NON-STRESSFUL, DOES NOT DOMINATE) -->
+        <!-- CALM ASSISTIVE TIMER (NO 'REMAINING' TEXT) -->
         <div class="timer-assist-container">
           <span class="timer-assist-icon">⏱️</span>
           <span class="timer-assist-digits" id="timer-display">02:00</span>
-          <span class="timer-assist-label">remaining</span>
         </div>
         
-        <!-- DIRECTIVE TEXT WITH REQUIRED LINE BREAK -->
+        <!-- DIRECTIVE LINE WITH BREAK -->
         <p class="timer-assist-subtext">Do not multitask.<br>Follow through to see the results.</p>
       </div>
 
@@ -201,21 +200,23 @@
       </div>
     </div>
 
-    <!-- SCREEN 6: VICTORY SCREEN -->
+    <!-- SCREEN 6: VICTORY SCREEN (SPACED SENTENCES & RECTIFIED OVERWHELM BUTTON) -->
     <div id="screen-victory" class="screen">
       <div style="margin: auto 0; width: 100%;">
         <div style="font-size: 40px; margin-bottom: 6px;" id="victory-header-badge">🏆</div>
         <h2 class="title-large" id="victory-title-text" style="margin-bottom: 4px;">Impact Calibrated.</h2>
         <div id="victory-points-reclaimed-badge" style="font-size: 14px; font-weight: 800; color: var(--success-color); margin-bottom: 14px;">+120s Focus Reclaimed</div>
         
-        <div style="background: var(--bg-color); border: 1.5px solid var(--border-color); padding: 18px; border-radius: 20px; text-align: left;">
-          <div style="font-size: 10px; font-weight: 800; letter-spacing: 0.08em; color: #7A7571; margin-bottom: 6px;">NEUROLOGICAL REWIRE</div>
-          <p id="victory-validation-copy" style="font-size: 15px; font-weight: 700; margin: 0; line-height: 1.45;">The freeze is broken. Action clears anxiety.</p>
+        <div style="background: var(--bg-color); border: 1.5px solid var(--border-color); padding: 20px 18px; border-radius: 20px; text-align: left;">
+          <div style="font-size: 10px; font-weight: 800; letter-spacing: 0.08em; color: #7A7571; margin-bottom: 8px;">NEUROLOGICAL REWIRE</div>
+          <div id="victory-validation-copy" style="font-size: 16px; font-weight: 600; color: var(--text-color); line-height: 1.6;">
+            The freeze is broken. Action clears anxiety.
+          </div>
         </div>
       </div>
 
       <div id="overwhelm-victory-actions" style="display: none; width: 100%; flex-direction: column; gap: 8px; margin-top: auto;">
-        <button id="btn-overwhelm-next" class="btn-primary" onclick="advanceOverwhelmNextMove()">Continue to Move &rarr;</button>
+        <button id="btn-overwhelm-next" class="btn-primary" onclick="advanceOverwhelmNextMove()">Continue to Move 2 &rarr;</button>
         <button id="btn-overwhelm-reset" class="btn-primary" style="display: none;" onclick="claimRewardStack()">Claim 4x Protocol Stack &rarr;</button>
       </div>
 
