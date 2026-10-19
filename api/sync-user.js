@@ -11,7 +11,7 @@ module.exports = async function handler(req, res) {
 
   const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-  // SANITIZER: Evaluates temporary pass timestamps before permanent flags
+  // SANITIZER: Pass expiration takes strict priority over boolean flag
   async function sanitizePassStatus(profile) {
     if (!profile) return profile;
 
@@ -20,7 +20,6 @@ module.exports = async function handler(req, res) {
       const now = Date.now();
 
       if (now >= expiresAt) {
-        // Pass expired: demote in Supabase
         await supabase
           .from('user_profiles')
           .update({ premium_user: false, pass_expires_at: null })
@@ -29,7 +28,6 @@ module.exports = async function handler(req, res) {
         profile.premium_user = false;
         profile.pass_expires_at = null;
       } else {
-        // Pass is still active
         profile.premium_user = true;
       }
     }
@@ -102,10 +100,10 @@ module.exports = async function handler(req, res) {
   }
 
   /* ========================================================
-     GET: LOGIN TALLY & PROFILE RETRIEVAL
+     GET: PROFILE RETRIEVAL & LOGIN TALLY
   ======================================================== */
   if (req.method === 'GET') {
-    const { email, action, promo_code } = req.query;
+    const { email, promo_code } = req.query;
     if (!email) return res.status(400).json({ error: "Email parameter missing" });
 
     const lowerEmail = email.trim().toLowerCase();
@@ -113,7 +111,7 @@ module.exports = async function handler(req, res) {
     try {
       let profileData = await getProfileSafely(lowerEmail);
 
-      // If user does not exist in Supabase yet, initialize entry
+      // Initialize entry if profile does not exist yet
       if (!profileData) {
         const { data: newProfile, error: insertError } = await supabase
           .from('user_profiles')
@@ -132,7 +130,7 @@ module.exports = async function handler(req, res) {
         }
       }
 
-      // Handle promo code (PREMIUM99)
+      // Handle promotional bypasses
       if (profileData && promo_code === 'PREMIUM99' && !profileData.premium_user && !profileData.promo_claimed) {
         const passExpiry = new Date(Date.now() + (48 * 3600 * 1000)).toISOString();
         const { data: updated } = await supabase
