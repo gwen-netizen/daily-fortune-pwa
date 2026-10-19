@@ -97,13 +97,6 @@ body {
   margin-top: 6px; 
 }
 
-.italic-hint { 
-  font-size: 13px; 
-  color: #9C8E80; 
-  font-style: italic; 
-  line-height: 1.4; 
-}
-
 .badge {
   display: inline-block;
   padding: 4px 10px;
@@ -222,22 +215,23 @@ body {
   background: #F7F4EE;
 }
 
-/* DYNAMIC SLIDE-UP NOTIFICATION CARD */
+/* SLOW-MOTION SLIDE-UP NOTIFICATION CARD */
 .slideup-notification-card {
   width: 100%;
   background: #FFFFFF;
   border: 1.5px solid var(--border-color);
   border-radius: 18px;
-  padding: 12px 16px;
+  padding: 14px 18px;
   text-align: center;
-  box-shadow: 0 4px 18px rgba(45, 43, 42, 0.06);
+  box-shadow: 0 6px 20px rgba(45, 43, 42, 0.07);
   margin-top: auto;
   opacity: 0;
-  transform: translateY(35px);
-  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.45s ease;
+  transform: translateY(45px);
+  transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
 }
 
-.slideup-notification-card.slide-up-active {
+.slideup-notification-card.slide-up-show {
   opacity: 1;
   transform: translateY(0);
 }
@@ -258,7 +252,7 @@ body {
   line-height: 1.3;
 }
 
-/* HERO TASK DISPLAY CARD */
+/* HERO TASK DISPLAY CARD (DOMINANT FONT, CLEAN SPACING) */
 .task-hero-card {
   background: #FFFFFF;
   border: 2px solid var(--border-color);
@@ -272,11 +266,20 @@ body {
 }
 
 .task-headline-text {
-  font-size: 22px;
-  line-height: 1.45;
+  font-size: 21px;
+  line-height: 1.5;
   font-weight: 800;
-  color: #1A1918;
-  letter-spacing: -0.3px;
+  color: #1F1E1D;
+  letter-spacing: -0.2px;
+}
+
+.sentence-paragraph {
+  margin: 0 0 10px 0;
+  line-height: 1.55;
+}
+
+.sentence-paragraph:last-child {
+  margin-bottom: 0;
 }
 
 .focus-area-badge {
@@ -291,7 +294,7 @@ body {
   width: fit-content;
 }
 
-/* CALM ASSISTIVE COUNTDOWN TIMER (NON-STRESSFUL PILL) */
+/* CALM ASSISTIVE COUNTDOWN TIMER PILL (NON-STRESSFUL) */
 .timer-assist-container {
   display: inline-flex;
   align-items: center;
@@ -300,8 +303,8 @@ body {
   background: #F5EFE6;
   border: 1px solid var(--border-color);
   border-radius: 30px;
-  padding: 8px 18px;
-  margin: 22px auto 10px auto;
+  padding: 8px 20px;
+  margin: 20px auto 10px auto;
 }
 
 .timer-assist-icon {
@@ -309,24 +312,16 @@ body {
 }
 
 .timer-assist-digits {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
   color: #4A4643;
   letter-spacing: 0.5px;
   font-variant-numeric: tabular-nums;
 }
 
-.timer-assist-label {
-  font-size: 12px;
-  font-weight: 700;
-  color: #9C8E80;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
 .timer-assist-subtext {
   font-size: 13.5px;
-  line-height: 1.45;
+  line-height: 1.5;
   color: #7A7571;
   font-weight: 600;
   text-align: center;
