@@ -40,33 +40,29 @@
       </div>
     </div>
 
-    <!-- SCREEN 2: FRICTION SCREEN -->
+    <!-- SCREEN 2: IDENTIFY PAIN POINT (CLEANED CARDS & TITLES) -->
     <div id="screen-onboarding-2" class="screen">
       <div style="width: 100%; margin-bottom: 12px;">
         <div id="screen2-status-banner" style="width: 100%; padding: 10px 14px; border-radius: 14px; font-size: 12px; margin-bottom: 14px; border: 1.5px solid var(--border-color); text-align: center;"></div>
 
         <div style="text-align: left;">
           <span class="badge">STEP 1 OF 2</span>
-          <h2 class="title-large" style="margin: 6px 0 4px 0; font-size: 24px;">Identify Friction Line</h2>
-          <p class="body-text">Select the pattern paralyzing you today:</p>
+          <h2 class="title-large" style="margin: 8px 0 0 0; font-size: 26px;">Identify Pain Point</h2>
         </div>
       </div>
 
-      <div class="deck-list">
+      <div class="deck-list" style="margin-top: 10px;">
         <div class="deck-item selected" onclick="selectOption(this, 'mindless_scrolling')">
           <div class="deck-meta free">HABIT LOOP</div>
-          <div class="deck-name">Mindless Scrolling</div>
-          <div class="deck-desc">Phone glued to your hand, cycling feeds in a dopaminergic trance.</div>
+          <div class="deck-name" style="font-size: 16px;">Mindless Scrolling</div>
         </div>
         <div class="deck-item" onclick="selectOption(this, 'task_paralysis')">
           <div class="deck-meta free">EXECUTIVE DYSFUNCTION</div>
-          <div class="deck-name">Task Paralysis</div>
-          <div class="deck-desc">Staring at your screen or desk, entirely unable to take the first step.</div>
+          <div class="deck-name" style="font-size: 16px;">Task Paralysis</div>
         </div>
         <div class="deck-item" onclick="selectOption(this, 'low_lethargy')">
           <div class="deck-meta free">SOMATIC DEPLETION</div>
-          <div class="deck-name">Brain Fog & Lethargy</div>
-          <div class="deck-desc">Sluggish, heavy limbs, depleted willpower, and scattered concentration.</div>
+          <div class="deck-name" style="font-size: 16px;">Brain Fog & Lethargy</div>
         </div>
       </div>
 
@@ -75,7 +71,7 @@
       </div>
     </div>
 
-    <!-- SCREEN 3: TARGET FOCUS AREA DASHBOARD -->
+    <!-- SCREEN 3: TARGET FOCUS AREA DASHBOARD (WITH PRESET 11:15 PM) -->
     <div id="screen-dashboard" class="screen">
       <div style="width: 100%;">
         <div id="screen3-status-banner" style="width: 100%; padding: 10px 14px; border-radius: 14px; font-size: 12px; margin-bottom: 12px; border: 1.5px solid var(--border-color); text-align: center;"></div>
@@ -123,7 +119,7 @@
           </div>
         </div>
 
-        <!-- SCHEDULED INTERCEPTS CONTAINER -->
+        <!-- SCHEDULED INTERCEPTS CONTAINER (INCLUDES PRESET 11:15 PM BEDTIME LOOP) -->
         <div style="margin-top: 18px; text-align: left;">
           <h2 class="title-large" style="font-size: 17px; margin-bottom: 8px;">Daily Intercepts</h2>
           <div class="lifeline-list" id="lifeline-container">
@@ -133,6 +129,10 @@
             </div>
             <div class="lifeline-item">
               <div><div style="font-weight: 800; font-size: 14px; color: var(--text-color);">02:30 PM</div><div style="font-size: 11px; color: #7A7571; font-weight: 600;">Post-Lunch Brain Fog</div></div>
+              <label class="toggle-switch"><input type="checkbox" checked disabled><span class="slider"></span></label>
+            </div>
+            <div class="lifeline-item">
+              <div><div style="font-weight: 800; font-size: 14px; color: var(--text-color);">11:15 PM</div><div style="font-size: 11px; color: #7A7571; font-weight: 600;">Bedtime Loop</div></div>
               <label class="toggle-switch"><input type="checkbox" checked disabled><span class="slider"></span></label>
             </div>
             <div id="custom-intercepts-injection-point"></div>
@@ -150,13 +150,13 @@
       </div>
     </div>
 
-    <!-- SCREEN 4: TRIGGER SCREEN -->
+    <!-- SCREEN 4: TRIGGER SCREEN (REORDERED BACK BUTTON & ANIMATED SLIDE-UP NOTIFICATION) -->
     <div id="screen-trigger" class="screen">
-      <div style="margin-top: 10px; width: 100%; text-align: center;">
+      <div style="margin-top: 6px; width: 100%; text-align: center;">
         <h2 class="title-deck" id="active-deck-title" style="font-size: 24px; font-weight: 800; line-height: 1.25;">Command the room.</h2>
       </div>
 
-      <!-- CENTER: START BUTTON & ENLARGED IN-APP BACK BUTTON DIRECTLY BELOW -->
+      <!-- CENTER: START BUTTON & DEDICATED IN-APP BACK BUTTON DIRECTLY BELOW -->
       <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; margin: auto 0;">
         <div class="spin-outer-ring" style="margin: 0 auto 14px auto;">
           <button class="big-red-btn" onclick="executeTurnaroundSpin()">START</button>
@@ -167,27 +167,32 @@
         </button>
       </div>
 
-      <!-- BOTTOM: SLIDE-UP NOTIFICATION (FITS 2 LINES CLEANLY) -->
+      <!-- BOTTOM: RELIABLE SLIDE-UP NOTIFICATION CARD -->
       <div id="trigger-slideup-notification" class="slideup-notification-card">
         <div class="notification-line-1" id="trigger-instructions">Take one slow breath before pushing.</div>
         <div class="notification-line-2">Commit to the next 120 seconds completely.</div>
       </div>
     </div>
 
-    <!-- SCREEN 5: COUNTDOWN SCREEN -->
+    <!-- SCREEN 5: COUNTDOWN SCREEN (HIGH-CONTRAST TEXT & CALM ASSISTIVE TIMER) -->
     <div id="screen-countdown" class="screen">
       <div style="width: 100%; margin: auto 0;">
         
-        <!-- TASK DISPLAY CARD: TASK TEXT FIRST, FOCUS AREA BELOW -->
-        <div class="task-display-card">
+        <!-- PROMINENT HERO TASK CARD -->
+        <div class="task-hero-card">
           <div id="target-task-text" class="task-headline-text">Loading calibrated task...</div>
           <div id="target-task-focus-area" class="focus-area-badge">FOCUS AREA: CORE BIOMECHANICS</div>
         </div>
 
-        <!-- 02:00 COUNTDOWN DISPLAY (PRE-INITIALIZED, NO 01:46 STALE FLASH) -->
-        <div class="timer-large" id="timer-display" style="margin: 22px 0 6px 0;">02:00</div>
+        <!-- CALM ASSISTIVE COUNTDOWN BADGE (NON-STRESSFUL, DOES NOT DOMINATE) -->
+        <div class="timer-assist-container">
+          <span class="timer-assist-icon">⏱️</span>
+          <span class="timer-assist-digits" id="timer-display">02:00</span>
+          <span class="timer-assist-label">remaining</span>
+        </div>
         
-        <p class="body-text" style="font-size: 13px; font-weight: 600; color: #7A7571;">Do not multitask. Follow through to see the results.</p>
+        <!-- DIRECTIVE TEXT WITH REQUIRED LINE BREAK -->
+        <p class="timer-assist-subtext">Do not multitask.<br>Follow through to see the results.</p>
       </div>
 
       <div style="width: 100%; margin-top: auto; display: flex; flex-direction: column; gap: 8px;">
@@ -264,21 +269,18 @@
         <h2 class="title-large" style="font-size: 20px; margin-bottom: 6px;">Break Free From the Loops</h2>
         <p class="body-text" style="margin-bottom: 16px;">Unlock behavioral overrides modeled on clinical executive functioning systems.</p>
         
-        <!-- TIER 1: 48-Hour Pass ($0.99) -->
         <div class="tier-box selected" data-plan="pass" onclick="selectTier(this)">
           <span style="float: right; font-weight: 800; color: var(--success-color);">$0.99</span>
           <div style="font-weight: 700; font-size: 15px;">2-Day Unlimited Pass</div>
           <div style="font-size: 12px; color: #7A7571; margin-top: 2px;">48 hours of unrestricted intercepts & all premium decks.</div>
         </div>
 
-        <!-- TIER 2: Lifetime Freedom ($14.99) -->
         <div class="tier-box" data-plan="lifetime" onclick="selectTier(this)">
           <span style="float: right; font-weight: 800; color: var(--premium-color);">$14.99</span>
           <div style="font-weight: 700; font-size: 15px;">Lifetime Freedom Access</div>
           <div style="font-size: 12px; color: #7A7571; margin-top: 2px;">One-time payment. Permanent access forever.</div>
         </div>
 
-        <!-- TIER 3: Continuous Momentum Monthly ($2.99/mo) -->
         <div class="tier-box" data-plan="monthly" onclick="selectTier(this)">
           <span style="float: right; font-weight: 800;">$2.99/mo</span>
           <div style="font-weight: 700; font-size: 15px;">Continuous Momentum Plan</div>
