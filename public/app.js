@@ -1,11 +1,5 @@
 /**
  * 120Reset Client Engine (public/app.js)
- * 
- * Features:
- *  - Restores 48-Hour Pass Countdown ($0.99) ticker across BOTH screens (screen-onboarding-2 and screen-dashboard).
- *  - Restores $2.99/mo subscription selection and checkout payload.
- *  - Correctly renders scheduled custom intercept timings in 12-hour AM/PM format.
- *  - 4x multiplier for the Anti-Overwhelm Protocol.
  */
 
 let currentUserProfile = null;
@@ -28,74 +22,148 @@ const DECK_SUBHEADINGS = {
   overwhelm: "Shatter task paralysis."
 };
 
-document.addEventListener("DOMContentLoaded", async () => {
-  loadStoredPreferences();
-  checkStripeRedirectStatus();
-  renderCustomIntercepts();
-  startBackgroundInterceptMonitor();
-  startPassTicker(); // Launches the live 1-sec countdown for $0.99 pass on both screens
-  updateMetricDashboard();
-});
-
 function parseDbTimestamp(ts) {
   if (!ts) return 0;
   if (typeof ts === 'number') return ts;
   return new Date(ts).getTime();
 }
 
-function loadStoredPreferences() {
-  const savedFriction = localStorage.getItem('nudge_friction_style');
-  if (savedFriction) mindFrictionStyle = savedFriction;
+/* ========================================================
+   INITIALIZATION & BOOT TALLY
+======================================================== */
+document.addEventListener("DOMContentLoaded", async () => {
+  renderCustomIntercepts();
+  startBackgroundInterceptMonitor();
+  await checkStripeRedirectStatus();
 
-  const savedWins = localStorage.getItem('nudge_total_wins');
-  if (savedWins) totalWinsCount = parseInt(savedWins, 10) || 0;
+  const savedEmail = localStorage.getItem('nudge_user_email');
+  
+  if (savedEmail && savedEmail.includes('@')) {
+    try {
+      const endpoint = `/api/sync-user?email=${encodeURIComponent(savedEmail)}&action=get_profile`;
+      const response = await fetch(endpoint);
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.profile) {
+          currentUserProfile = data.profile;
+          totalWinsCount = parseInt(data.profile.total_wins, 10) || totalWinsCount;
+          totalFocusReclaimed = parseFloat(data.profile.focus_reclaimed) || totalFocusReclaimed;
+        }
+      }
+    } catch (e) {
+      console.warn("Supabase network sync offline on boot, using fallback session:", e);
+      if (!currentUserProfile) {
+        currentUserProfile = { email: savedEmail, premium_user: false, pass_expires_at: null };
+      }
+    }
 
-  const savedFocus = localStorage.getItem('nudge_focus_reclaimed');
-  if (savedFocus) totalFocusReclaimed = parseFloat(savedFocus) || 0.0;
-
-  const userEmail = localStorage.getItem('nudge_user_email');
-  if (userEmail) {
+    startPassTicker();
+    updateMetricDashboard();
     switchScreen('screen-dashboard');
-    syncLifetimeProgressToCloud();
   } else {
     switchScreen('screen-onboarding-1');
+  }
+});
+
+/* ========================================================
+   LOGIN & SUPABASE TALLY WITH SAFE FALLBACK
+======================================================== */
+async function initializeUserProfile() {
+  const emailInput = document.getElementById('user-auth-email');
+  if (!emailInput || !emailInput.value.includes('@')) {
+    alert("Please enter a valid email address.");
+    return;
+  }
+
+  const userEmail = emailInput.value.trim().toLowerCase();
+  const promoInput = document.getElementById('user-promo-code');
+  const promoCode = promoInput ? promoInput.value.trim().toUpperCase() : '';
+
+  const loginBtn = document.querySelector('#screen-onboarding-1 .btn-primary');
+  const originalText = loginBtn ? loginBtn.innerText : "Continue →";
+  
+  if (loginBtn) {
+    loginBtn.innerText = "VERIFYING ACCOUNT...";
+    loginBtn.disabled = true;
+  }
+
+  try {
+    // 1. Tally account with Supabase before switching screens
+    const endpoint = `/api/sync-user?email=${encodeURIComponent(userEmail)}&action=get_profile&promo_code=${encodeURIComponent(promoCode)}`;
+    const response = await fetch(endpoint);
+    const data = await response.json();
+
+    if (response.ok && data.profile) {
+      currentUserProfile = data.profile;
+      localStorage.setItem('nudge_user_email', userEmail);
+      
+      totalWinsCount = parseInt(data.profile.total_wins, 10) || 0;
+      totalFocusReclaimed = parseFloat(data.profile.focus_reclaimed) || 0.0;
+      localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
+      localStorage.setItem('nudge_focus_reclaimed', totalFocusReclaimed.toString());
+
+      startPassTicker();
+      updateMetricDashboard();
+
+      if (totalWinsCount > 0 || isUserPremiumOrPass()) {
+        switchScreen('screen-dashboard');
+      } else {
+        switchScreen('screen-onboarding-2');
+      }
+    } else {
+      throw new Error(data.error || "Profile initialization response invalid.");
+    }
+  } catch (error) {
+    console.warn("Supabase connection fallback triggered:", error);
+    // FALLBACK MECHANISM: Allows user to proceed safely even if offline
+    localStorage.setItem('nudge_user_email', userEmail);
+    currentUserProfile = { 
+      email: userEmail, 
+      premium_user: false, 
+      pass_expires_at: null,
+      total_wins: totalWinsCount,
+      focus_reclaimed: totalFocusReclaimed
+    };
+    
+    startPassTicker();
+    updateMetricDashboard();
+    switchScreen('screen-onboarding-2');
+  } finally {
+    if (loginBtn) {
+      loginBtn.innerText = originalText;
+      loginBtn.disabled = false;
+    }
   }
 }
 
 /* ========================================================
-   48-HOUR PASS COUNTDOWN ENGINE (SCREENS 2 & 3)
+   PREMIUM & PASS STATUS ENGINE (PRIORITY EXPIRATION CHECK)
 ======================================================== */
 function isUserPremiumOrPass() {
-  if (localStorage.getItem('nudge_is_lifetime') === 'true') return true;
+  if (!currentUserProfile) return false;
 
-  if (currentUserProfile) {
-    if (currentUserProfile.premium_user === true || currentUserProfile.premium_user === 'true') {
-      return true;
-    }
-    if (currentUserProfile.pass_expires_at) {
-      const expiryMs = parseDbTimestamp(currentUserProfile.pass_expires_at);
-      return Date.now() < expiryMs;
+  // 1. Temporary Pass Check FIRST: If a pass timestamp exists, it governs validity
+  if (currentUserProfile.pass_expires_at) {
+    const expiryMs = parseDbTimestamp(currentUserProfile.pass_expires_at);
+    if (Date.now() < expiryMs) {
+      return true; // Pass is still ACTIVE
+    } else {
+      return false; // Pass has EXPIRED (cannot fall through to true)
     }
   }
 
-  const localPassExpiry = localStorage.getItem('nudge_pass_expiry');
-  if (localPassExpiry) {
-    return Date.now() < parseDbTimestamp(localPassExpiry);
+  // 2. Permanent/Monthly Subscription check (pass_expires_at is null)
+  if (currentUserProfile.premium_user === true || currentUserProfile.premium_user === 'true') {
+    return true;
   }
 
   return false;
 }
 
 function getPassRemainingSeconds() {
-  let expiryMs = 0;
-  if (currentUserProfile && currentUserProfile.pass_expires_at) {
-    expiryMs = parseDbTimestamp(currentUserProfile.pass_expires_at);
-  } else {
-    const localPassExpiry = localStorage.getItem('nudge_pass_expiry');
-    if (localPassExpiry) expiryMs = parseDbTimestamp(localPassExpiry);
-  }
-
-  if (!expiryMs) return 0;
+  if (!currentUserProfile || !currentUserProfile.pass_expires_at) return 0;
+  const expiryMs = parseDbTimestamp(currentUserProfile.pass_expires_at);
   return Math.max(0, Math.floor((expiryMs - Date.now()) / 1000));
 }
 
@@ -107,8 +175,8 @@ function startPassTicker() {
 
 function updatePassCountdown() {
   const banners = [
-    document.getElementById('screen2-status-banner'), // Friction Screen
-    document.getElementById('screen3-status-banner')  // Target Focus Area Screen
+    document.getElementById('screen2-status-banner'), // Screen 2 (Friction Screen)
+    document.getElementById('screen3-status-banner')  // Screen 3 (Target Focus Area)
   ];
 
   const hasAccess = isUserPremiumOrPass();
@@ -117,16 +185,15 @@ function updatePassCountdown() {
   banners.forEach(banner => {
     if (!banner) return;
     
-    // 1. Permanent / Lifetime Unlocked
-    if (localStorage.getItem('nudge_is_lifetime') === 'true' || 
-       (currentUserProfile && (currentUserProfile.premium_user === true || currentUserProfile.premium_user === 'true') && !currentUserProfile.pass_expires_at)) {
+    // 1. Full Lifetime / Active Monthly Subscription
+    if (currentUserProfile && (currentUserProfile.premium_user === true || currentUserProfile.premium_user === 'true') && !currentUserProfile.pass_expires_at) {
       banner.style.display = 'block';
       banner.style.background = '#E8F5E9';
       banner.style.borderColor = 'var(--success-color)';
       banner.style.color = 'var(--success-color)';
-      banner.innerHTML = '✅ <b>FULL ACCESS UNLOCKED</b><br>Unlimited Daily Intercepts & All Decks';
+      banner.innerHTML = '✅ <b>FULL PREMIUM UNLOCKED</b><br>Unlimited Daily Intercepts & All Decks';
     }
-    // 2. 48-Hour Pass Countdown ($0.99) Active
+    // 2. Active 48-Hour Pass Countdown ($0.99)
     else if (remainingSecs > 0) {
       banner.style.display = 'block';
       banner.style.background = '#FFF8E1';
@@ -143,7 +210,7 @@ function updatePassCountdown() {
       
       banner.innerHTML = `⚡ <b>48-HOUR PASS ACTIVE</b><br>⏱️ <b>${hStr}h ${mStr}m ${sStr}s</b> remaining`;
     } 
-    // 3. Free Account Tier
+    // 3. Free Account Tier (including accounts whose 0.99 pass has ended)
     else {
       const clicksUsed = getDailyClicksCount();
       banner.style.display = 'block';
@@ -558,7 +625,7 @@ function startBackgroundInterceptMonitor() {
         c.triggeredToday = true;
         if ("Notification" in window && Notification.permission === "granted") {
           new Notification("120 Reset Circuit Breaker", {
-            body: `Scheduled Intercept Triggered: ${c.friction} (${c.deck}). Tap to break the loop.`
+            body: `Scheduled Intercept: ${c.friction} (${c.deck}). Tap to break the loop.`
           });
         }
       }
@@ -567,28 +634,8 @@ function startBackgroundInterceptMonitor() {
 }
 
 /* ========================================================
-   AUTH & PAYWALL ENGINE (SUPPORTS PASS, MONTHLY & LIFETIME)
+   PAYWALL & SUBSCRIPTION GATEWAY ($0.99, $14.99 & $2.99/mo)
 ======================================================== */
-async function initializeUserProfile() {
-  const emailInput = document.getElementById('user-auth-email').value.trim().toLowerCase();
-  const promoInput = document.getElementById('user-promo-code').value.trim().toUpperCase();
-
-  if (!emailInput || !emailInput.includes('@')) {
-    alert("Please enter a valid email address.");
-    return;
-  }
-
-  localStorage.setItem('nudge_user_email', emailInput);
-
-  if (promoInput === 'LIFETIME' || promoInput === 'PREMIUM99') {
-    localStorage.setItem('nudge_is_lifetime', 'true');
-    alert("🎉 Promotional Access Code Activated!");
-  }
-
-  switchScreen('screen-onboarding-2');
-  syncLifetimeProgressToCloud();
-}
-
 function openPaywallModal() {
   const modal = document.getElementById('paywall-overlay');
   if (modal) modal.classList.add('active');
@@ -608,7 +655,6 @@ async function simulatePurchase() {
   const selectedTierBox = document.querySelector('.tier-box.selected');
   if (!selectedTierBox) { alert("Please select an option to continue."); return; }
 
-  // Restored: Supports 'pass', 'monthly' ($2.99), or 'lifetime'
   const planType = selectedTierBox.getAttribute('data-plan') || 'monthly';
   const paywallBtn = document.querySelector('#paywall-overlay .btn-primary');
   const userEmail = localStorage.getItem('nudge_user_email') || 'anonymous_tester';
@@ -661,19 +707,16 @@ function incrementDailyClicks() {
   updateMetricDashboard();
 }
 
-function checkStripeRedirectStatus() {
+async function checkStripeRedirectStatus() {
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('session') === 'success') {
-    const plan = urlParams.get('plan');
-    if (plan === 'pass' || plan === '2day') {
-      const passExpiresAt = new Date(Date.now() + 48 * 3600 * 1000).toISOString();
-      localStorage.setItem('nudge_pass_expiry', passExpiresAt);
-    } else {
-      localStorage.setItem('nudge_is_lifetime', 'true');
+    const emailParam = urlParams.get('email');
+    if (emailParam) {
+      localStorage.setItem('nudge_user_email', emailParam.trim().toLowerCase());
     }
-    alert("🎉 Payment Confirmed! Your access is now activated.");
+    alert("🎉 Payment confirmed! Synchronizing access with Supabase...");
     window.history.replaceState({}, document.title, window.location.pathname);
-    updateMetricDashboard();
+    await syncLifetimeProgressToCloud();
   }
 }
 
@@ -687,19 +730,15 @@ async function syncLifetimeProgressToCloud() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email: userEmail,
-        totalWins: totalWinsCount,
-        focusReclaimed: totalFocusReclaimed,
-        frictionStyle: mindFrictionStyle
+        total_wins: totalWinsCount,
+        focus_reclaimed: totalFocusReclaimed
       })
     });
     const data = await response.json();
     if (data.profile) {
       currentUserProfile = data.profile;
-      if (currentUserProfile.pass_expires_at) {
-        localStorage.setItem('nudge_pass_expiry', currentUserProfile.pass_expires_at);
-      }
-      applyPremiumUIVisuals(isUserPremiumOrPass());
       updatePassCountdown();
+      applyPremiumUIVisuals(isUserPremiumOrPass());
     }
   } catch (e) {
     console.warn("Silent sync fallback:", e);
