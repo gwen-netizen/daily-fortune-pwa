@@ -28,6 +28,20 @@ function parseDbTimestamp(ts) {
   return new Date(ts).getTime();
 }
 
+/**
+ * Splits text by sentence-ending punctuation so each sentence
+ * is cleanly spaced with comfortable margins.
+ */
+function formatSpacedSentences(text) {
+  if (!text) return '';
+  const cleaned = text.trim();
+  const sentences = cleaned.split(/(?<=[.!?])\s+(?=[A-Z0-9"'])/);
+  if (sentences.length > 1) {
+    return sentences.map(s => `<p class="sentence-paragraph">${s}</p>`).join('');
+  }
+  return `<p class="sentence-paragraph">${cleaned}</p>`;
+}
+
 /* ========================================================
    HARDWARE / SYSTEM BACK BUTTON HANDLER (PWA ENHANCEMENT)
 ======================================================== */
@@ -43,13 +57,16 @@ window.addEventListener('popstate', () => {
 
   if (currentId === 'screen-countdown') {
     cancelTimer();
-  } else if (currentId === 'screen-trigger' || currentId === 'screen-onboarding-2' || currentId === 'screen-victory') {
+  } else if (currentId === 'screen-trigger' || currentId === 'screen-victory') {
     switchScreen('screen-dashboard', false);
+  } else if (currentId === 'screen-dashboard') {
+    switchScreen('screen-onboarding-2', false);
   }
 });
 
 /* ========================================================
    INITIALIZATION & BOOT TALLY
+   DEFAULT ENTRY: ALWAYS OPENS PAIN POINT SCREEN (screen-onboarding-2)
 ======================================================== */
 document.addEventListener("DOMContentLoaded", async () => {
   renderCustomIntercepts();
@@ -80,14 +97,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     startPassTicker();
     updateMetricDashboard();
-    switchScreen('screen-dashboard', true);
+    // DEFAULT TO PAIN POINT PAGE ON APP ENTRY
+    switchScreen('screen-onboarding-2', true);
   } else {
     switchScreen('screen-onboarding-1', true);
   }
 });
 
 /* ========================================================
-   LOGIN & SUPABASE TALLY WITH SAFE FALLBACK
+   LOGIN & SUPABASE TALLY
 ======================================================== */
 async function initializeUserProfile() {
   const emailInput = document.getElementById('user-auth-email');
@@ -125,11 +143,8 @@ async function initializeUserProfile() {
       startPassTicker();
       updateMetricDashboard();
 
-      if (totalWinsCount > 0 || isUserPremiumOrPass()) {
-        switchScreen('screen-dashboard', true);
-      } else {
-        switchScreen('screen-onboarding-2', true);
-      }
+      // ALWAYS DEFAULT TO PAIN POINT PAGE (screen-onboarding-2)
+      switchScreen('screen-onboarding-2', true);
     } else {
       throw new Error(data.error || "Profile initialization response invalid.");
     }
@@ -146,6 +161,7 @@ async function initializeUserProfile() {
     
     startPassTicker();
     updateMetricDashboard();
+    // DEFAULT TO PAIN POINT PAGE ON FALLBACK
     switchScreen('screen-onboarding-2', true);
   } finally {
     if (loginBtn) {
@@ -156,7 +172,7 @@ async function initializeUserProfile() {
 }
 
 /* ========================================================
-   PREMIUM & PASS STATUS ENGINE (PRIORITY EXPIRATION CHECK)
+   PREMIUM & PASS STATUS ENGINE
 ======================================================== */
 function isUserPremiumOrPass() {
   if (!currentUserProfile) return false;
@@ -270,7 +286,7 @@ function applyPremiumUIVisuals(hasAccess) {
 }
 
 /* ========================================================
-   SCREEN SWITCHER (WITH RELIABLE SLIDE-UP NOTIFICATION)
+   SCREEN SWITCHER (SLIDE-UP TOAST ANIMATION IN SLOW MOTION)
 ======================================================== */
 function switchScreen(screenId, shouldPushHistory = true) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -283,18 +299,24 @@ function switchScreen(screenId, shouldPushHistory = true) {
       pushNavigationState(screenId);
     }
 
-    // RELIABLE SLIDE-UP ANIMATION TRIGGER
+    // DELIBERATE SLOW-MOTION SLIDE UP
     const toast = document.getElementById('trigger-slideup-notification');
     if (screenId === 'screen-trigger') {
       if (toast) {
-        toast.classList.remove('slide-up-active');
-        setTimeout(() => {
-          toast.classList.add('slide-up-active');
-        }, 100);
+        toast.style.transition = 'none';
+        toast.classList.remove('slide-up-show');
+        toast.offsetHeight; // Force DOM layout recalculation
+        
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            toast.style.transition = 'transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1)';
+            toast.classList.add('slide-up-show');
+          }, 120);
+        });
       }
     } else {
       if (toast) {
-        toast.classList.remove('slide-up-active');
+        toast.classList.remove('slide-up-show');
       }
     }
 
@@ -359,7 +381,7 @@ async function executeTurnaroundSpin() {
     return;
   }
 
-  // Pre-initialize timer to 02:00 synchronously so 01:46 is never displayed
+  // Pre-initialize timer to 02:00 synchronously so 01:46 never flashes
   const timerDisplayEl = document.getElementById('timer-display');
   if (timerDisplayEl) timerDisplayEl.innerText = "02:00";
 
@@ -398,14 +420,15 @@ async function executeTurnaroundSpin() {
       const taskDisplayEl = document.getElementById('target-task-text');
       const focusAreaEl = document.getElementById('target-task-focus-area');
       
+      // FORMAT SENTENCE SPACING ON TASK TEXT
       if (taskDisplayEl && currentActiveTask) {
-        taskDisplayEl.innerText = currentActiveTask.text;
+        taskDisplayEl.innerHTML = formatSpacedSentences(currentActiveTask.text);
       }
       
-      // STRIP "FOCUS AREA:" TO PREVENT ANY DUPLICATE VISUAL TEXT ON ALL DECKS
+      // RELIABLE CLEANING OF ANY "FOCUS AREA:" PREFIX TO PREVENT DUPLICATE LABELS
       if (focusAreaEl && currentActiveTask) {
         const rawArea = currentActiveTask.focusArea || "Energy Surge";
-        const cleanArea = rawArea.replace(/^focus\s*area\s*:\s*/i, '').trim();
+        const cleanArea = rawArea.replace(/^(focus\s*area\s*[:\-–—]?\s*)+/i, '').trim();
 
         if (categoryKey === 'overwhelm') {
           focusAreaEl.innerText = `FOCUS AREA: MOVE ${overwhelmCurrentStep} OF 4 • ${cleanArea.toUpperCase()}`;
@@ -491,9 +514,11 @@ function triggerVictoryPhase(minutesEarned) {
 
   const validationCopyEl = document.getElementById('victory-validation-copy');
   if (validationCopyEl) {
-    validationCopyEl.innerText = (currentActiveTask && currentActiveTask.affirmation)
+    const rawAffirmation = (currentActiveTask && currentActiveTask.affirmation)
       ? currentActiveTask.affirmation
       : "The freeze is broken. Action clears anxiety.";
+    // FORMAT SENTENCE SPACING ON AFFIRMATION PAGE
+    validationCopyEl.innerHTML = formatSpacedSentences(rawAffirmation);
   }
 
   const badgeEl = document.getElementById('victory-points-reclaimed-badge');
@@ -514,7 +539,8 @@ function triggerVictoryPhase(minutesEarned) {
       if (badgeEl) badgeEl.innerText = `Move ${overwhelmCurrentStep} of 4 Complete`;
       if (btnNext) {
         btnNext.style.display = 'block';
-        btnNext.innerText = `Continue to Move ${overwhelmCurrentStep + 1} &rarr;`;
+        // RECTIFIED: Real Unicode arrow instead of raw unparsed '&rarr;'
+        btnNext.innerText = `Continue to Move ${overwhelmCurrentStep + 1} →`;
       }
       if (btnReset) btnReset.style.display = 'none';
     } else {
