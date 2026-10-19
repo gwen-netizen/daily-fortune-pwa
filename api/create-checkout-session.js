@@ -1,6 +1,12 @@
 const stripe = require('stripe');
 
 module.exports = async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).end();
 
   const isLive = process.env.IS_STRIPE_LIVE === 'true';
@@ -8,7 +14,7 @@ module.exports = async function handler(req, res) {
   
   if (!secretKey) {
     console.error("Vercel Environment Variable Missing: Stripe Secret Key is undefined.");
-    return res.status(500).json({ error: "Server configuration error: Missing Stripe API Key." });
+    return res.status(500).json({ error: "Server configuration error: Missing Stripe API Key in Vercel." });
   }
 
   const stripeClient = stripe(secretKey);
@@ -20,8 +26,8 @@ module.exports = async function handler(req, res) {
       pass: process.env.STRIPE_TEST_PASS_PRICE_ID || 'price_1UOeIWG617eW830naNZ3Dvi6'
     },
     live: { 
-      lifetime: process.env.STRIPE_LIVE_LIFETIME_PRICE_ID || 'price_YOUR_LIVE_LIFETIME_ID', 
-      monthly: process.env.STRIPE_LIVE_MONTHLY_PRICE_ID || 'price_YOUR_LIVE_MONTHLY_ID',
+      lifetime: process.env.STRIPE_LIVE_LIFETIME_PRICE_ID || process.env.STRIPE_PRICE_LIFETIME, 
+      monthly: process.env.STRIPE_LIVE_MONTHLY_PRICE_ID || process.env.STRIPE_PRICE_MONTHLY,
       pass: process.env.STRIPE_PRICE_2_DAY || process.env.STRIPE_LIVE_PASS_PRICE_ID || 'price_1UOeGrG617eW830nwxz6eHsB'
     }
   };
@@ -29,40 +35,63 @@ module.exports = async function handler(req, res) {
   try {
     const { planType, successUrl, cancelUrl, email } = req.body;
     const activePrices = isLive ? prices.live : prices.test;
-    
-    let targetPriceId = activePrices.monthly;
-    let mode = 'subscription';
+    const targetPriceId = activePrices[planType] || (planType === '2day' ? activePrices.pass : undefined);
 
-    if (planType === 'lifetime') {
-      targetPriceId = activePrices.lifetime;
-      mode = 'payment';
-    } else if (planType === 'pass' || planType === '2day') {
-      targetPriceId = activePrices.pass;
-      mode = 'payment';
-    }
+    const cleanEmail = (email && typeof email === 'string') ? email.trim().toLowerCase() : '';
+    const isValidEmail = cleanEmail.includes('@') && cleanEmail !== 'anonymous_tester';
 
-    const cleanEmail = email ? email.trim().toLowerCase() : '';
-    const finalSuccessUrl = successUrl.includes('?') 
-      ? `${successUrl}&email=${encodeURIComponent(cleanEmail)}&plan=${encodeURIComponent(planType)}` 
-      : `${successUrl}?session=success&email=${encodeURIComponent(cleanEmail)}&plan=${encodeURIComponent(planType)}`;
+    const origin = req.headers.origin || ('https://' + req.headers.host);
+    const defaultSuccessUrl = `${origin}/app.html?session=success`;
+    const defaultCancelUrl = `${origin}/app.html`;
+
+    const baseSuccess = successUrl || defaultSuccessUrl;
+    const finalSuccessUrl = baseSuccess.includes('?') 
+      ? `${baseSuccess}&email=${encodeURIComponent(isValidEmail ? cleanEmail : '')}&plan=${encodeURIComponent(planType)}` 
+      : `${baseSuccess}?session=success&email=${encodeURIComponent(isValidEmail ? cleanEmail : '')}&plan=${encodeURIComponent(planType)}`;
+
+    const isSubscription = (planType === 'monthly');
 
     const sessionPayload = {
       payment_method_types: ['card'],
-      mode: mode,
-      line_items: [{ price: targetPriceId, quantity: 1 }],
+      mode: isSubscription ? 'subscription' : 'payment',
       success_url: finalSuccessUrl,
-      cancel_url: cancelUrl,
-      client_reference_id: cleanEmail,
-      customer_email: cleanEmail || undefined,
+      cancel_url: cancelUrl || defaultCancelUrl,
       allow_promotion_codes: true,
       metadata: { plan_type: planType }
     };
 
-    const session = await stripeClient.checkout.sessions.create(sessionPayload);
+    if (isValidEmail) {
+      sessionPayload.client_reference_id = cleanEmail;
+      sessionPayload.customer_email = cleanEmail;
+    }
 
-    res.status(200).json({ url: session.url });
+    if (targetPriceId && typeof targetPriceId === 'string' && targetPriceId.startsWith('price_') && !targetPriceId.includes('YOUR_')) {
+      sessionPayload.line_items = [{ price: targetPriceId, quantity: 1 }];
+    } else {
+      const fallbackCatalog = {
+        pass: { name: '120Reset 2-Day Unlimited Pass', amount: 99, recurring: false },
+        '2day': { name: '120Reset 2-Day Unlimited Pass', amount: 99, recurring: false },
+        monthly: { name: '120Reset Continuous Momentum Plan', amount: 299, recurring: true },
+        lifetime: { name: '120Reset Lifetime Freedom Access', amount: 1499, recurring: false }
+      };
+      const item = fallbackCatalog[planType] || fallbackCatalog.monthly;
+      sessionPayload.line_items = [{
+        price_data: {
+          currency: 'usd',
+          unit_amount: item.amount,
+          product_data: { name: item.name },
+          ...(item.recurring ? { recurring: { interval: 'month' } } : {})
+        },
+        quantity: 1
+      }];
+    }
+
+    const session = await stripeClient.checkout.sessions.create(sessionPayload);
+    return res.status(200).json({ url: session.url });
   } catch (err) {
-    console.error("Stripe Session Creation Error:", err);
-    res.status(500).json({ error: err.message });
+    console.error("Stripe Checkout Session Creation Error:", err);
+    return res.status(500).json({ 
+      error: err.message || "Failed to initialize Stripe checkout session." 
+    });
   }
 };
