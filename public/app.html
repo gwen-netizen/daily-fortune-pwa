@@ -16,27 +16,54 @@
 
   <div class="app-container">
 
-    <!-- SCREEN 0: WELCOME SCREEN (INITIAL LANDING UPON OPENING APP) -->
-    <div id="screen-welcome" class="screen active">
-      <div style="margin: auto 0; width: 100%; text-align: center;">
-        
-        <!-- Brand Kicker -->
-        <div class="mb-8 flex justify-center" style="margin-bottom: 28px; display: flex; justify-content: center;">
-          <span class="brand-kicker-pill">
-            120Reset
-          </span>
+    <!-- SCREEN 0: IMMERSIVE PROTOCOL WELCOME SCREEN -->
+    <div id="screen-welcome" class="screen active welcome-screen-styled">
+      
+      <!-- TOP: BRAND KICKER & HEADLINE -->
+      <div class="welcome-header-zone">
+        <div class="kicker-wrapper">
+          <span class="brand-kicker-glow">120RESET</span>
         </div>
-
-        <!-- Main Text, Center Aligned -->
-        <h1 class="welcome-main-text">
-          120 seconds to clear your mental friction.
+        <h1 class="welcome-hero-title">
+          120 seconds to clear your <span class="highlight-text">mental friction.</span>
         </h1>
       </div>
 
-      <!-- Button at the bottom -->
-      <div style="width: 100%; margin-top: auto; padding-top: 20px;">
-        <button class="btn-primary" onclick="switchScreen('screen-onboarding-2')">TAP TO CONTINUE &rarr;</button>
+      <!-- CENTER: KINETIC 120s CIRCUIT BREAKER ORB (BREATHING ANIMATION) -->
+      <div class="welcome-centerpiece">
+        <div class="pulse-outer-aura">
+          <div class="kinetic-core-circle">
+            <span class="core-spark-icon">⚡</span>
+            <div class="core-number">120<span class="core-unit">s</span></div>
+            <span class="core-status-pill">CIRCUIT BREAKER</span>
+          </div>
+        </div>
       </div>
+
+      <!-- PROTOCOL GAMEPLAY CHIPS -->
+      <div class="welcome-perks-row">
+        <div class="perk-chip">
+          <span class="perk-icon">🧠</span>
+          <span class="perk-label">Break Paralysis</span>
+        </div>
+        <div class="perk-chip">
+          <span class="perk-icon">🎯</span>
+          <span class="perk-label">Somatic Shifts</span>
+        </div>
+        <div class="perk-chip">
+          <span class="perk-icon">⚡</span>
+          <span class="perk-label">Zero Willpower</span>
+        </div>
+      </div>
+
+      <!-- BOTTOM: TACTICAL ACTION BUTTON & SUB-HINT -->
+      <div class="welcome-action-zone">
+        <button class="btn-primary btn-launch-pulse" onclick="switchScreen('screen-onboarding-2')">
+          TAP TO CONTINUE &rarr;
+        </button>
+        <p class="welcome-subhint">Takes 2 minutes &bull; Instant neuro-reset</p>
+      </div>
+
     </div>
 
     <!-- SCREEN 1: ONBOARDING & LOGIN ENTRY -->
@@ -189,7 +216,6 @@
         </button>
       </div>
 
-      <!-- SLOW-MOTION SLIDE-UP NOTIFICATION CARD -->
       <div id="trigger-slideup-notification" class="slideup-notification-card">
         <div class="notification-line-1" id="trigger-instructions">Take one slow breath before pushing.</div>
         <div class="notification-line-2">Commit to the next 120 seconds completely.</div>
@@ -199,6 +225,7 @@
     <!-- SCREEN 5: COUNTDOWN SCREEN -->
     <div id="screen-countdown" class="screen">
       <div style="width: 100%; margin: auto 0;">
+        
         <div class="task-hero-card">
           <div id="target-task-text" class="task-headline-text">Loading calibrated task...</div>
           <div id="target-task-focus-area" class="focus-area-badge">FOCUS AREA: CORE BIOMECHANICS</div>
@@ -244,7 +271,7 @@
       </div>
     </div>
 
-    <!-- CUSTOM INTERCEPT MODAL -->
+    <!-- CUSTOM INTERCEPT CREATION MODAL -->
     <div id="custom-intercept-modal" class="modal-backdrop">
       <div class="paywall-sheet">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
