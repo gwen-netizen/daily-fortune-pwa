@@ -4,6 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>120Reset — Behavioral Circuit Breaker</title>
+
+    <!-- HEADLESS INSTANT REDIRECT (ELIMINATES FLASH OF WEBSITE & HERO ICON ON APP LAUNCH) -->
+    <script>
+        (function() {
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                                 window.navigator.standalone === true || 
+                                 document.referrer.includes('android-app://');
+            const savedEmail = localStorage.getItem('nudge_user_email');
+
+            // If running as an installed PWA or if user has an existing account session
+            if (isStandalone || (savedEmail && savedEmail.includes('@'))) {
+                document.documentElement.style.display = 'none';
+                const urlParams = new URLSearchParams(window.location.search);
+                const promo = urlParams.get('promo');
+                const targetUrl = promo ? `/app.html?promo=${encodeURIComponent(promo)}` : '/app.html';
+                window.location.replace(targetUrl);
+            }
+        })();
+    </script>
+
     <meta name="description" content="120Reset — Behavioral circuit breaker for executive dysfunction and burnout. Intercept mindless scrolling and break task paralysis in 120 seconds.">
     <link rel="canonical" href="https://120reset.vercel.app">
 
@@ -250,8 +270,7 @@
             
             <div class="text-center mb-16">
                 <h2 class="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white tracking-tight mb-4">Proven in <span class="text-red-500">high-friction</span> environments.</h2>
-                    Unfiltered beta testing logs.
-                </p>
+                <p class="text-lg md:text-xl text-zinc-400 font-medium">Unfiltered beta testing logs.</p>
             </div>
 
             <!-- Stacked Rows for Fast Reading -->
@@ -353,23 +372,12 @@
         </div>
     </footer>
 
+    <!-- APP LAUNCHER SCRIPT -->
     <script>
-        // DEVICE SESSION DETECTOR: Skip landing page if already signed up/logged in on this device
-        (function() {
-            const savedEmail = localStorage.getItem('nudge_user_email');
-            if (savedEmail && savedEmail.includes('@')) {
-                const urlParams = new URLSearchParams(window.location.search);
-                const promo = urlParams.get('promo');
-                const targetUrl = promo ? `/app.html?promo=${promo}` : '/app.html';
-                window.location.href = targetUrl;
-            }
-        })();
-
-        // APP LAUNCHER
         function launchApp() {
             const urlParams = new URLSearchParams(window.location.search);
             const promo = urlParams.get('promo') || 'PREMIUM99';
-            window.location.href = `/app.html?promo=${promo}`;
+            window.location.href = `/app.html?promo=${encodeURIComponent(promo)}`;
         }
     </script>
 </body>
