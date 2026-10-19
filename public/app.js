@@ -99,7 +99,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     startPassTicker();
     updateMetricDashboard();
-    // DEFAULT TO WELCOME PAGE ON APP ENTRY
     switchScreen('screen-welcome', false);
   } else {
     switchScreen('screen-welcome', false);
@@ -269,24 +268,57 @@ function updateMetricDashboard() {
     }
   }
 
+  // TALLIES DIRECTLY WITH SUPABASE STATUS
   applyPremiumUIVisuals(hasAccess);
   updatePassCountdown();
 }
 
+/**
+ * DYNAMIC SUPABASE-TALLIED VISUAL SWITCHER
+ * Changes every occurrence of "PREMIUM UPGRADE" on Target Focus Area screen
+ * to "UNLOCKED PREMIUM AREA" in green font when subscribed.
+ */
 function applyPremiumUIVisuals(hasAccess) {
-  const customMeta = document.getElementById('custom-intercept-meta');
-  const customText = document.getElementById('custom-intercept-text');
-  if (customMeta) {
-    customMeta.innerText = hasAccess ? "UNLOCKED PREMIUM AREA" : "PREMIUM UPGRADE";
-    customMeta.className = hasAccess ? "deck-meta free" : "deck-meta premium";
+  // Update all meta tags in Target Focus Area screen dynamically
+  const allMetas = document.querySelectorAll('#screen-dashboard .deck-meta');
+  allMetas.forEach(m => {
+    const text = m.innerText.trim();
+    if (text === 'PREMIUM UPGRADE' || text === 'UNLOCKED PREMIUM AREA') {
+      if (hasAccess) {
+        m.innerText = "UNLOCKED PREMIUM AREA";
+        m.className = "deck-meta free";
+        m.style.color = "var(--success-color)";
+      } else {
+        m.innerText = "PREMIUM UPGRADE";
+        m.className = "deck-meta premium";
+        m.style.color = "";
+      }
+    }
+  });
+
+  // Dopamine swap deck name icon indicator
+  const dopamineDeck = document.querySelector('.deck-item[data-category="dopamine"]');
+  if (dopamineDeck) {
+    const name = dopamineDeck.querySelector('.deck-name');
+    if (name) name.innerHTML = hasAccess ? "✅ The Dopamine Swap Deck" : "⚡ The Dopamine Swap Deck";
   }
+
+  // Overwhelm deck name icon indicator
+  const overwhelmDeck = document.querySelector('.deck-item[data-category="overwhelm"]');
+  if (overwhelmDeck) {
+    const name = overwhelmDeck.querySelector('.deck-name');
+    if (name) name.innerHTML = hasAccess ? "✅ The Anti-Overwhelm Deck" : "🧠 The Anti-Overwhelm Deck";
+  }
+
+  // Custom Intercept button
+  const customText = document.getElementById('custom-intercept-text');
   if (customText) {
     customText.innerHTML = hasAccess ? "✅ + Add Custom Intercept" : "⚡ + Add Custom Intercept";
   }
 }
 
 /* ========================================================
-   SCREEN SWITCHER (SLIDE-UP NOTIFICATION IN SLOW MOTION)
+   SCREEN SWITCHER (3.0s SLOW-MOTION SLIDE-UP FOCUS DIVERSION)
 ======================================================== */
 function switchScreen(screenId, shouldPushHistory = true) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -299,19 +331,19 @@ function switchScreen(screenId, shouldPushHistory = true) {
       pushNavigationState(screenId);
     }
 
-    // DELIBERATE SLOW-MOTION SLIDE UP
+    // 3.0-SECOND DELIBERATE SLOW-MOTION SLIDE-UP DIVERSION
     const toast = document.getElementById('trigger-slideup-notification');
     if (screenId === 'screen-trigger') {
       if (toast) {
         toast.style.transition = 'none';
         toast.classList.remove('slide-up-show');
-        toast.offsetHeight; // Force layout reflow
+        toast.offsetHeight; // Force DOM reflow
         
         requestAnimationFrame(() => {
           setTimeout(() => {
-            toast.style.transition = 'transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1)';
+            toast.style.transition = 'transform 3.0s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 2.2s ease';
             toast.classList.add('slide-up-show');
-          }, 120);
+          }, 150);
         });
       }
     } else {
@@ -425,7 +457,7 @@ async function executeTurnaroundSpin() {
         taskDisplayEl.innerHTML = formatSpacedSentences(currentActiveTask.text);
       }
       
-      // RELIABLE CLEANING OF ANY "FOCUS AREA:" PREFIX TO PREVENT DUPLICATE LABELS
+      // PREVENT DUPLICATE "FOCUS AREA: FOCUS AREA:" ACROSS ALL DECKS
       if (focusAreaEl && currentActiveTask) {
         const rawArea = currentActiveTask.focusArea || "Energy Surge";
         const cleanArea = rawArea.replace(/^(focus\s*area\s*[:\-–—]?\s*)+/i, '').trim();
@@ -517,7 +549,6 @@ function triggerVictoryPhase(minutesEarned) {
     const rawAffirmation = (currentActiveTask && currentActiveTask.affirmation)
       ? currentActiveTask.affirmation
       : "The freeze is broken. Action clears anxiety.";
-    // FORMAT SENTENCE SPACING ON AFFIRMATION PAGE
     validationCopyEl.innerHTML = formatSpacedSentences(rawAffirmation);
   }
 
@@ -539,6 +570,7 @@ function triggerVictoryPhase(minutesEarned) {
       if (badgeEl) badgeEl.innerText = `Move ${overwhelmCurrentStep} of 4 Complete`;
       if (btnNext) {
         btnNext.style.display = 'block';
+        // RECTIFIED: Plain arrow literal, no code entities
         btnNext.innerText = `Continue to Move ${overwhelmCurrentStep + 1} →`;
       }
       if (btnReset) btnReset.style.display = 'none';
