@@ -8,12 +8,11 @@ module.exports = async function handler(req, res) {
   
   if (!secretKey) {
     console.error("Vercel Environment Variable Missing: Stripe Secret Key is undefined.");
-    return res.status(500).json({ error: "Server configuration error: Missing Stripe API Key. A redeploy is required." });
+    return res.status(500).json({ error: "Server configuration error: Missing Stripe API Key." });
   }
 
   const stripeClient = stripe(secretKey);
 
-  // Price ID Configuration
   const prices = {
     test: { 
       lifetime: process.env.STRIPE_TEST_LIFETIME_PRICE_ID || 'price_1UO7PUG617eW830nZMDod1D8',
@@ -56,7 +55,7 @@ module.exports = async function handler(req, res) {
       client_reference_id: cleanEmail,
       customer_email: cleanEmail || undefined,
       allow_promotion_codes: true,
-      metadata: { plan_type: planType } // VITAL FIX: Attaches the plan type so the webhook knows what was purchased
+      metadata: { plan_type: planType }
     };
 
     const session = await stripeClient.checkout.sessions.create(sessionPayload);
