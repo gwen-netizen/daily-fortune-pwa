@@ -73,6 +73,7 @@ window.addEventListener('popstate', () => {
 
 /* ========================================================
    INITIALIZATION & BOOT TALLY
+   DEFAULT ENTRY: ALWAYS OPENS WELCOME SCREEN (screen-welcome)
 ======================================================== */
 document.addEventListener("DOMContentLoaded", async () => {
   renderPresetIntercepts();
@@ -426,7 +427,6 @@ async function executeTurnaroundSpin() {
   const frictionKey = mindFrictionStyle || 'mindless_scrolling';
   const userEmail = localStorage.getItem('nudge_user_email') || 'anonymous_tester';
 
-  // Read non-repeating seen task indices and last focus area from persistent storage
   const seenKey = `nudge_seen_${categoryKey}`;
   const lastFocusKey = `nudge_last_focus_${categoryKey}`;
   const seenIndices = JSON.parse(localStorage.getItem(seenKey) || '[]');
@@ -448,7 +448,6 @@ async function executeTurnaroundSpin() {
     currentActiveTask = data.task;
     currentActiveTask.deck = categoryKey;
 
-    // Track non-repeating sequence
     if (typeof data.taskIndex === 'number') {
       if (data.historyReset) {
         localStorage.setItem(seenKey, JSON.stringify([data.taskIndex]));
@@ -475,12 +474,13 @@ async function executeTurnaroundSpin() {
         taskDisplayEl.innerHTML = formatSpacedSentences(currentActiveTask.text);
       }
       
+      // MOVE "MOVE 1 OF 4" DOWN 1 SPACING UNDER FOCUS AREA
       if (focusAreaEl && currentActiveTask) {
         const rawArea = currentActiveTask.focusArea || "Energy Surge";
         const cleanArea = rawArea.replace(/^(focus\s*area\s*[:\-–—]?\s*)+/i, '').trim();
 
         if (categoryKey === 'overwhelm') {
-          focusAreaEl.innerText = `FOCUS AREA: MOVE ${overwhelmCurrentStep} OF 4 • ${cleanArea.toUpperCase()}`;
+          focusAreaEl.innerHTML = `<div>FOCUS AREA: ${cleanArea.toUpperCase()}</div><div style="margin-top: 4px; font-size: 10px; font-weight: 700; letter-spacing: 0.05em; opacity: 0.85;">MOVE ${overwhelmCurrentStep} OF 4</div>`;
         } else {
           focusAreaEl.innerText = `FOCUS AREA: ${cleanArea.toUpperCase()}`;
         }
@@ -821,7 +821,6 @@ function startBackgroundInterceptMonitor() {
     const minutes = String(now.getMinutes()).padStart(2, '0');
     const currentTimeStr = `${hours}:${minutes}`;
 
-    // Monitor Presets
     const presets = getStoredPresetIntercepts();
     presets.forEach(p => {
       if (p.enabled && p.time === currentTimeStr && !p.triggeredToday) {
@@ -830,7 +829,6 @@ function startBackgroundInterceptMonitor() {
       }
     });
 
-    // Monitor Customs
     const customs = JSON.parse(localStorage.getItem('nudge_custom_intercepts') || '[]');
     customs.forEach(c => {
       if (c.enabled && c.time === currentTimeStr && !c.triggeredToday) {
