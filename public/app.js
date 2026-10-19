@@ -61,12 +61,14 @@ window.addEventListener('popstate', () => {
     switchScreen('screen-dashboard', false);
   } else if (currentId === 'screen-dashboard') {
     switchScreen('screen-onboarding-2', false);
+  } else if (currentId === 'screen-onboarding-2') {
+    switchScreen('screen-welcome', false);
   }
 });
 
 /* ========================================================
    INITIALIZATION & BOOT TALLY
-   DEFAULT ENTRY: ALWAYS OPENS PAIN POINT SCREEN (screen-onboarding-2)
+   DEFAULT ENTRY: ALWAYS OPENS WELCOME SCREEN (screen-welcome)
 ======================================================== */
 document.addEventListener("DOMContentLoaded", async () => {
   renderCustomIntercepts();
@@ -97,10 +99,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     startPassTicker();
     updateMetricDashboard();
-    // DEFAULT TO PAIN POINT PAGE ON APP ENTRY
-    switchScreen('screen-onboarding-2', true);
+    // DEFAULT TO WELCOME PAGE ON APP ENTRY
+    switchScreen('screen-welcome', false);
   } else {
-    switchScreen('screen-onboarding-1', true);
+    switchScreen('screen-welcome', false);
   }
 });
 
@@ -143,7 +145,6 @@ async function initializeUserProfile() {
       startPassTicker();
       updateMetricDashboard();
 
-      // ALWAYS DEFAULT TO PAIN POINT PAGE (screen-onboarding-2)
       switchScreen('screen-onboarding-2', true);
     } else {
       throw new Error(data.error || "Profile initialization response invalid.");
@@ -161,7 +162,6 @@ async function initializeUserProfile() {
     
     startPassTicker();
     updateMetricDashboard();
-    // DEFAULT TO PAIN POINT PAGE ON FALLBACK
     switchScreen('screen-onboarding-2', true);
   } finally {
     if (loginBtn) {
@@ -286,7 +286,7 @@ function applyPremiumUIVisuals(hasAccess) {
 }
 
 /* ========================================================
-   SCREEN SWITCHER (SLIDE-UP TOAST ANIMATION IN SLOW MOTION)
+   SCREEN SWITCHER (SLIDE-UP NOTIFICATION IN SLOW MOTION)
 ======================================================== */
 function switchScreen(screenId, shouldPushHistory = true) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -305,7 +305,7 @@ function switchScreen(screenId, shouldPushHistory = true) {
       if (toast) {
         toast.style.transition = 'none';
         toast.classList.remove('slide-up-show');
-        toast.offsetHeight; // Force DOM layout recalculation
+        toast.offsetHeight; // Force layout reflow
         
         requestAnimationFrame(() => {
           setTimeout(() => {
@@ -539,7 +539,6 @@ function triggerVictoryPhase(minutesEarned) {
       if (badgeEl) badgeEl.innerText = `Move ${overwhelmCurrentStep} of 4 Complete`;
       if (btnNext) {
         btnNext.style.display = 'block';
-        // RECTIFIED: Real Unicode arrow instead of raw unparsed '&rarr;'
         btnNext.innerText = `Continue to Move ${overwhelmCurrentStep + 1} →`;
       }
       if (btnReset) btnReset.style.display = 'none';
