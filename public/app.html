@@ -42,28 +42,27 @@
         </div>
       </div>
 
-      <!-- PROTOCOL GAMEPLAY CHIPS -->
+      <!-- PROTOCOL GAMEPLAY CHIPS (1 WORD PER LINE) -->
       <div class="welcome-perks-row">
         <div class="perk-chip">
           <span class="perk-icon">🧠</span>
-          <span class="perk-label">Break Paralysis</span>
+          <span class="perk-label">Break<br>Paralysis</span>
         </div>
         <div class="perk-chip">
           <span class="perk-icon">🎯</span>
-          <span class="perk-label">Somatic Shifts</span>
+          <span class="perk-label">Somatic<br>Shifts</span>
         </div>
         <div class="perk-chip">
           <span class="perk-icon">⚡</span>
-          <span class="perk-label">Zero Willpower</span>
+          <span class="perk-label">Zero<br>Willpower</span>
         </div>
       </div>
 
-      <!-- BOTTOM: ACTION BUTTON & CONFIDENCE SUB-HINT -->
+      <!-- BOTTOM: ACTION BUTTON (REMOVED SUB-HINT BELOW) -->
       <div class="welcome-action-zone">
         <button class="btn-primary btn-launch-pulse" onclick="switchScreen('screen-onboarding-2')">
           TAP TO CONTINUE &rarr;
         </button>
-        <p class="welcome-subhint">Takes 2 minutes &bull; Instant neuro-reset</p>
       </div>
 
     </div>
@@ -171,13 +170,11 @@
           </div>
         </div>
 
-        <!-- SCHEDULED INTERCEPTS CONTAINER (TOGGLEABLE PRESETS & CUSTOMS) -->
+        <!-- SCHEDULED INTERCEPTS CONTAINER -->
         <div style="margin-top: 18px; text-align: left;">
           <h2 class="title-large" style="font-size: 17px; margin-bottom: 8px;">Daily Intercepts</h2>
           <div class="lifeline-list" id="lifeline-container">
-            <!-- Preset intercepts rendered dynamically with active toggles -->
             <div id="preset-intercepts-injection-point"></div>
-            <!-- Custom user intercepts -->
             <div id="custom-intercepts-injection-point"></div>
             
             <button id="custom-intercept-add-btn" class="btn-bypass" style="width: 100%; border: 2px dashed var(--premium-color); border-radius: 12px; padding: 12px; margin-top: 4px; text-align: center; background: #FFFFFF;" onclick="openCustomInterceptModal()">
@@ -193,7 +190,7 @@
       </div>
     </div>
 
-    <!-- SCREEN 4: TRIGGER SCREEN (3.0s SLOW-MOTION SLIDE-UP DIVERSION) -->
+    <!-- SCREEN 4: TRIGGER SCREEN -->
     <div id="screen-trigger" class="screen">
       <div style="margin-top: 6px; width: 100%; text-align: center;">
         <h2 class="title-deck" id="active-deck-title" style="font-size: 24px; font-weight: 800; line-height: 1.25;">Command the room.</h2>
@@ -264,7 +261,7 @@
       </div>
     </div>
 
-    <!-- CUSTOM INTERCEPT CREATION MODAL (DROPDOWN WITH 3 PAIN POINTS & SOLUTION DECK) -->
+    <!-- CUSTOM INTERCEPT CREATION MODAL -->
     <div id="custom-intercept-modal" class="modal-backdrop">
       <div class="paywall-sheet">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
