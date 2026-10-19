@@ -10,6 +10,7 @@ let mindFrictionStyle = 'mindless_scrolling';
 let selectedCategory = 'charisma';
 let isPremiumSelected = false;
 let overwhelmCurrentStep = 1;
+let isOtpRequested = false;
 
 let totalWinsCount = 0;
 let totalFocusReclaimed = 0.0;
@@ -64,12 +65,17 @@ window.addEventListener('popstate', () => {
   } else if (currentId === 'screen-dashboard') {
     switchScreen('screen-onboarding-2', false);
   } else if (currentId === 'screen-onboarding-2') {
-    switchScreen('screen-welcome', false);
+    const savedEmail = localStorage.getItem('nudge_user_email');
+    if (savedEmail && savedEmail.includes('@')) {
+      switchScreen('screen-welcome', false);
+    } else {
+      switchScreen('screen-onboarding-1', false);
+    }
   }
 });
 
 /* ========================================================
-   INITIALIZATION & BOOT TALLY
+   INITIALIZATION & BOOT ROUTING
 ======================================================== */
 document.addEventListener("DOMContentLoaded", async () => {
   renderPresetIntercepts();
@@ -77,8 +83,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   startBackgroundInterceptMonitor();
   await checkStripeRedirectStatus();
 
+  // Read any promo code passed from URL query
+  const urlParams = new URLSearchParams(window.location.search);
+  const promoParam = urlParams.get('promo');
+  const promoInput = document.getElementById('user-promo-code');
+  if (promoInput && promoParam) {
+    promoInput.value = promoParam.trim().toUpperCase();
+  }
+
   const savedEmail = localStorage.getItem('nudge_user_email');
   
+  // 1. Existing verified user on device: Restore session & open Welcome Screen
   if (savedEmail && savedEmail.includes('@')) {
     try {
       const endpoint = `/api/sync-user?email=${encodeURIComponent(savedEmail)}&action=get_profile`;
@@ -93,7 +108,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       }
     } catch (e) {
-      console.warn("Supabase sync fallback:", e);
+      console.warn("Supabase auto-boot sync offline:", e);
       if (!currentUserProfile) {
         currentUserProfile = { email: savedEmail, premium_user: false, pass_expires_at: null };
       }
@@ -103,34 +118,80 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateMetricDashboard();
     switchScreen('screen-welcome', false);
   } else {
-    switchScreen('screen-welcome', false);
+    // 2. New user / Signed out user / Incognito Tab: MUST go to login & OTP screen[cite: 9]
+    switchScreen('screen-onboarding-1', false);
   }
 });
 
+function handleWelcomeContinue() {
+  const savedEmail = localStorage.getItem('nudge_user_email');
+  if (savedEmail && savedEmail.includes('@')) {
+    switchScreen('screen-onboarding-2', true);
+  } else {
+    switchScreen('screen-onboarding-1', true);
+  }
+}
+
 /* ========================================================
-   LOGIN & SUPABASE TALLY
+   2-STEP EMAIL + OTP AUTHENTICATION
 ======================================================== */
-async function initializeUserProfile() {
+async function handleAuthAction() {
   const emailInput = document.getElementById('user-auth-email');
+  const promoInput = document.getElementById('user-promo-code');
+  const otpInput = document.getElementById('user-auth-otp');
+  const otpGroup = document.getElementById('auth-otp-group');
+  const authBtn = document.getElementById('btn-auth-action');
+
   if (!emailInput || !emailInput.value.includes('@')) {
     alert("Please enter a valid email address.");
     return;
   }
 
   const userEmail = emailInput.value.trim().toLowerCase();
-  const promoInput = document.getElementById('user-promo-code');
   const promoCode = promoInput ? promoInput.value.trim().toUpperCase() : '';
 
-  const loginBtn = document.querySelector('#screen-onboarding-1 .btn-primary');
-  const originalText = loginBtn ? loginBtn.innerText : "Continue →";
-  
-  if (loginBtn) {
-    loginBtn.innerText = "VERIFYING ACCOUNT...";
-    loginBtn.disabled = true;
+  // STEP 1: REQUEST OTP ACCESS CODE
+  if (!isOtpRequested) {
+    authBtn.innerText = "SENDING ACCESS CODE...";
+    authBtn.disabled = true;
+
+    try {
+      const response = await fetch(`/api/sync-user?email=${encodeURIComponent(userEmail)}&action=request_otp`);
+      const data = await response.json();
+
+      if (response.ok && data.sent) {
+        isOtpRequested = true;
+        emailInput.disabled = true;
+        if (promoInput) promoInput.disabled = true;
+        
+        otpGroup.style.display = 'block';
+        authBtn.innerText = "Verify Code & Enter Engine →";
+        authBtn.disabled = false;
+        
+        if (otpInput) otpInput.focus();
+      } else {
+        throw new Error(data.error || "Failed to send verification code. Please check email address.");
+      }
+    } catch (err) {
+      alert(`Authentication Error: ${err.message}`);
+      authBtn.innerText = "Send Access Code →";
+      authBtn.disabled = false;
+    }
+    return;
   }
 
+  // STEP 2: VERIFY 6-DIGIT OTP ACCESS CODE
+  const otpCode = otpInput ? otpInput.value.trim() : '';
+  if (!otpCode || otpCode.length < 6) {
+    alert("Please enter the complete 6-digit access code sent to your email.");
+    return;
+  }
+
+  authBtn.innerText = "VERIFYING CODE...";
+  authBtn.disabled = true;
+
   try {
-    const endpoint = `/api/sync-user?email=${encodeURIComponent(userEmail)}&action=get_profile&promo_code=${encodeURIComponent(promoCode)}`;
+    const endpoint = `/api/sync-user?email=${encodeURIComponent(userEmail)}&token=${encodeURIComponent(otpCode)}&action=verify_otp&promo_code=${encodeURIComponent(promoCode)}`;
     const response = await fetch(endpoint);
     const data = await response.json();
 
@@ -145,29 +206,37 @@ async function initializeUserProfile() {
 
       startPassTicker();
       updateMetricDashboard();
-      switchScreen('screen-onboarding-2', true);
+
+      alert("🎉 Access verified! Identity session saved to this device.");
+      switchScreen('screen-welcome', true);
     } else {
-      throw new Error(data.error || "Profile initialization response invalid.");
+      throw new Error(data.error || "Invalid or expired access code.");
     }
-  } catch (error) {
-    console.warn("Supabase fallback:", error);
-    localStorage.setItem('nudge_user_email', userEmail);
-    currentUserProfile = { 
-      email: userEmail, 
-      premium_user: false, 
-      pass_expires_at: null,
-      total_wins: totalWinsCount,
-      focus_reclaimed: totalFocusReclaimed
-    };
-    
-    startPassTicker();
-    updateMetricDashboard();
-    switchScreen('screen-onboarding-2', true);
-  } finally {
-    if (loginBtn) {
-      loginBtn.innerText = originalText;
-      loginBtn.disabled = false;
+  } catch (err) {
+    alert(`Verification Failed: ${err.message}`);
+    authBtn.innerText = "Verify Code & Enter Engine →";
+    authBtn.disabled = false;
+  }
+}
+
+async function resendOtpCode() {
+  const emailInput = document.getElementById('user-auth-email');
+  if (!emailInput || !emailInput.value.includes('@')) {
+    alert("Please enter a valid email address first.");
+    return;
+  }
+  const userEmail = emailInput.value.trim().toLowerCase();
+  
+  try {
+    const response = await fetch(`/api/sync-user?email=${encodeURIComponent(userEmail)}&action=request_otp`);
+    const data = await response.json();
+    if (response.ok && data.sent) {
+      alert("A fresh access code has been dispatched to your email.");
+    } else {
+      throw new Error(data.error || "Unable to resend code.");
     }
+  } catch (e) {
+    alert(`Resend Notice: ${e.message}`);
   }
 }
 
@@ -273,11 +342,6 @@ function updateMetricDashboard() {
   updatePassCountdown();
 }
 
-/**
- * TALLIES WITH SUPABASE:
- * Updates every "PREMIUM UPGRADE" meta tag to "UNLOCKED PREMIUM AREA" in green font for subscribers.
- * Displays "Manage Subscription" on the victory screen strictly for active monthly subscribers.
- */
 function applyPremiumUIVisuals(hasAccess) {
   const allMetas = document.querySelectorAll('#screen-dashboard .deck-meta');
   allMetas.forEach(m => {
@@ -312,7 +376,6 @@ function applyPremiumUIVisuals(hasAccess) {
     customText.innerHTML = hasAccess ? "✅ + Add Custom Intercept" : "⚡ + Add Custom Intercept";
   }
 
-  // RESTORE MANAGE SUBSCRIPTION BUTTON FOR ACTIVE MONTHLY SUBSCRIBERS
   const victoryManageBtn = document.getElementById('btn-victory-manage-subscription');
   if (victoryManageBtn) {
     const isMonthlySubscriber = Boolean(currentUserProfile && (currentUserProfile.premium_user === true || currentUserProfile.premium_user === 'true') && !currentUserProfile.pass_expires_at);
@@ -320,9 +383,6 @@ function applyPremiumUIVisuals(hasAccess) {
   }
 }
 
-/* ========================================================
-   STRIPE CUSTOMER BILLING PORTAL SESSION
-======================================================== */
 async function openCustomerPortal() {
   const userEmail = localStorage.getItem('nudge_user_email');
   if (!userEmail) {
@@ -363,7 +423,7 @@ async function openCustomerPortal() {
 }
 
 /* ========================================================
-   SCREEN SWITCHER (3.0s SLOW-MOTION SLIDE UP DIVERSION)
+   SCREEN SWITCHER
 ======================================================== */
 function switchScreen(screenId, shouldPushHistory = true) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -520,7 +580,6 @@ async function executeTurnaroundSpin() {
         taskDisplayEl.innerHTML = formatSpacedSentences(currentActiveTask.text);
       }
       
-      // MOVE 1 OF 4 MOVED DOWN 1 SPACING UNDER FOCUS AREA
       if (focusAreaEl && currentActiveTask) {
         const rawArea = currentActiveTask.focusArea || "Energy Surge";
         const cleanArea = rawArea.replace(/^(focus\s*area\s*[:\-–—]?\s*)+/i, '').trim();
@@ -651,7 +710,6 @@ function triggerVictoryPhase(minutesEarned) {
     if (badgeEl) badgeEl.innerText = "+120s Focus Reclaimed";
   }
 
-  // Manage Subscription visibility
   applyPremiumUIVisuals(isUserPremiumOrPass());
 
   const chime = document.getElementById('victory-chime');
@@ -912,7 +970,7 @@ async function simulatePurchase() {
 
   const planType = selectedTierBox.getAttribute('data-plan') || 'monthly';
   const paywallBtn = document.querySelector('#paywall-overlay .btn-primary');
-  const userEmail = localStorage.getItem('nudge_user_email') || 'anonymous_tester';
+  const userEmail = localStorage.getItem('nudge_user_email') || '';
 
   if (paywallBtn) { paywallBtn.innerText = "SECURING GATEWAY..."; paywallBtn.disabled = true; }
 
@@ -928,19 +986,18 @@ async function simulatePurchase() {
       })
     });
 
+    const data = await response.json();
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Server status ${response.status}: ${errorText}`);
+      throw new Error(data.error || `Server status ${response.status}`);
     }
 
-    const session = await response.json();
-    if (session.url) {
-      window.location.href = session.url;
+    if (data.url) {
+      window.location.href = data.url;
     } else {
-      throw new Error(session.error || "Unable to initialize Stripe session.");
+      throw new Error(data.error || "Unable to initialize Stripe session.");
     }
   } catch (err) {
-    alert(`Checkout Error: ${err.message}`);
+    alert(`Checkout Notice: ${err.message}`);
     if (paywallBtn) { paywallBtn.innerText = "Unlock Access Now"; paywallBtn.disabled = false; }
   }
 }
@@ -966,7 +1023,7 @@ async function checkStripeRedirectStatus() {
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('session') === 'success') {
     const emailParam = urlParams.get('email');
-    if (emailParam) {
+    if (emailParam && emailParam.includes('@')) {
       localStorage.setItem('nudge_user_email', emailParam.trim().toLowerCase());
     }
     alert("🎉 Payment confirmed! Synchronizing access with Supabase...");
