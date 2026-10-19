@@ -22,6 +22,12 @@ const DECK_SUBHEADINGS = {
   overwhelm: "Shatter task paralysis."
 };
 
+const DEFAULT_PRESET_INTERCEPTS = [
+  { id: 'pre_1', time: '08:15', label: 'Morning Bed-Lock', deck: 'The Charisma Deck', enabled: true },
+  { id: 'pre_2', time: '14:30', label: 'Post-Lunch Brain Fog', deck: 'The Financial Reset Deck', enabled: true },
+  { id: 'pre_3', time: '23:15', label: 'Bedtime Loop', deck: 'The Anti-Overwhelm Deck', enabled: true }
+];
+
 function parseDbTimestamp(ts) {
   if (!ts) return 0;
   if (typeof ts === 'number') return ts;
@@ -29,8 +35,7 @@ function parseDbTimestamp(ts) {
 }
 
 /**
- * Splits text by sentence-ending punctuation so each sentence
- * is cleanly spaced with comfortable margins.
+ * Splits text into paragraphs spaced with comfortable margins.
  */
 function formatSpacedSentences(text) {
   if (!text) return '';
@@ -43,7 +48,7 @@ function formatSpacedSentences(text) {
 }
 
 /* ========================================================
-   HARDWARE / SYSTEM BACK BUTTON HANDLER (PWA ENHANCEMENT)
+   HARDWARE / SYSTEM BACK BUTTON HANDLER
 ======================================================== */
 function pushNavigationState(screenId) {
   try {
@@ -68,9 +73,9 @@ window.addEventListener('popstate', () => {
 
 /* ========================================================
    INITIALIZATION & BOOT TALLY
-   DEFAULT ENTRY: ALWAYS OPENS WELCOME SCREEN (screen-welcome)
 ======================================================== */
 document.addEventListener("DOMContentLoaded", async () => {
+  renderPresetIntercepts();
   renderCustomIntercepts();
   startBackgroundInterceptMonitor();
   await checkStripeRedirectStatus();
@@ -91,7 +96,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       }
     } catch (e) {
-      console.warn("Supabase network sync offline on boot, using fallback session:", e);
+      console.warn("Supabase sync fallback:", e);
       if (!currentUserProfile) {
         currentUserProfile = { email: savedEmail, premium_user: false, pass_expires_at: null };
       }
@@ -143,13 +148,12 @@ async function initializeUserProfile() {
 
       startPassTicker();
       updateMetricDashboard();
-
       switchScreen('screen-onboarding-2', true);
     } else {
       throw new Error(data.error || "Profile initialization response invalid.");
     }
   } catch (error) {
-    console.warn("Supabase connection fallback triggered:", error);
+    console.warn("Supabase fallback:", error);
     localStorage.setItem('nudge_user_email', userEmail);
     currentUserProfile = { 
       email: userEmail, 
@@ -268,18 +272,15 @@ function updateMetricDashboard() {
     }
   }
 
-  // TALLIES DIRECTLY WITH SUPABASE STATUS
   applyPremiumUIVisuals(hasAccess);
   updatePassCountdown();
 }
 
 /**
- * DYNAMIC SUPABASE-TALLIED VISUAL SWITCHER
- * Changes every occurrence of "PREMIUM UPGRADE" on Target Focus Area screen
- * to "UNLOCKED PREMIUM AREA" in green font when subscribed.
+ * TALLIES WITH SUPABASE STATUS:
+ * Turns every "PREMIUM UPGRADE" on Target Focus Area screen to "UNLOCKED PREMIUM AREA" in green font.
  */
 function applyPremiumUIVisuals(hasAccess) {
-  // Update all meta tags in Target Focus Area screen dynamically
   const allMetas = document.querySelectorAll('#screen-dashboard .deck-meta');
   allMetas.forEach(m => {
     const text = m.innerText.trim();
@@ -296,21 +297,18 @@ function applyPremiumUIVisuals(hasAccess) {
     }
   });
 
-  // Dopamine swap deck name icon indicator
   const dopamineDeck = document.querySelector('.deck-item[data-category="dopamine"]');
   if (dopamineDeck) {
     const name = dopamineDeck.querySelector('.deck-name');
     if (name) name.innerHTML = hasAccess ? "✅ The Dopamine Swap Deck" : "⚡ The Dopamine Swap Deck";
   }
 
-  // Overwhelm deck name icon indicator
   const overwhelmDeck = document.querySelector('.deck-item[data-category="overwhelm"]');
   if (overwhelmDeck) {
     const name = overwhelmDeck.querySelector('.deck-name');
     if (name) name.innerHTML = hasAccess ? "✅ The Anti-Overwhelm Deck" : "🧠 The Anti-Overwhelm Deck";
   }
 
-  // Custom Intercept button
   const customText = document.getElementById('custom-intercept-text');
   if (customText) {
     customText.innerHTML = hasAccess ? "✅ + Add Custom Intercept" : "⚡ + Add Custom Intercept";
@@ -318,7 +316,7 @@ function applyPremiumUIVisuals(hasAccess) {
 }
 
 /* ========================================================
-   SCREEN SWITCHER (3.0s SLOW-MOTION SLIDE-UP FOCUS DIVERSION)
+   SCREEN SWITCHER (3.0s SLOW-MOTION SLIDE UP DIVERSION)
 ======================================================== */
 function switchScreen(screenId, shouldPushHistory = true) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -331,13 +329,12 @@ function switchScreen(screenId, shouldPushHistory = true) {
       pushNavigationState(screenId);
     }
 
-    // 3.0-SECOND DELIBERATE SLOW-MOTION SLIDE-UP DIVERSION
     const toast = document.getElementById('trigger-slideup-notification');
     if (screenId === 'screen-trigger') {
       if (toast) {
         toast.style.transition = 'none';
         toast.classList.remove('slide-up-show');
-        toast.offsetHeight; // Force DOM reflow
+        toast.offsetHeight;
         
         requestAnimationFrame(() => {
           setTimeout(() => {
@@ -354,6 +351,7 @@ function switchScreen(screenId, shouldPushHistory = true) {
 
     if (screenId === 'screen-dashboard' || screenId === 'screen-onboarding-2') {
       updatePassCountdown();
+      renderPresetIntercepts();
       renderCustomIntercepts();
       updateMetricDashboard();
     }
@@ -403,6 +401,9 @@ function startTriggerPhase() {
   }
 }
 
+/* ========================================================
+   TASK FETCHING: NON-REPEATING DIVERSE FOCUS ROTATION
+======================================================== */
 async function executeTurnaroundSpin() {
   const hasAccess = isUserPremiumOrPass();
   const dailyClicks = getDailyClicksCount();
@@ -413,7 +414,6 @@ async function executeTurnaroundSpin() {
     return;
   }
 
-  // Pre-initialize timer to 02:00 synchronously so 01:46 never flashes
   const timerDisplayEl = document.getElementById('timer-display');
   if (timerDisplayEl) timerDisplayEl.innerText = "02:00";
 
@@ -426,8 +426,14 @@ async function executeTurnaroundSpin() {
   const frictionKey = mindFrictionStyle || 'mindless_scrolling';
   const userEmail = localStorage.getItem('nudge_user_email') || 'anonymous_tester';
 
+  // Read non-repeating seen task indices and last focus area from persistent storage
+  const seenKey = `nudge_seen_${categoryKey}`;
+  const lastFocusKey = `nudge_last_focus_${categoryKey}`;
+  const seenIndices = JSON.parse(localStorage.getItem(seenKey) || '[]');
+  const lastFocus = localStorage.getItem(lastFocusKey) || '';
+
   try {
-    let endpoint = `/api/get-task?category=${encodeURIComponent(categoryKey)}&friction=${encodeURIComponent(frictionKey)}&email=${encodeURIComponent(userEmail)}`;
+    let endpoint = `/api/get-task?category=${encodeURIComponent(categoryKey)}&friction=${encodeURIComponent(frictionKey)}&email=${encodeURIComponent(userEmail)}&seen=${encodeURIComponent(seenIndices.join(','))}&lastFocusArea=${encodeURIComponent(lastFocus)}`;
     if (categoryKey === 'overwhelm') {
       endpoint += `&step=${overwhelmCurrentStep}`;
     }
@@ -442,6 +448,19 @@ async function executeTurnaroundSpin() {
     currentActiveTask = data.task;
     currentActiveTask.deck = categoryKey;
 
+    // Track non-repeating sequence
+    if (typeof data.taskIndex === 'number') {
+      if (data.historyReset) {
+        localStorage.setItem(seenKey, JSON.stringify([data.taskIndex]));
+      } else {
+        seenIndices.push(data.taskIndex);
+        localStorage.setItem(seenKey, JSON.stringify(seenIndices));
+      }
+    }
+    if (data.task.focusArea) {
+      localStorage.setItem(lastFocusKey, data.task.focusArea);
+    }
+
     if (!hasAccess) {
       incrementDailyClicks();
     }
@@ -452,12 +471,10 @@ async function executeTurnaroundSpin() {
       const taskDisplayEl = document.getElementById('target-task-text');
       const focusAreaEl = document.getElementById('target-task-focus-area');
       
-      // FORMAT SENTENCE SPACING ON TASK TEXT
       if (taskDisplayEl && currentActiveTask) {
         taskDisplayEl.innerHTML = formatSpacedSentences(currentActiveTask.text);
       }
       
-      // PREVENT DUPLICATE "FOCUS AREA: FOCUS AREA:" ACROSS ALL DECKS
       if (focusAreaEl && currentActiveTask) {
         const rawArea = currentActiveTask.focusArea || "Energy Surge";
         const cleanArea = rawArea.replace(/^(focus\s*area\s*[:\-–—]?\s*)+/i, '').trim();
@@ -570,7 +587,6 @@ function triggerVictoryPhase(minutesEarned) {
       if (badgeEl) badgeEl.innerText = `Move ${overwhelmCurrentStep} of 4 Complete`;
       if (btnNext) {
         btnNext.style.display = 'block';
-        // RECTIFIED: Plain arrow literal, no code entities
         btnNext.innerText = `Continue to Move ${overwhelmCurrentStep + 1} →`;
       }
       if (btnReset) btnReset.style.display = 'none';
@@ -626,7 +642,61 @@ function runAnotherRound() {
 }
 
 /* ========================================================
-   CUSTOM & PRESET INTERCEPTS MONITOR
+   PRESET INTERCEPTS (TOGGLEABLE & PERSISTENT AFTER CACHE CLEAR)
+======================================================== */
+function getStoredPresetIntercepts() {
+  const stored = localStorage.getItem('nudge_preset_intercepts');
+  if (!stored) {
+    localStorage.setItem('nudge_preset_intercepts', JSON.stringify(DEFAULT_PRESET_INTERCEPTS));
+    return DEFAULT_PRESET_INTERCEPTS;
+  }
+  try {
+    return JSON.parse(stored);
+  } catch (e) {
+    return DEFAULT_PRESET_INTERCEPTS;
+  }
+}
+
+function renderPresetIntercepts() {
+  const container = document.getElementById('preset-intercepts-injection-point');
+  if (!container) return;
+  
+  const presets = getStoredPresetIntercepts();
+  container.innerHTML = '';
+
+  presets.forEach((p, index) => {
+    const formatted = formatTime12h(p.time);
+    const isChecked = p.enabled !== false ? 'checked' : '';
+    const html = `
+      <div class="lifeline-item" style="margin-bottom: 8px;">
+        <div>
+          <div style="font-weight: 800; font-size: 14px; color: var(--text-color);">${formatted}</div>
+          <div style="font-size: 11px; color: #7A7571; font-weight: 600;">${p.label}</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" ${isChecked} onchange="togglePresetInterceptState(${index})">
+          <span class="slider"></span>
+        </label>
+      </div>
+    `;
+    container.insertAdjacentHTML('beforeend', html);
+  });
+}
+
+function togglePresetInterceptState(index) {
+  const presets = getStoredPresetIntercepts();
+  if (presets[index]) {
+    presets[index].enabled = !presets[index].enabled;
+    localStorage.setItem('nudge_preset_intercepts', JSON.stringify(presets));
+
+    if (presets[index].enabled && "Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  }
+}
+
+/* ========================================================
+   CUSTOM INTERCEPTS & NOTIFICATION MONITOR
 ======================================================== */
 function formatTime12h(time24) {
   if (!time24) return "12:00 PM";
@@ -655,7 +725,7 @@ function closeCustomInterceptModal() {
 
 function saveCustomIntercept() {
   const timeInput = document.getElementById('custom-time-input').value;
-  const frictionInput = document.getElementById('custom-friction-input').value || 'Custom Reset';
+  const frictionInput = document.getElementById('custom-friction-input').value || 'Mindless Scrolling';
   const deckInput = document.getElementById('custom-deck-input').value || 'The Anti-Overwhelm Deck';
 
   if (!timeInput) {
@@ -727,39 +797,45 @@ function renderCustomIntercepts() {
   });
 }
 
-function startBackgroundInterceptMonitor() {
-  const presets = [
-    { time: '08:15', label: 'Morning Bed-Lock', deck: 'The Charisma Deck' },
-    { time: '14:30', label: 'Post-Lunch Brain Fog', deck: 'The Financial Reset Deck' },
-    { time: '23:15', label: 'Bedtime Loop', deck: 'The Anti-Overwhelm Deck' }
-  ];
+function dispatchNotification(title, body) {
+  if ("Notification" in window && Notification.permission === "granted") {
+    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.ready.then(reg => {
+        reg.showNotification(title, {
+          body: body,
+          icon: '/images/icon-192.png',
+          badge: '/images/icon-192.png',
+          vibrate: [200, 100, 200]
+        });
+      });
+    } else {
+      new Notification(title, { body: body, icon: '/images/icon-192.png' });
+    }
+  }
+}
 
+function startBackgroundInterceptMonitor() {
   setInterval(() => {
     const now = new Date();
     const hours = String(now.getHours()).padStart(2, '0');
     const minutes = String(now.getMinutes()).padStart(2, '0');
     const currentTimeStr = `${hours}:${minutes}`;
 
+    // Monitor Presets
+    const presets = getStoredPresetIntercepts();
     presets.forEach(p => {
-      if (p.time === currentTimeStr && !p.triggeredToday) {
+      if (p.enabled && p.time === currentTimeStr && !p.triggeredToday) {
         p.triggeredToday = true;
-        if ("Notification" in window && Notification.permission === "granted") {
-          new Notification("120 Reset Circuit Breaker", {
-            body: `Scheduled Intercept: ${p.label}. Tap to break the loop.`
-          });
-        }
+        dispatchNotification("120 Reset Circuit Breaker", `Scheduled Intercept: ${p.label}. Tap to break the loop.`);
       }
     });
 
+    // Monitor Customs
     const customs = JSON.parse(localStorage.getItem('nudge_custom_intercepts') || '[]');
     customs.forEach(c => {
       if (c.enabled && c.time === currentTimeStr && !c.triggeredToday) {
         c.triggeredToday = true;
-        if ("Notification" in window && Notification.permission === "granted") {
-          new Notification("120 Reset Circuit Breaker", {
-            body: `Scheduled Intercept: ${c.friction} (${c.deck}). Tap to break the loop.`
-          });
-        }
+        dispatchNotification("120 Reset Circuit Breaker", `Scheduled Intercept: ${c.friction} (${c.deck}). Tap to break the loop.`);
       }
     });
   }, 30000);
