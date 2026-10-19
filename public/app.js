@@ -29,6 +29,26 @@ function parseDbTimestamp(ts) {
 }
 
 /* ========================================================
+   HARDWARE / SYSTEM BACK BUTTON HANDLER (PWA ENHANCEMENT)
+======================================================== */
+function pushNavigationState(screenId) {
+  try {
+    window.history.pushState({ screen: screenId }, "", window.location.pathname);
+  } catch (e) {}
+}
+
+window.addEventListener('popstate', () => {
+  const activeScreen = document.querySelector('.screen.active');
+  const currentId = activeScreen ? activeScreen.id : '';
+
+  if (currentId === 'screen-countdown') {
+    cancelTimer();
+  } else if (currentId === 'screen-trigger' || currentId === 'screen-onboarding-2' || currentId === 'screen-victory') {
+    switchScreen('screen-dashboard', false);
+  }
+});
+
+/* ========================================================
    INITIALIZATION & BOOT TALLY
 ======================================================== */
 document.addEventListener("DOMContentLoaded", async () => {
@@ -60,9 +80,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     startPassTicker();
     updateMetricDashboard();
-    switchScreen('screen-dashboard');
+    switchScreen('screen-dashboard', true);
   } else {
-    switchScreen('screen-onboarding-1');
+    switchScreen('screen-onboarding-1', true);
   }
 });
 
@@ -89,7 +109,6 @@ async function initializeUserProfile() {
   }
 
   try {
-    // 1. Tally account with Supabase before switching screens
     const endpoint = `/api/sync-user?email=${encodeURIComponent(userEmail)}&action=get_profile&promo_code=${encodeURIComponent(promoCode)}`;
     const response = await fetch(endpoint);
     const data = await response.json();
@@ -107,16 +126,15 @@ async function initializeUserProfile() {
       updateMetricDashboard();
 
       if (totalWinsCount > 0 || isUserPremiumOrPass()) {
-        switchScreen('screen-dashboard');
+        switchScreen('screen-dashboard', true);
       } else {
-        switchScreen('screen-onboarding-2');
+        switchScreen('screen-onboarding-2', true);
       }
     } else {
       throw new Error(data.error || "Profile initialization response invalid.");
     }
   } catch (error) {
     console.warn("Supabase connection fallback triggered:", error);
-    // FALLBACK MECHANISM: Allows user to proceed safely even if offline
     localStorage.setItem('nudge_user_email', userEmail);
     currentUserProfile = { 
       email: userEmail, 
@@ -128,7 +146,7 @@ async function initializeUserProfile() {
     
     startPassTicker();
     updateMetricDashboard();
-    switchScreen('screen-onboarding-2');
+    switchScreen('screen-onboarding-2', true);
   } finally {
     if (loginBtn) {
       loginBtn.innerText = originalText;
@@ -147,9 +165,9 @@ function isUserPremiumOrPass() {
   if (currentUserProfile.pass_expires_at) {
     const expiryMs = parseDbTimestamp(currentUserProfile.pass_expires_at);
     if (Date.now() < expiryMs) {
-      return true; // Pass is still ACTIVE
+      return true; // Pass is ACTIVE
     } else {
-      return false; // Pass has EXPIRED (cannot fall through to true)
+      return false; // Pass has EXPIRED
     }
   }
 
@@ -175,8 +193,8 @@ function startPassTicker() {
 
 function updatePassCountdown() {
   const banners = [
-    document.getElementById('screen2-status-banner'), // Screen 2 (Friction Screen)
-    document.getElementById('screen3-status-banner')  // Screen 3 (Target Focus Area)
+    document.getElementById('screen2-status-banner'),
+    document.getElementById('screen3-status-banner')
   ];
 
   const hasAccess = isUserPremiumOrPass();
@@ -185,16 +203,13 @@ function updatePassCountdown() {
   banners.forEach(banner => {
     if (!banner) return;
     
-    // 1. Full Lifetime / Active Monthly Subscription
     if (currentUserProfile && (currentUserProfile.premium_user === true || currentUserProfile.premium_user === 'true') && !currentUserProfile.pass_expires_at) {
       banner.style.display = 'block';
       banner.style.background = '#E8F5E9';
       banner.style.borderColor = 'var(--success-color)';
       banner.style.color = 'var(--success-color)';
       banner.innerHTML = '✅ <b>FULL PREMIUM UNLOCKED</b><br>Unlimited Daily Intercepts & All Decks';
-    }
-    // 2. Active 48-Hour Pass Countdown ($0.99)
-    else if (remainingSecs > 0) {
+    } else if (remainingSecs > 0) {
       banner.style.display = 'block';
       banner.style.background = '#FFF8E1';
       banner.style.borderColor = '#FFB300';
@@ -209,9 +224,7 @@ function updatePassCountdown() {
       const sStr = String(secs).padStart(2, '0');
       
       banner.innerHTML = `⚡ <b>48-HOUR PASS ACTIVE</b><br>⏱️ <b>${hStr}h ${mStr}m ${sStr}s</b> remaining`;
-    } 
-    // 3. Free Account Tier (including accounts whose 0.99 pass has ended)
-    else {
+    } else {
       const clicksUsed = getDailyClicksCount();
       banner.style.display = 'block';
       banner.style.background = '#FAF7F2';
@@ -258,12 +271,26 @@ function applyPremiumUIVisuals(hasAccess) {
   }
 }
 
-function switchScreen(screenId) {
+function switchScreen(screenId, shouldPushHistory = true) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const target = document.getElementById(screenId);
   if (target) {
     target.classList.add('active');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    if (shouldPushHistory) {
+      pushNavigationState(screenId);
+    }
+
+    if (screenId === 'screen-trigger') {
+      const toast = document.getElementById('trigger-slideup-notification');
+      if (toast) {
+        toast.style.animation = 'none';
+        toast.offsetHeight; // Force DOM reflow
+        toast.style.animation = '';
+      }
+    }
+
     if (screenId === 'screen-dashboard' || screenId === 'screen-onboarding-2') {
       updatePassCountdown();
       renderCustomIntercepts();
@@ -277,7 +304,7 @@ function selectOption(el, frictionKey) {
   el.classList.add('selected');
   mindFrictionStyle = frictionKey;
   localStorage.setItem('nudge_friction_style', frictionKey);
-  switchScreen('screen-dashboard');
+  switchScreen('screen-dashboard', true);
 }
 
 function selectDeck(el, isPremium, categoryKey) {
@@ -311,7 +338,7 @@ function startTriggerPhase() {
     openPaywallModal();
   } else {
     updateStartScreenHeading(selectedCategory);
-    switchScreen('screen-trigger');
+    switchScreen('screen-trigger', true);
   }
 }
 
@@ -324,6 +351,10 @@ async function executeTurnaroundSpin() {
     openPaywallModal();
     return;
   }
+
+  // PRE-INITIALIZE TIMER TO PREVENT 01:46 FLASH
+  const timerDisplayEl = document.getElementById('timer-display');
+  if (timerDisplayEl) timerDisplayEl.innerText = "02:00";
 
   const btn = document.querySelector('.big-red-btn');
   const instruction = document.getElementById('trigger-instructions');
@@ -360,41 +391,61 @@ async function executeTurnaroundSpin() {
       const taskDisplayEl = document.getElementById('target-task-text');
       const focusAreaEl = document.getElementById('target-task-focus-area');
       
-      if (taskDisplayEl && currentActiveTask) taskDisplayEl.innerText = currentActiveTask.text;
+      if (taskDisplayEl && currentActiveTask) {
+        taskDisplayEl.innerText = currentActiveTask.text;
+      }
       if (focusAreaEl && currentActiveTask) {
+        const areaName = currentActiveTask.focusArea || "Energy Surge";
         if (categoryKey === 'overwhelm') {
-          focusAreaEl.innerText = `Move ${overwhelmCurrentStep} of 4 • ${currentActiveTask.focusArea || 'Decompression'}`;
+          focusAreaEl.innerText = `FOCUS AREA: MOVE ${overwhelmCurrentStep} OF 4 • ${areaName.toUpperCase()}`;
         } else {
-          focusAreaEl.innerText = currentActiveTask.focusArea || "Core Biomechanics";
+          focusAreaEl.innerText = `FOCUS AREA: ${areaName.toUpperCase()}`;
         }
       }
       
-      switchScreen('screen-countdown');
+      switchScreen('screen-countdown', true);
       startActionTimer(120);
     }, 1500);
   } catch (err) {
     alert(`Focus Engine Response: ${err.message}`);
-    switchScreen('screen-dashboard');
+    switchScreen('screen-dashboard', true);
     if (btn) { btn.innerText = "START"; btn.style.opacity = "1"; }
   }
 }
 
 function startActionTimer(seconds) {
   const display = document.getElementById('timer-display');
-  let timeLeft = seconds;
   clearInterval(countdownInterval);
+  let timeLeft = seconds;
+
+  const renderTime = (t) => {
+    let m = Math.floor(t / 60);
+    let s = t % 60;
+    if (display) {
+      display.innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+  };
+
+  // Paint 02:00 synchronously before first tick
+  renderTime(timeLeft);
   
   countdownInterval = setInterval(() => {
-    let minutes = Math.floor(timeLeft / 60);
-    let secs = timeLeft % 60;
-    minutes = minutes < 10 ? "0" + minutes : minutes;
-    secs = secs < 10 ? "0" + secs : secs;
-    if (display) display.innerText = `${minutes}:${secs}`;
-    if (--timeLeft < 0) { 
+    timeLeft--;
+    if (timeLeft < 0) { 
       clearInterval(countdownInterval); 
       triggerVictoryPhase(2.0); 
+      return;
     }
+    renderTime(timeLeft);
   }, 1000);
+}
+
+function cancelTimer() {
+  clearInterval(countdownInterval);
+  const display = document.getElementById('timer-display');
+  if (display) display.innerText = "02:00";
+  updateMetricDashboard();
+  switchScreen('screen-dashboard', false);
 }
 
 function finishEarly() {
@@ -408,15 +459,10 @@ function finishEarly() {
       const elapsedSeconds = 120 - (currentMin * 60 + currentSec);
       elapsedMinutes = Math.max(0.2, elapsedSeconds / 60);
     }
+    displayEl.innerText = "02:00";
   }
   clearInterval(countdownInterval);
   triggerVictoryPhase(elapsedMinutes);
-}
-
-function cancelTimer() {
-  clearInterval(countdownInterval);
-  updateMetricDashboard();
-  switchScreen('screen-dashboard');
 }
 
 function triggerVictoryPhase(minutesEarned) {
@@ -424,7 +470,7 @@ function triggerVictoryPhase(minutesEarned) {
 
   if (isOverwhelm && overwhelmCurrentStep >= 4) {
     totalWinsCount += 1;
-    totalFocusReclaimed += 8.0; // 4x Multiplier (480s)
+    totalFocusReclaimed += 8.0;
   } else if (!isOverwhelm) {
     totalWinsCount += 1;
     totalFocusReclaimed += minutesEarned;
@@ -486,7 +532,7 @@ function triggerVictoryPhase(minutesEarned) {
     confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
   }
 
-  switchScreen('screen-victory');
+  switchScreen('screen-victory', true);
 }
 
 function advanceOverwhelmNextMove() {
@@ -498,20 +544,22 @@ function advanceOverwhelmNextMove() {
 
 function claimRewardStack() {
   overwhelmCurrentStep = 1;
+  const display = document.getElementById('timer-display');
+  if (display) display.innerText = "02:00";
   updateMetricDashboard();
   syncLifetimeProgressToCloud();
-  switchScreen('screen-dashboard');
+  switchScreen('screen-dashboard', true);
 }
 
 function runAnotherRound() {
   updateMetricDashboard();
   syncLifetimeProgressToCloud();
-  switchScreen('screen-trigger');
+  switchScreen('screen-trigger', true);
   executeTurnaroundSpin();
 }
 
 /* ========================================================
-   CUSTOM INTERCEPTS & 12-HOUR TIMING RENDERER
+   CUSTOM INTERCEPTS & TIMING RENDERER
 ======================================================== */
 function formatTime12h(time24) {
   if (!time24) return "12:00 PM";
@@ -634,7 +682,7 @@ function startBackgroundInterceptMonitor() {
 }
 
 /* ========================================================
-   PAYWALL & SUBSCRIPTION GATEWAY ($0.99, $14.99 & $2.99/mo)
+   PAYWALL & SUBSCRIPTION GATEWAY
 ======================================================== */
 function openPaywallModal() {
   const modal = document.getElementById('paywall-overlay');
