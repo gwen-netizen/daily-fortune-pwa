@@ -16,6 +16,29 @@
 
   <div class="app-container">
 
+    <!-- SCREEN 0: WELCOME SCREEN (INITIAL LANDING UPON OPENING APP) -->
+    <div id="screen-welcome" class="screen active">
+      <div style="margin: auto 0; width: 100%; text-align: center;">
+        
+        <!-- Brand Kicker -->
+        <div class="mb-8 flex justify-center" style="margin-bottom: 28px; display: flex; justify-content: center;">
+          <span class="brand-kicker-pill">
+            120Reset
+          </span>
+        </div>
+
+        <!-- Main Text, Center Aligned -->
+        <h1 class="welcome-main-text">
+          120 seconds to clear your mental friction.
+        </h1>
+      </div>
+
+      <!-- Button at the bottom -->
+      <div style="width: 100%; margin-top: auto; padding-top: 20px;">
+        <button class="btn-primary" onclick="switchScreen('screen-onboarding-2')">TAP TO CONTINUE &rarr;</button>
+      </div>
+    </div>
+
     <!-- SCREEN 1: ONBOARDING & LOGIN ENTRY -->
     <div id="screen-onboarding-1" class="screen">
       <div style="margin: auto 0; width: 100%;">
@@ -40,7 +63,7 @@
       </div>
     </div>
 
-    <!-- SCREEN 2: IDENTIFY PAIN POINT (CLEAN CARDS & REMOVED SUBTEXT) -->
+    <!-- SCREEN 2: IDENTIFY PAIN POINT -->
     <div id="screen-onboarding-2" class="screen">
       <div style="width: 100%; margin-bottom: 12px;">
         <div id="screen2-status-banner" style="width: 100%; padding: 10px 14px; border-radius: 14px; font-size: 12px; margin-bottom: 14px; border: 1.5px solid var(--border-color); text-align: center;"></div>
@@ -71,7 +94,7 @@
       </div>
     </div>
 
-    <!-- SCREEN 3: TARGET FOCUS AREA DASHBOARD (WITH PRESET 11:15 PM) -->
+    <!-- SCREEN 3: TARGET FOCUS AREA DASHBOARD -->
     <div id="screen-dashboard" class="screen">
       <div style="width: 100%;">
         <div id="screen3-status-banner" style="width: 100%; padding: 10px 14px; border-radius: 14px; font-size: 12px; margin-bottom: 12px; border: 1.5px solid var(--border-color); text-align: center;"></div>
@@ -119,7 +142,7 @@
           </div>
         </div>
 
-        <!-- SCHEDULED INTERCEPTS CONTAINER (INCLUDES PRESET 11:15 PM BEDTIME LOOP) -->
+        <!-- SCHEDULED INTERCEPTS CONTAINER -->
         <div style="margin-top: 18px; text-align: left;">
           <h2 class="title-large" style="font-size: 17px; margin-bottom: 8px;">Daily Intercepts</h2>
           <div class="lifeline-list" id="lifeline-container">
@@ -150,13 +173,12 @@
       </div>
     </div>
 
-    <!-- SCREEN 4: TRIGGER SCREEN (SLOW-MOTION SLIDE-UP NOTIFICATION) -->
+    <!-- SCREEN 4: TRIGGER SCREEN -->
     <div id="screen-trigger" class="screen">
       <div style="margin-top: 6px; width: 100%; text-align: center;">
         <h2 class="title-deck" id="active-deck-title" style="font-size: 24px; font-weight: 800; line-height: 1.25;">Command the room.</h2>
       </div>
 
-      <!-- CENTER: START BUTTON & DEDICATED IN-APP BACK BUTTON DIRECTLY BELOW -->
       <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; margin: auto 0;">
         <div class="spin-outer-ring" style="margin: 0 auto 14px auto;">
           <button class="big-red-btn" onclick="executeTurnaroundSpin()">START</button>
@@ -167,30 +189,26 @@
         </button>
       </div>
 
-      <!-- BOTTOM: RELIABLE SLOW-MOTION SLIDE-UP NOTIFICATION CARD -->
+      <!-- SLOW-MOTION SLIDE-UP NOTIFICATION CARD -->
       <div id="trigger-slideup-notification" class="slideup-notification-card">
         <div class="notification-line-1" id="trigger-instructions">Take one slow breath before pushing.</div>
         <div class="notification-line-2">Commit to the next 120 seconds completely.</div>
       </div>
     </div>
 
-    <!-- SCREEN 5: COUNTDOWN SCREEN (HIGH CONTRAST & CALM ASSISTING TIMER) -->
+    <!-- SCREEN 5: COUNTDOWN SCREEN -->
     <div id="screen-countdown" class="screen">
       <div style="width: 100%; margin: auto 0;">
-        
-        <!-- PROMINENT HERO TASK CARD -->
         <div class="task-hero-card">
           <div id="target-task-text" class="task-headline-text">Loading calibrated task...</div>
           <div id="target-task-focus-area" class="focus-area-badge">FOCUS AREA: CORE BIOMECHANICS</div>
         </div>
 
-        <!-- CALM ASSISTIVE TIMER (NO 'REMAINING' TEXT) -->
         <div class="timer-assist-container">
           <span class="timer-assist-icon">⏱️</span>
           <span class="timer-assist-digits" id="timer-display">02:00</span>
         </div>
         
-        <!-- DIRECTIVE LINE WITH BREAK -->
         <p class="timer-assist-subtext">Do not multitask.<br>Follow through to see the results.</p>
       </div>
 
@@ -200,7 +218,7 @@
       </div>
     </div>
 
-    <!-- SCREEN 6: VICTORY SCREEN (SPACED SENTENCES & RECTIFIED OVERWHELM BUTTON) -->
+    <!-- SCREEN 6: VICTORY SCREEN -->
     <div id="screen-victory" class="screen">
       <div style="margin: auto 0; width: 100%;">
         <div style="font-size: 40px; margin-bottom: 6px;" id="victory-header-badge">🏆</div>
@@ -216,7 +234,7 @@
       </div>
 
       <div id="overwhelm-victory-actions" style="display: none; width: 100%; flex-direction: column; gap: 8px; margin-top: auto;">
-        <button id="btn-overwhelm-next" class="btn-primary" onclick="advanceOverwhelmNextMove()">Continue to Move 2 &rarr;</button>
+        <button id="btn-overwhelm-next" class="btn-primary" onclick="advanceOverwhelmNextMove()">Continue to Move 2 →</button>
         <button id="btn-overwhelm-reset" class="btn-primary" style="display: none;" onclick="claimRewardStack()">Claim 4x Protocol Stack &rarr;</button>
       </div>
 
@@ -226,7 +244,7 @@
       </div>
     </div>
 
-    <!-- CUSTOM INTERCEPT CREATION MODAL -->
+    <!-- CUSTOM INTERCEPT MODAL -->
     <div id="custom-intercept-modal" class="modal-backdrop">
       <div class="paywall-sheet">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -260,7 +278,7 @@
       </div>
     </div>
 
-    <!-- PAYWALL OVERLAY ($0.99, $14.99 & $2.99/mo) -->
+    <!-- PAYWALL OVERLAY -->
     <div id="paywall-overlay" class="paywall-modal">
       <div class="paywall-sheet">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
