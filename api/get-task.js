@@ -14,7 +14,7 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
-    const { category, friction, email, step } = req.query;
+    const { category, friction, email, step, seen, lastFocusArea } = req.query;
     
     if (!category) {
       return res.status(400).json({ error: "Missing required category parameter." });
@@ -67,26 +67,70 @@ module.exports = async function handler(req, res) {
       return res.status(404).json({ error: "Focus Area pool mapping mismatch." });
     }
 
-    let pool = targetPool;
-    if (friction) {
-      const filtered = targetPool.filter(t => Array.isArray(t.frictionTags) && t.frictionTags.includes(friction));
-      if (filtered.length > 0) pool = filtered;
-    }
-
     let selectedTaskData;
+    let selectedOriginalIndex = 0;
+    let historyReset = false;
+
     if (lowerCategory === 'overwhelm') {
       const targetStep = parseInt(step, 10) || 1;
-      selectedTaskData = pool.find(t => t.step === targetStep) || pool[targetStep - 1] || pool[0];
+      const stepCandidates = targetPool.map((t, idx) => ({ ...t, originalIndex: idx })).filter(t => t.step === targetStep);
+      
+      let pool = stepCandidates;
+      if (friction) {
+        const filtered = stepCandidates.filter(t => Array.isArray(t.frictionTags) && t.frictionTags.includes(friction));
+        if (filtered.length > 0) pool = filtered;
+      }
+
+      const randomIdx = Math.floor(Math.random() * pool.length);
+      selectedTaskData = pool[randomIdx] || stepCandidates[0] || targetPool[0];
+      selectedOriginalIndex = selectedTaskData.originalIndex || 0;
     } else {
-      const randomTaskIndex = Math.floor(Math.random() * pool.length);
-      selectedTaskData = pool[randomTaskIndex];
+      // NON-REPEATING & FOCUS-DIVERSE ROTATION FOR ALL DECKS
+      let candidatesWithIdx = targetPool.map((t, idx) => ({ ...t, originalIndex: idx }));
+      
+      if (friction) {
+        const filtered = candidatesWithIdx.filter(t => Array.isArray(t.frictionTags) && t.frictionTags.includes(friction));
+        if (filtered.length > 0) candidatesWithIdx = filtered;
+      }
+
+      // Parse seen indices
+      const seenSet = new Set();
+      if (seen) {
+        seen.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n)).forEach(n => seenSet.add(n));
+      }
+
+      let unseen = candidatesWithIdx.filter(t => !seenSet.has(t.originalIndex));
+
+      // If all tasks have been seen, complete the cycle and reset history
+      if (unseen.length === 0) {
+        unseen = candidatesWithIdx;
+        historyReset = true;
+      }
+
+      // Interchangeably push tasks between different task focuses
+      let diverseCandidates = unseen;
+      if (lastFocusArea) {
+        const cleanLast = lastFocusArea.replace(/^(focus\s*area\s*[:\-–—]?\s*)+/i, '').trim().toLowerCase();
+        const differentFocus = unseen.filter(t => {
+          const tArea = (t.focusArea || '').replace(/^(focus\s*area\s*[:\-–—]?\s*)+/i, '').trim().toLowerCase();
+          return tArea && tArea !== cleanLast;
+        });
+        if (differentFocus.length > 0) {
+          diverseCandidates = differentFocus;
+        }
+      }
+
+      const pickIndex = Math.floor(Math.random() * diverseCandidates.length);
+      selectedTaskData = diverseCandidates[pickIndex];
+      selectedOriginalIndex = selectedTaskData.originalIndex;
     }
 
-    // Comprehensive regex cleanup: eliminates any leading 'Focus Area:' to prevent 'FOCUS AREA: FOCUS AREA:'
     const rawFocusArea = selectedTaskData.focusArea || selectedTaskData.label || "Core Biomechanics";
     const cleanFocusArea = rawFocusArea.replace(/^(focus\s*area\s*[:\-–—]?\s*)+/i, '').trim();
 
     return res.status(200).json({ 
+      taskIndex: selectedOriginalIndex,
+      historyReset: historyReset,
       task: {
         text: selectedTaskData.text,
         focusArea: cleanFocusArea,
