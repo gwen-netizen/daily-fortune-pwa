@@ -1,14 +1,21 @@
 /**
  * 120Reset Client Engine (public/app.js)
+ * 
+ * Features:
+ *  - Restores 48-Hour Pass Countdown ($0.99) ticker across BOTH screens (screen-onboarding-2 and screen-dashboard).
+ *  - Restores $2.99/mo subscription selection and checkout payload.
+ *  - Correctly renders scheduled custom intercept timings in 12-hour AM/PM format.
+ *  - 4x multiplier for the Anti-Overwhelm Protocol.
  */
 
+let currentUserProfile = null;
 let currentActiveTask = null;
 let countdownInterval = null;
+let passTickerInterval = null;
 let mindFrictionStyle = 'mindless_scrolling';
 let selectedCategory = 'charisma';
 let isPremiumSelected = false;
 let overwhelmCurrentStep = 1;
-let selectedTierToBuy = 'lifetime';
 
 let totalWinsCount = 0;
 let totalFocusReclaimed = 0.0;
@@ -26,8 +33,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   checkStripeRedirectStatus();
   renderCustomIntercepts();
   startBackgroundInterceptMonitor();
+  startPassTicker(); // Launches the live 1-sec countdown for $0.99 pass on both screens
   updateMetricDashboard();
 });
+
+function parseDbTimestamp(ts) {
+  if (!ts) return 0;
+  if (typeof ts === 'number') return ts;
+  return new Date(ts).getTime();
+}
 
 function loadStoredPreferences() {
   const savedFriction = localStorage.getItem('nudge_friction_style');
@@ -42,9 +56,103 @@ function loadStoredPreferences() {
   const userEmail = localStorage.getItem('nudge_user_email');
   if (userEmail) {
     switchScreen('screen-dashboard');
+    syncLifetimeProgressToCloud();
   } else {
     switchScreen('screen-onboarding-1');
   }
+}
+
+/* ========================================================
+   48-HOUR PASS COUNTDOWN ENGINE (SCREENS 2 & 3)
+======================================================== */
+function isUserPremiumOrPass() {
+  if (localStorage.getItem('nudge_is_lifetime') === 'true') return true;
+
+  if (currentUserProfile) {
+    if (currentUserProfile.premium_user === true || currentUserProfile.premium_user === 'true') {
+      return true;
+    }
+    if (currentUserProfile.pass_expires_at) {
+      const expiryMs = parseDbTimestamp(currentUserProfile.pass_expires_at);
+      return Date.now() < expiryMs;
+    }
+  }
+
+  const localPassExpiry = localStorage.getItem('nudge_pass_expiry');
+  if (localPassExpiry) {
+    return Date.now() < parseDbTimestamp(localPassExpiry);
+  }
+
+  return false;
+}
+
+function getPassRemainingSeconds() {
+  let expiryMs = 0;
+  if (currentUserProfile && currentUserProfile.pass_expires_at) {
+    expiryMs = parseDbTimestamp(currentUserProfile.pass_expires_at);
+  } else {
+    const localPassExpiry = localStorage.getItem('nudge_pass_expiry');
+    if (localPassExpiry) expiryMs = parseDbTimestamp(localPassExpiry);
+  }
+
+  if (!expiryMs) return 0;
+  return Math.max(0, Math.floor((expiryMs - Date.now()) / 1000));
+}
+
+function startPassTicker() {
+  if (passTickerInterval) clearInterval(passTickerInterval);
+  updatePassCountdown();
+  passTickerInterval = setInterval(updatePassCountdown, 1000);
+}
+
+function updatePassCountdown() {
+  const banners = [
+    document.getElementById('screen2-status-banner'), // Friction Screen
+    document.getElementById('screen3-status-banner')  // Target Focus Area Screen
+  ];
+
+  const hasAccess = isUserPremiumOrPass();
+  const remainingSecs = getPassRemainingSeconds();
+
+  banners.forEach(banner => {
+    if (!banner) return;
+    
+    // 1. Permanent / Lifetime Unlocked
+    if (localStorage.getItem('nudge_is_lifetime') === 'true' || 
+       (currentUserProfile && (currentUserProfile.premium_user === true || currentUserProfile.premium_user === 'true') && !currentUserProfile.pass_expires_at)) {
+      banner.style.display = 'block';
+      banner.style.background = '#E8F5E9';
+      banner.style.borderColor = 'var(--success-color)';
+      banner.style.color = 'var(--success-color)';
+      banner.innerHTML = '✅ <b>FULL ACCESS UNLOCKED</b><br>Unlimited Daily Intercepts & All Decks';
+    }
+    // 2. 48-Hour Pass Countdown ($0.99) Active
+    else if (remainingSecs > 0) {
+      banner.style.display = 'block';
+      banner.style.background = '#FFF8E1';
+      banner.style.borderColor = '#FFB300';
+      banner.style.color = '#B78103';
+      
+      const hours = Math.floor(remainingSecs / 3600);
+      const mins = Math.floor((remainingSecs % 3600) / 60);
+      const secs = remainingSecs % 60;
+      
+      const hStr = String(hours).padStart(2, '0');
+      const mStr = String(mins).padStart(2, '0');
+      const sStr = String(secs).padStart(2, '0');
+      
+      banner.innerHTML = `⚡ <b>48-HOUR PASS ACTIVE</b><br>⏱️ <b>${hStr}h ${mStr}m ${sStr}s</b> remaining`;
+    } 
+    // 3. Free Account Tier
+    else {
+      const clicksUsed = getDailyClicksCount();
+      banner.style.display = 'block';
+      banner.style.background = '#FAF7F2';
+      banner.style.borderColor = 'var(--border-color)';
+      banner.style.color = '#7A7571';
+      banner.innerHTML = `🌱 <b>Free Account (${clicksUsed}/4 Daily Intercepts Used)</b><br><span style="text-decoration:underline; cursor:pointer; color:var(--text-color); font-weight:700;" onclick="openPaywallModal()">Get 2-Day Pass ($0.99)</span>`;
+    }
+  });
 }
 
 function updateMetricDashboard() {
@@ -68,6 +176,7 @@ function updateMetricDashboard() {
   }
 
   applyPremiumUIVisuals(hasAccess);
+  updatePassCountdown();
 }
 
 function applyPremiumUIVisuals(hasAccess) {
@@ -88,6 +197,11 @@ function switchScreen(screenId) {
   if (target) {
     target.classList.add('active');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (screenId === 'screen-dashboard' || screenId === 'screen-onboarding-2') {
+      updatePassCountdown();
+      renderCustomIntercepts();
+      updateMetricDashboard();
+    }
   }
 }
 
@@ -96,6 +210,7 @@ function selectOption(el, frictionKey) {
   el.classList.add('selected');
   mindFrictionStyle = frictionKey;
   localStorage.setItem('nudge_friction_style', frictionKey);
+  switchScreen('screen-dashboard');
 }
 
 function selectDeck(el, isPremium, categoryKey) {
@@ -138,7 +253,7 @@ async function executeTurnaroundSpin() {
   const dailyClicks = getDailyClicksCount();
 
   if (!hasAccess && dailyClicks >= 4) {
-    alert("🔒 Daily Limit Reached (4/4 Intercepts Used Today)!\n\nUpgrade to Premium or get a 2-Day Pass ($0.99) for unlimited daily access.");
+    alert("🔒 Daily Limit Reached (4/4 Intercepts Used Today)!\n\nUpgrade or get a 2-Day Pass ($0.99) for unlimited daily access.");
     openPaywallModal();
     return;
   }
@@ -452,7 +567,7 @@ function startBackgroundInterceptMonitor() {
 }
 
 /* ========================================================
-   AUTH & PAYWALL ENGINE
+   AUTH & PAYWALL ENGINE (SUPPORTS PASS, MONTHLY & LIFETIME)
 ======================================================== */
 async function initializeUserProfile() {
   const emailInput = document.getElementById('user-auth-email').value.trim().toLowerCase();
@@ -471,58 +586,62 @@ async function initializeUserProfile() {
   }
 
   switchScreen('screen-onboarding-2');
+  syncLifetimeProgressToCloud();
 }
 
 function openPaywallModal() {
-  const modal = document.getElementById('paywall-modal');
+  const modal = document.getElementById('paywall-overlay');
   if (modal) modal.classList.add('active');
 }
 
 function closePaywall() {
-  const modal = document.getElementById('paywall-modal');
+  const modal = document.getElementById('paywall-overlay');
   if (modal) modal.classList.remove('active');
 }
 
-function selectTier(tier) {
-  selectedTierToBuy = tier;
-  document.querySelectorAll('.paywall-option').forEach(opt => opt.classList.remove('selected'));
-  if (tier === 'pass_48h') {
-    document.querySelectorAll('.paywall-option')[0].classList.add('selected');
-  } else {
-    document.querySelectorAll('.paywall-option')[1].classList.add('selected');
-  }
+function selectTier(el) {
+  document.querySelectorAll('.tier-box').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
 }
 
 async function simulatePurchase() {
-  const btn = document.getElementById('btn-paywall-checkout');
-  if (btn) { btn.innerText = "Securing Session..."; btn.disabled = true; }
+  const selectedTierBox = document.querySelector('.tier-box.selected');
+  if (!selectedTierBox) { alert("Please select an option to continue."); return; }
 
-  const email = localStorage.getItem('nudge_user_email') || 'anonymous_tester';
+  // Restored: Supports 'pass', 'monthly' ($2.99), or 'lifetime'
+  const planType = selectedTierBox.getAttribute('data-plan') || 'monthly';
+  const paywallBtn = document.querySelector('#paywall-overlay .btn-primary');
+  const userEmail = localStorage.getItem('nudge_user_email') || 'anonymous_tester';
+
+  if (paywallBtn) { paywallBtn.innerText = "SECURING GATEWAY..."; paywallBtn.disabled = true; }
 
   try {
-    const res = await fetch('/api/create-checkout-session', {
+    const response = await fetch('/api/create-checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ productType: selectedTierToBuy, email })
+      body: JSON.stringify({
+        planType: planType,
+        email: userEmail,
+        successUrl: window.location.origin + '/app.html?session=success',
+        cancelUrl: window.location.origin + '/app.html'
+      })
     });
-    const data = await res.json();
-    if (data.url) {
-      window.location.href = data.url;
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Server status ${response.status}: ${errorText}`);
+    }
+
+    const session = await response.json();
+    if (session.url) {
+      window.location.href = session.url;
     } else {
-      throw new Error(data.error || "Unable to initialize Stripe session.");
+      throw new Error(session.error || "Unable to initialize Stripe session.");
     }
   } catch (err) {
     alert(`Checkout Error: ${err.message}`);
-    if (btn) { btn.innerText = "Unlock Now →"; btn.disabled = false; }
+    if (paywallBtn) { paywallBtn.innerText = "Unlock Access Now"; paywallBtn.disabled = false; }
   }
-}
-
-function isUserPremiumOrPass() {
-  const isLifetime = localStorage.getItem('nudge_is_lifetime') === 'true';
-  const passExpiry = localStorage.getItem('nudge_pass_expiry');
-  if (isLifetime) return true;
-  if (passExpiry && new Date(passExpiry) > new Date()) return true;
-  return false;
 }
 
 function getDailyClicksCount() {
@@ -544,29 +663,44 @@ function incrementDailyClicks() {
 
 function checkStripeRedirectStatus() {
   const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('session_id')) {
-    localStorage.setItem('nudge_is_lifetime', 'true');
-    alert("🎉 Payment Confirmed! Lifetime Access is unlocked.");
+  if (urlParams.get('session') === 'success') {
+    const plan = urlParams.get('plan');
+    if (plan === 'pass' || plan === '2day') {
+      const passExpiresAt = new Date(Date.now() + 48 * 3600 * 1000).toISOString();
+      localStorage.setItem('nudge_pass_expiry', passExpiresAt);
+    } else {
+      localStorage.setItem('nudge_is_lifetime', 'true');
+    }
+    alert("🎉 Payment Confirmed! Your access is now activated.");
     window.history.replaceState({}, document.title, window.location.pathname);
     updateMetricDashboard();
   }
 }
 
 async function syncLifetimeProgressToCloud() {
-  const email = localStorage.getItem('nudge_user_email');
-  if (!email || email === 'anonymous_tester') return;
+  const userEmail = localStorage.getItem('nudge_user_email');
+  if (!userEmail || userEmail === 'anonymous_tester') return;
 
   try {
-    await fetch('/api/sync-user', {
+    const response = await fetch('/api/sync-user', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        email,
+        email: userEmail,
         totalWins: totalWinsCount,
         focusReclaimed: totalFocusReclaimed,
         frictionStyle: mindFrictionStyle
       })
     });
+    const data = await response.json();
+    if (data.profile) {
+      currentUserProfile = data.profile;
+      if (currentUserProfile.pass_expires_at) {
+        localStorage.setItem('nudge_pass_expiry', currentUserProfile.pass_expires_at);
+      }
+      applyPremiumUIVisuals(isUserPremiumOrPass());
+      updatePassCountdown();
+    }
   } catch (e) {
     console.warn("Silent sync fallback:", e);
   }
