@@ -14,6 +14,7 @@
 
   <audio id="victory-chime" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="none"></audio>
 
+  <!-- Centered phone-width container -->
   <div class="app-container">
 
     <!-- SCREEN 1: ONBOARDING & ACCOUNT ANCHOR -->
@@ -30,7 +31,7 @@
         </div>
 
         <div style="width: 100%; text-align: left; margin-bottom: 16px;">
-          <label style="font-size: 11px; font-weight: 700; color: #9C8E80; letter-spacing: 0.5px; text-transform: uppercase;">Promo Pass Code (Optional)</label>
+          <label style="font-size: 11px; font-weight: 700; color: #9C8E80; letter-spacing: 0.5px; text-transform: uppercase;">Promotional Pass Code (Optional)</label>
           <input type="text" id="user-promo-code" placeholder="e.g. LIFETIME" oninput="this.value = this.value.toUpperCase();"
                  style="width: 100%; padding: 12px 14px; border: 2px dashed var(--border-color); border-radius: 14px; font-size: 14px; margin-top: 4px; outline: none; background: #FFFFFF; color: var(--text-color); font-weight: 700; letter-spacing: 1px;">
         </div>
@@ -40,12 +41,17 @@
       </div>
     </div>
 
-    <!-- SCREEN 2: FRICTION LINE CALIBRATION -->
+    <!-- SCREEN 2: FRICTION LINE CALIBRATION (WITH 0.99 PASS COUNTDOWN) -->
     <div id="screen-onboarding-2" class="screen">
-      <div style="text-align: left; margin-bottom: 16px; width: 100%;">
-        <span class="badge">STEP 1 OF 2</span>
-        <h2 class="title-large" style="margin: 8px 0 4px 0;">Identify Friction Line</h2>
-        <p class="body-text">Select the pattern paralyzing you today:</p>
+      <div style="width: 100%; margin-bottom: 12px;">
+        <!-- RESTORED PASS COUNTDOWN BANNER (FRICTION SCREEN) -->
+        <div id="screen2-status-banner" style="width: 100%; padding: 10px 14px; border-radius: 14px; font-size: 12px; margin-bottom: 14px; border: 1.5px solid var(--border-color); text-align: center;"></div>
+
+        <div style="text-align: left;">
+          <span class="badge">STEP 1 OF 2</span>
+          <h2 class="title-large" style="margin: 6px 0 4px 0; font-size: 24px;">Identify Friction Line</h2>
+          <p class="body-text">Select the pattern paralyzing you today:</p>
+        </div>
       </div>
 
       <div class="deck-list">
@@ -71,9 +77,12 @@
       </div>
     </div>
 
-    <!-- SCREEN 3: DASHBOARD -->
+    <!-- SCREEN 3: DASHBOARD / TARGET FOCUS AREA (WITH 0.99 PASS COUNTDOWN) -->
     <div id="screen-dashboard" class="screen">
       <div style="width: 100%;">
+        <!-- RESTORED PASS COUNTDOWN BANNER (TARGET FOCUS AREA SCREEN) -->
+        <div id="screen3-status-banner" style="width: 100%; padding: 10px 14px; border-radius: 14px; font-size: 12px; margin-bottom: 12px; border: 1.5px solid var(--border-color); text-align: center;"></div>
+
         <div class="metric-ribbon">
           <div class="metric-block">
             <span class="metric-num" id="stat-focus-reclaimed" style="color: var(--success-color);">0.0m</span>
@@ -118,28 +127,19 @@
         </div>
 
         <!-- SCHEDULED INTERCEPTS CONTAINER -->
-        <div style="margin-top: 20px; text-align: left;">
-          <h2 class="title-large" style="font-size: 18px; margin-bottom: 12px; margin-left: 4px;">Daily Intercepts</h2>
+        <div style="margin-top: 18px; text-align: left;">
+          <h2 class="title-large" style="font-size: 17px; margin-bottom: 8px;">Daily Intercepts</h2>
           <div class="lifeline-list" id="lifeline-container">
             <div class="lifeline-item">
               <div><div style="font-weight: 800; font-size: 14px; color: var(--text-color);">08:15 AM</div><div style="font-size: 11px; color: #7A7571; font-weight: 600;">Morning Bed-Lock</div></div>
               <label class="toggle-switch"><input type="checkbox" checked disabled><span class="slider"></span></label>
             </div>
             <div class="lifeline-item">
-              <div><div style="font-weight: 800; font-size: 14px; color: var(--text-color);">09:45 AM</div><div style="font-size: 11px; color: #7A7571; font-weight: 600;">Workspace Inertia</div></div>
+              <div><div style="font-weight: 800; font-size: 14px; color: var(--text-color);">02:30 PM</div><div style="font-size: 11px; color: #7A7571; font-weight: 600;">Post-Lunch Brain Fog</div></div>
               <label class="toggle-switch"><input type="checkbox" checked disabled><span class="slider"></span></label>
             </div>
-            <div class="lifeline-item">
-              <div><div style="font-weight: 800; font-size: 14px; color: var(--text-color);">03:45 PM</div><div style="font-size: 11px; color: #7A7571; font-weight: 600;">Willpower Exhaustion</div></div>
-              <label class="toggle-switch"><input type="checkbox" checked disabled><span class="slider"></span></label>
-            </div>
-            <div class="lifeline-item">
-              <div><div style="font-weight: 800; font-size: 14px; color: var(--text-color);">11:15 PM</div><div style="font-size: 11px; color: #7A7571; font-weight: 600;">Bedtime Loop</div></div>
-              <label class="toggle-switch"><input type="checkbox" checked disabled><span class="slider"></span></label>
-            </div>
-            
             <div id="custom-intercepts-injection-point"></div>
-
+            
             <button id="custom-intercept-add-btn" class="btn-bypass" style="width: 100%; border: 2px dashed var(--premium-color); border-radius: 12px; padding: 12px; margin-top: 4px; text-align: center; background: #FFFFFF;" onclick="openCustomInterceptModal()">
               <div id="custom-intercept-meta" class="deck-meta premium" style="margin-bottom: 4px;">PREMIUM UPGRADE</div>
               <div id="custom-intercept-text" style="font-weight: 800; font-size: 14px; color: var(--text-color);">⚡ + Add Custom Intercept</div>
@@ -184,7 +184,7 @@
       </div>
     </div>
 
-    <!-- SCREEN 6: VICTORY -->
+    <!-- SCREEN 6: VICTORY & AFFIRMATION -->
     <div id="screen-victory" class="screen">
       <div style="margin: auto 0; width: 100%;">
         <div style="font-size: 40px; margin-bottom: 6px;" id="victory-header-badge">🏆</div>
@@ -208,7 +208,7 @@
       </div>
     </div>
 
-    <!-- CUSTOM INTERCEPT CREATION MODAL -->
+    <!-- MODAL 1: CUSTOM INTERCEPT CREATION -->
     <div id="custom-intercept-modal" class="modal-backdrop">
       <div class="paywall-sheet">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -242,33 +242,41 @@
       </div>
     </div>
 
-    <!-- PAYWALL MODAL -->
-    <div id="paywall-modal" class="modal-backdrop">
+    <!-- MODAL 2: PAYWALL OVERLAY (RESTORED WITH 0.99, 14.99 & 2.99 MONTHLY) -->
+    <div id="paywall-overlay" class="paywall-modal">
       <div class="paywall-sheet">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
           <span class="badge">UNLIMITED ACCESS</span>
           <button style="background: none; border: none; font-size: 20px; cursor: pointer;" onclick="closePaywall()">&times;</button>
         </div>
-        <h2 class="title-large" style="font-size: 20px; margin-bottom: 6px;">Unlock All Decks</h2>
-        <p class="body-text" style="margin-bottom: 16px;">Full access to Overwhelm, Dopamine Swap, and infinite daily intercepts.</p>
+        <h2 class="title-large" style="font-size: 20px; margin-bottom: 6px;">Break Free From the Loops</h2>
+        <p class="body-text" style="margin-bottom: 16px;">Unlock behavioral overrides modeled on clinical executive functioning systems.</p>
         
-        <div class="paywall-option" onclick="selectTier('pass_48h')">
-          <div>
-            <div style="font-weight: 800; font-size: 14px; color: var(--text-color);">48-Hour Emergency Pass</div>
-            <div style="font-size: 11px; color: #7A7571;">Instant unlimited resets for 2 days.</div>
-          </div>
-          <div style="font-weight: 800; font-size: 15px; color: var(--text-color);">$0.99</div>
+        <!-- TIER 1: 48-Hour Pass ($0.99) -->
+        <div class="tier-box selected" data-plan="pass" onclick="selectTier(this)">
+          <span style="float: right; font-weight: 800; color: var(--success-color);">$0.99</span>
+          <div style="font-weight: 700; font-size: 15px;">2-Day Unlimited Pass</div>
+          <div style="font-size: 12px; color: #7A7571; margin-top: 2px;">48 hours of unrestricted intercepts & all premium decks.</div>
         </div>
 
-        <div class="paywall-option selected" onclick="selectTier('lifetime')">
-          <div>
-            <div style="font-weight: 800; font-size: 14px; color: var(--text-color);">Lifetime Full Engine Access</div>
-            <div style="font-size: 11px; color: #7A7571;">All 4 Decks, Custom Intercepts, forever.</div>
-          </div>
-          <div style="font-weight: 800; font-size: 15px; color: var(--success-color);">$14.99</div>
+        <!-- TIER 2: Lifetime Freedom ($14.99) -->
+        <div class="tier-box" data-plan="lifetime" onclick="selectTier(this)">
+          <span style="float: right; font-weight: 800; color: var(--premium-color);">$14.99</span>
+          <div style="font-weight: 700; font-size: 15px;">Lifetime Freedom Access</div>
+          <div style="font-size: 12px; color: #7A7571; margin-top: 2px;">One-time payment. Permanent access forever.</div>
         </div>
 
-        <button class="btn-primary" id="btn-paywall-checkout" onclick="simulatePurchase()">Unlock Now &rarr;</button>
+        <!-- TIER 3: RESTORED Continuous Momentum Monthly ($2.99/mo) -->
+        <div class="tier-box" data-plan="monthly" onclick="selectTier(this)">
+          <span style="float: right; font-weight: 800;">$2.99/mo</span>
+          <div style="font-weight: 700; font-size: 15px;">Continuous Momentum Plan</div>
+          <div style="font-size: 12px; color: #7A7571; margin-top: 2px;">Billed monthly. Cancel anytime with zero friction.</div>
+        </div>
+
+        <div style="width: 100%; margin-top: 16px;">
+          <button class="btn-primary" onclick="simulatePurchase()">Unlock Access Now</button>
+          <button class="btn-bypass" style="display: block; margin: 10px auto 0 auto;" onclick="closePaywall()">Continue with Free Limit (4/4)</button>
+        </div>
       </div>
     </div>
 
