@@ -13,7 +13,6 @@
                                  document.referrer.includes('android-app://');
             const savedEmail = localStorage.getItem('nudge_user_email');
 
-            // If running as an installed PWA or if user has an existing account session
             if (isStandalone || (savedEmail && savedEmail.includes('@'))) {
                 document.documentElement.style.display = 'none';
                 const urlParams = new URLSearchParams(window.location.search);
