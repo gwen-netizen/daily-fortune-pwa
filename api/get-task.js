@@ -82,9 +82,9 @@ module.exports = async function handler(req, res) {
       selectedTaskData = pool[randomTaskIndex];
     }
 
-    // Clean focus area to prevent any double "FOCUS AREA: FOCUS AREA:" prefix
+    // Comprehensive regex cleanup: eliminates any leading 'Focus Area:' to prevent 'FOCUS AREA: FOCUS AREA:'
     const rawFocusArea = selectedTaskData.focusArea || selectedTaskData.label || "Core Biomechanics";
-    const cleanFocusArea = rawFocusArea.replace(/^focus\s*area\s*:\s*/i, '').trim();
+    const cleanFocusArea = rawFocusArea.replace(/^(focus\s*area\s*[:\-–—]?\s*)+/i, '').trim();
 
     return res.status(200).json({ 
       task: {
