@@ -34,9 +34,6 @@ function parseDbTimestamp(ts) {
   return new Date(ts).getTime();
 }
 
-/**
- * Splits text into paragraphs spaced with comfortable margins.
- */
 function formatSpacedSentences(text) {
   if (!text) return '';
   const cleaned = text.trim();
@@ -73,7 +70,6 @@ window.addEventListener('popstate', () => {
 
 /* ========================================================
    INITIALIZATION & BOOT TALLY
-   DEFAULT ENTRY: ALWAYS OPENS WELCOME SCREEN (screen-welcome)
 ======================================================== */
 document.addEventListener("DOMContentLoaded", async () => {
   renderPresetIntercepts();
@@ -278,8 +274,9 @@ function updateMetricDashboard() {
 }
 
 /**
- * TALLIES WITH SUPABASE STATUS:
- * Turns every "PREMIUM UPGRADE" on Target Focus Area screen to "UNLOCKED PREMIUM AREA" in green font.
+ * TALLIES WITH SUPABASE:
+ * Updates every "PREMIUM UPGRADE" meta tag to "UNLOCKED PREMIUM AREA" in green font for subscribers.
+ * Displays "Manage Subscription" on the victory screen strictly for active monthly subscribers.
  */
 function applyPremiumUIVisuals(hasAccess) {
   const allMetas = document.querySelectorAll('#screen-dashboard .deck-meta');
@@ -313,6 +310,55 @@ function applyPremiumUIVisuals(hasAccess) {
   const customText = document.getElementById('custom-intercept-text');
   if (customText) {
     customText.innerHTML = hasAccess ? "✅ + Add Custom Intercept" : "⚡ + Add Custom Intercept";
+  }
+
+  // RESTORE MANAGE SUBSCRIPTION BUTTON FOR ACTIVE MONTHLY SUBSCRIBERS
+  const victoryManageBtn = document.getElementById('btn-victory-manage-subscription');
+  if (victoryManageBtn) {
+    const isMonthlySubscriber = Boolean(currentUserProfile && (currentUserProfile.premium_user === true || currentUserProfile.premium_user === 'true') && !currentUserProfile.pass_expires_at);
+    victoryManageBtn.style.display = isMonthlySubscriber ? 'inline-block' : 'none';
+  }
+}
+
+/* ========================================================
+   STRIPE CUSTOMER BILLING PORTAL SESSION
+======================================================== */
+async function openCustomerPortal() {
+  const userEmail = localStorage.getItem('nudge_user_email');
+  if (!userEmail) {
+    alert("Please log in with your email first.");
+    return;
+  }
+
+  const btn = document.getElementById('btn-victory-manage-subscription');
+  const originalText = btn ? btn.innerText : "Manage Subscription";
+  if (btn) {
+    btn.innerText = "Loading billing portal...";
+    btn.disabled = true;
+  }
+
+  try {
+    const response = await fetch('/api/create-portal-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: userEmail,
+        returnUrl: window.location.origin + '/app.html'
+      })
+    });
+
+    const data = await response.json();
+    if (response.ok && data.url) {
+      window.location.href = data.url;
+    } else {
+      throw new Error(data.error || "Unable to access billing portal.");
+    }
+  } catch (err) {
+    alert(`Billing Portal: ${err.message}`);
+    if (btn) {
+      btn.innerText = originalText;
+      btn.disabled = false;
+    }
   }
 }
 
@@ -350,7 +396,7 @@ function switchScreen(screenId, shouldPushHistory = true) {
       }
     }
 
-    if (screenId === 'screen-dashboard' || screenId === 'screen-onboarding-2') {
+    if (screenId === 'screen-dashboard' || screenId === 'screen-onboarding-2' || screenId === 'screen-victory') {
       updatePassCountdown();
       renderPresetIntercepts();
       renderCustomIntercepts();
@@ -474,7 +520,7 @@ async function executeTurnaroundSpin() {
         taskDisplayEl.innerHTML = formatSpacedSentences(currentActiveTask.text);
       }
       
-      // MOVE "MOVE 1 OF 4" DOWN 1 SPACING UNDER FOCUS AREA
+      // MOVE 1 OF 4 MOVED DOWN 1 SPACING UNDER FOCUS AREA
       if (focusAreaEl && currentActiveTask) {
         const rawArea = currentActiveTask.focusArea || "Energy Surge";
         const cleanArea = rawArea.replace(/^(focus\s*area\s*[:\-–—]?\s*)+/i, '').trim();
@@ -604,6 +650,9 @@ function triggerVictoryPhase(minutesEarned) {
     if (crownEl) crownEl.innerText = "🏆";
     if (badgeEl) badgeEl.innerText = "+120s Focus Reclaimed";
   }
+
+  // Manage Subscription visibility
+  applyPremiumUIVisuals(isUserPremiumOrPass());
 
   const chime = document.getElementById('victory-chime');
   if (chime) {
@@ -853,12 +902,12 @@ function closePaywall() {
 }
 
 function selectTier(el) {
-  document.querySelectorAll('.tier-box').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('.tier-card').forEach(b => b.classList.remove('selected'));
   el.classList.add('selected');
 }
 
 async function simulatePurchase() {
-  const selectedTierBox = document.querySelector('.tier-box.selected');
+  const selectedTierBox = document.querySelector('.tier-card.selected');
   if (!selectedTierBox) { alert("Please select an option to continue."); return; }
 
   const planType = selectedTierBox.getAttribute('data-plan') || 'monthly';
