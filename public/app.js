@@ -45,6 +45,15 @@ function formatSpacedSentences(text) {
   return `<p class="sentence-paragraph">${cleaned}</p>`;
 }
 
+function mapDeckNameToCategory(deckName) {
+  if (!deckName) return 'charisma';
+  const lower = deckName.toLowerCase();
+  if (lower.includes('overwhelm')) return 'overwhelm';
+  if (lower.includes('dopamine')) return 'dopamine';
+  if (lower.includes('financial') || lower.includes('wealth')) return 'wealth';
+  return 'charisma';
+}
+
 /* ========================================================
    HARDWARE / SYSTEM BACK BUTTON HANDLER
 ======================================================== */
@@ -83,7 +92,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   startBackgroundInterceptMonitor();
   await checkStripeRedirectStatus();
 
-  // Read any promo code passed from URL query
   const urlParams = new URLSearchParams(window.location.search);
   const promoParam = urlParams.get('promo');
   const promoInput = document.getElementById('user-promo-code');
@@ -93,7 +101,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const savedEmail = localStorage.getItem('nudge_user_email');
   
-  // 1. Existing verified user on device: Restore session & open Welcome Screen
   if (savedEmail && savedEmail.includes('@')) {
     try {
       const endpoint = `/api/sync-user?email=${encodeURIComponent(savedEmail)}&action=get_profile`;
@@ -118,7 +125,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateMetricDashboard();
     switchScreen('screen-welcome', false);
   } else {
-    // 2. New user / Signed out user / Incognito Tab: MUST go to login & OTP screen[cite: 9]
     switchScreen('screen-onboarding-1', false);
   }
 });
@@ -150,7 +156,6 @@ async function handleAuthAction() {
   const userEmail = emailInput.value.trim().toLowerCase();
   const promoCode = promoInput ? promoInput.value.trim().toUpperCase() : '';
 
-  // STEP 1: REQUEST OTP ACCESS CODE
   if (!isOtpRequested) {
     authBtn.innerText = "SENDING ACCESS CODE...";
     authBtn.disabled = true;
@@ -170,17 +175,16 @@ async function handleAuthAction() {
         
         if (otpInput) otpInput.focus();
       } else {
-        throw new Error(data.error || "Failed to send verification code. Please check email address.");
+        throw new Error(data.error || "Failed to send verification code.");
       }
     } catch (err) {
-      alert(`Authentication Error: ${err.message}`);
+      alert(`Authentication Notice: ${err.message}`);
       authBtn.innerText = "Send Access Code →";
       authBtn.disabled = false;
     }
     return;
   }
 
-  // STEP 2: VERIFY 6-DIGIT OTP ACCESS CODE
   const otpCode = otpInput ? otpInput.value.trim() : '';
   if (!otpCode || otpCode.length < 6) {
     alert("Please enter the complete 6-digit access code sent to your email.");
@@ -207,7 +211,7 @@ async function handleAuthAction() {
       startPassTicker();
       updateMetricDashboard();
 
-      alert("🎉 Access verified! Identity session saved to this device.");
+      alert("🎉 Access verified! Session anchored to this device.");
       switchScreen('screen-welcome', true);
     } else {
       throw new Error(data.error || "Invalid or expired access code.");
@@ -531,7 +535,7 @@ async function executeTurnaroundSpin() {
 
   const categoryKey = selectedCategory || 'charisma';
   const frictionKey = mindFrictionStyle || 'mindless_scrolling';
-  const userEmail = localStorage.getItem('nudge_user_email') || 'anonymous_tester';
+  const userEmail = localStorage.getItem('nudge_user_email') || '';
 
   const seenKey = `nudge_seen_${categoryKey}`;
   const lastFocusKey = `nudge_last_focus_${categoryKey}`;
@@ -749,7 +753,7 @@ function runAnotherRound() {
 }
 
 /* ========================================================
-   PRESET INTERCEPTS (TOGGLEABLE & PERSISTENT AFTER CACHE CLEAR)
+   PRESET INTERCEPTS (TOGGLEABLE & PERSISTENT)
 ======================================================== */
 function getStoredPresetIntercepts() {
   const stored = localStorage.getItem('nudge_preset_intercepts');
@@ -803,7 +807,7 @@ function togglePresetInterceptState(index) {
 }
 
 /* ========================================================
-   CUSTOM INTERCEPTS & NOTIFICATION MONITOR
+   CUSTOM INTERCEPTS MODAL
 ======================================================== */
 function formatTime12h(time24) {
   if (!time24) return "12:00 PM";
@@ -921,29 +925,70 @@ function dispatchNotification(title, body) {
   }
 }
 
+/* ========================================================
+   SCENARIO B: BACKGROUND INTERCEPT MONITOR & IN-APP DIRECT HIJACK
+======================================================== */
 function startBackgroundInterceptMonitor() {
   setInterval(() => {
     const now = new Date();
     const hours = String(now.getHours()).padStart(2, '0');
     const minutes = String(now.getMinutes()).padStart(2, '0');
     const currentTimeStr = `${hours}:${minutes}`;
+    const dateStr = now.toDateString();
 
+    // 1. MONITOR PRESETS
     const presets = getStoredPresetIntercepts();
     presets.forEach(p => {
-      if (p.enabled && p.time === currentTimeStr && !p.triggeredToday) {
-        p.triggeredToday = true;
+      const triggerTag = `${dateStr}_${currentTimeStr}_${p.id || p.time}`;
+      if (p.enabled && p.time === currentTimeStr && p.lastTriggerTag !== triggerTag) {
+        p.lastTriggerTag = triggerTag;
+        localStorage.setItem('nudge_preset_intercepts', JSON.stringify(presets));
+
+        // System OS / Lock Screen Notification
         dispatchNotification("120 Reset Circuit Breaker", `Scheduled Intercept: ${p.label}. Tap to break the loop.`);
+
+        // SCENARIO B: DIRECT IN-APP SCREEN HIJACK TO BIG RED START BUTTON
+        const activeScreen = document.querySelector('.screen.active');
+        if (activeScreen && activeScreen.id !== 'screen-countdown') {
+          selectedCategory = mapDeckNameToCategory(p.deck);
+          updateStartScreenHeading(selectedCategory);
+
+          const chime = document.getElementById('victory-chime');
+          if (chime) { chime.currentTime = 0; chime.play().catch(() => {}); }
+
+          switchScreen('screen-trigger', true);
+        }
       }
     });
 
+    // 2. MONITOR CUSTOM INTERCEPTS
     const customs = JSON.parse(localStorage.getItem('nudge_custom_intercepts') || '[]');
+    let customsModified = false;
     customs.forEach(c => {
-      if (c.enabled && c.time === currentTimeStr && !c.triggeredToday) {
-        c.triggeredToday = true;
-        dispatchNotification("120 Reset Circuit Breaker", `Scheduled Intercept: ${c.friction} (${c.deck}). Tap to break the loop.`);
+      const triggerTag = `${dateStr}_${currentTimeStr}_${c.id || c.time}`;
+      if (c.enabled && c.time === currentTimeStr && c.lastTriggerTag !== triggerTag) {
+        c.lastTriggerTag = triggerTag;
+        customsModified = true;
+
+        dispatchNotification("120 Reset Circuit Breaker", `Scheduled Intercept: ${c.friction} (${c.deck}).`);
+
+        // SCENARIO B: DIRECT IN-APP SCREEN HIJACK
+        const activeScreen = document.querySelector('.screen.active');
+        if (activeScreen && activeScreen.id !== 'screen-countdown') {
+          selectedCategory = mapDeckNameToCategory(c.deck);
+          updateStartScreenHeading(selectedCategory);
+
+          const chime = document.getElementById('victory-chime');
+          if (chime) { chime.currentTime = 0; chime.play().catch(() => {}); }
+
+          switchScreen('screen-trigger', true);
+        }
       }
     });
-  }, 30000);
+    if (customsModified) {
+      localStorage.setItem('nudge_custom_intercepts', JSON.stringify(customs));
+    }
+  }, 15000);
 }
 
 /* ========================================================
