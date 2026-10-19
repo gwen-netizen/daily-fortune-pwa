@@ -80,7 +80,7 @@ body {
 ======================================================== */
 .welcome-screen-styled {
   background: radial-gradient(circle at 50% 25%, rgba(220, 38, 38, 0.06) 0%, rgba(212, 163, 115, 0.05) 50%, #FFFFFF 85%);
-  padding: 32px 22px 24px 22px;
+  padding: 36px 22px 28px 22px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -199,13 +199,13 @@ body {
   margin-top: 4px;
 }
 
-/* PROTOCOL STATS ROW */
+/* PROTOCOL STATS ROW (1 WORD PER LINE) */
 .welcome-perks-row {
   display: flex;
   gap: 8px;
   width: 100%;
   justify-content: center;
-  margin-bottom: 14px;
+  margin-bottom: 18px;
 }
 
 .perk-chip {
@@ -213,23 +213,25 @@ body {
   background: #FAF7F2;
   border: 1px solid var(--border-color);
   border-radius: 14px;
-  padding: 10px 6px;
+  padding: 12px 6px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   text-align: center;
 }
 
 .perk-icon {
-  font-size: 16px;
+  font-size: 18px;
+  line-height: 1;
 }
 
 .perk-label {
   font-size: 11px;
   font-weight: 700;
   color: var(--text-color);
-  line-height: 1.2;
+  line-height: 1.3;
+  text-align: center;
 }
 
 /* BOTTOM ACTION ZONE */
@@ -245,14 +247,6 @@ body {
 
 .btn-launch-pulse:active {
   transform: scale(0.97);
-}
-
-.welcome-subhint {
-  font-size: 12px;
-  font-weight: 600;
-  color: #9C8E80;
-  margin-top: 10px;
-  letter-spacing: 0.2px;
 }
 
 /* ========================================================
@@ -472,9 +466,10 @@ body {
   color: var(--premium-color);
   letter-spacing: 0.06em;
   background: rgba(212, 163, 115, 0.15);
-  padding: 6px 12px;
-  border-radius: 8px;
+  padding: 8px 14px;
+  border-radius: 10px;
   width: fit-content;
+  line-height: 1.35;
 }
 
 /* CALM ASSISTIVE COUNTDOWN TIMER PILL */
