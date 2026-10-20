@@ -1,6 +1,6 @@
 {
-  "short_name": "120 Reset",
-  "name": "120 Reset",
+  "short_name": "120Reset",
+  "name": "120Reset",
   "description": "A cognitive circuit breaker for executive dysfunction, ADHD, and high-burnout professionals. Break task paralysis and screen addiction in 120 seconds.",
   "icons": [
     {
@@ -29,8 +29,8 @@
     }
   ],
   "start_url": "/app.html",
-  "background_color": "#FAF7F2",
+  "background_color": "#000000",
   "display": "standalone",
   "scope": "/",
-  "theme_color": "#FAF7F2"
+  "theme_color": "#000000"
 }
