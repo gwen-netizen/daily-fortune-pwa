@@ -908,87 +908,117 @@ function renderCustomIntercepts() {
   });
 }
 
+/* ========================================================
+   SAFARI-SAFE NOTIFICATION DISPATCHER
+======================================================== */
 function dispatchNotification(title, body) {
-  if ("Notification" in window && Notification.permission === "granted") {
-    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.ready.then(reg => {
-        reg.showNotification(title, {
-          body: body,
-          icon: '/images/icon-192.png',
-          badge: '/images/icon-192.png',
-          vibrate: [200, 100, 200]
-        });
-      });
-    } else {
-      new Notification(title, { body: body, icon: '/images/icon-192.png' });
+  try {
+    if (!("Notification" in window)) return;
+    if (Notification.permission !== "granted") return;
+
+    if (navigator.serviceWorker) {
+      navigator.serviceWorker.ready
+        .then(reg => {
+          if (reg && reg.showNotification) {
+            reg.showNotification(title, {
+              body: body,
+              icon: '/images/icon-192.png',
+              badge: '/images/icon-192.png',
+              vibrate: [200, 100, 200]
+            });
+          }
+        })
+        .catch(err => console.warn("SW notification suppressed:", err));
     }
+  } catch (e) {
+    console.warn("Safari notification dispatch bypassed:", e);
   }
 }
 
 /* ========================================================
-   SCENARIO B: BACKGROUND INTERCEPT MONITOR & IN-APP DIRECT HIJACK
+   SCENARIO B: BACKGROUND INTERCEPT & IN-APP DIRECT HIJACK
 ======================================================== */
 function startBackgroundInterceptMonitor() {
   setInterval(() => {
-    const now = new Date();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const currentTimeStr = `${hours}:${minutes}`;
-    const dateStr = now.toDateString();
+    try {
+      const now = new Date();
+      const currentHours = now.getHours();
+      const currentMinutes = now.getMinutes();
+      const currentTotalMin = currentHours * 60 + currentMinutes;
+      const currentTimeStr = `${String(currentHours).padStart(2, '0')}:${String(currentMinutes).padStart(2, '0')}`;
+      const dateStr = now.toDateString();
 
-    // 1. MONITOR PRESETS
-    const presets = getStoredPresetIntercepts();
-    presets.forEach(p => {
-      const triggerTag = `${dateStr}_${currentTimeStr}_${p.id || p.time}`;
-      if (p.enabled && p.time === currentTimeStr && p.lastTriggerTag !== triggerTag) {
-        p.lastTriggerTag = triggerTag;
-        localStorage.setItem('nudge_preset_intercepts', JSON.stringify(presets));
+      // 1. MONITOR PRESETS (With 5-min catch-up for sleeping iOS tabs)
+      const presets = getStoredPresetIntercepts();
+      presets.forEach(p => {
+        if (!p.enabled || !p.time) return;
+        const [pHour, pMin] = p.time.split(':').map(Number);
+        const targetTotalMin = pHour * 60 + pMin;
+        const timeDiff = currentTotalMin - targetTotalMin;
 
-        // System OS / Lock Screen Notification
-        dispatchNotification("120 Reset Circuit Breaker", `Scheduled Intercept: ${p.label}. Tap to break the loop.`);
+        const isTimeMatch = (p.time === currentTimeStr) || (timeDiff >= 0 && timeDiff <= 5);
+        const triggerTag = `${dateStr}_${p.id || p.time}`;
 
-        // SCENARIO B: DIRECT IN-APP SCREEN HIJACK TO BIG RED START BUTTON
-        const activeScreen = document.querySelector('.screen.active');
-        if (activeScreen && activeScreen.id !== 'screen-countdown') {
-          selectedCategory = mapDeckNameToCategory(p.deck);
-          updateStartScreenHeading(selectedCategory);
+        if (isTimeMatch && p.lastTriggerTag !== triggerTag) {
+          p.lastTriggerTag = triggerTag;
+          localStorage.setItem('nudge_preset_intercepts', JSON.stringify(presets));
 
-          const chime = document.getElementById('victory-chime');
-          if (chime) { chime.currentTime = 0; chime.play().catch(() => {}); }
+          dispatchNotification("120 Reset Circuit Breaker", `Scheduled Intercept: ${p.label}. Tap to break the loop.`);
 
-          switchScreen('screen-trigger', true);
+          // SCENARIO B: DIRECT IN-APP SCREEN HIJACK TO BIG RED START BUTTON
+          const activeScreen = document.querySelector('.screen.active');
+          if (activeScreen && activeScreen.id !== 'screen-countdown') {
+            selectedCategory = mapDeckNameToCategory(p.deck);
+            updateStartScreenHeading(selectedCategory);
+
+            const chime = document.getElementById('victory-chime');
+            if (chime) { chime.currentTime = 0; chime.play().catch(() => {}); }
+
+            switchScreen('screen-trigger', true);
+          }
         }
-      }
-    });
+      });
 
-    // 2. MONITOR CUSTOM INTERCEPTS
-    const customs = JSON.parse(localStorage.getItem('nudge_custom_intercepts') || '[]');
-    let customsModified = false;
-    customs.forEach(c => {
-      const triggerTag = `${dateStr}_${currentTimeStr}_${c.id || c.time}`;
-      if (c.enabled && c.time === currentTimeStr && c.lastTriggerTag !== triggerTag) {
-        c.lastTriggerTag = triggerTag;
-        customsModified = true;
+      // 2. MONITOR CUSTOM INTERCEPTS
+      const customs = JSON.parse(localStorage.getItem('nudge_custom_intercepts') || '[]');
+      let customsModified = false;
 
-        dispatchNotification("120 Reset Circuit Breaker", `Scheduled Intercept: ${c.friction} (${c.deck}).`);
+      customs.forEach(c => {
+        if (!c.enabled || !c.time) return;
+        const [cHour, cMin] = c.time.split(':').map(Number);
+        const targetTotalMin = cHour * 60 + cMin;
+        const timeDiff = currentTotalMin - targetTotalMin;
 
-        // SCENARIO B: DIRECT IN-APP SCREEN HIJACK
-        const activeScreen = document.querySelector('.screen.active');
-        if (activeScreen && activeScreen.id !== 'screen-countdown') {
-          selectedCategory = mapDeckNameToCategory(c.deck);
-          updateStartScreenHeading(selectedCategory);
+        const isTimeMatch = (c.time === currentTimeStr) || (timeDiff >= 0 && timeDiff <= 5);
+        const triggerTag = `${dateStr}_${c.id || c.time}`;
 
-          const chime = document.getElementById('victory-chime');
-          if (chime) { chime.currentTime = 0; chime.play().catch(() => {}); }
+        if (isTimeMatch && c.lastTriggerTag !== triggerTag) {
+          c.lastTriggerTag = triggerTag;
+          customsModified = true;
 
-          switchScreen('screen-trigger', true);
+          dispatchNotification("120 Reset Circuit Breaker", `Scheduled Intercept: ${c.friction} (${c.deck}).`);
+
+          // SCENARIO B: DIRECT IN-APP SCREEN HIJACK
+          const activeScreen = document.querySelector('.screen.active');
+          if (activeScreen && activeScreen.id !== 'screen-countdown') {
+            selectedCategory = mapDeckNameToCategory(c.deck);
+            updateStartScreenHeading(selectedCategory);
+
+            const chime = document.getElementById('victory-chime');
+            if (chime) { chime.currentTime = 0; chime.play().catch(() => {}); }
+
+            switchScreen('screen-trigger', true);
+          }
         }
+      });
+
+      if (customsModified) {
+        localStorage.setItem('nudge_custom_intercepts', JSON.stringify(customs));
       }
-    });
-    if (customsModified) {
-      localStorage.setItem('nudge_custom_intercepts', JSON.stringify(customs));
+    } catch (err) {
+      console.error("Intercept monitor loop caught error:", err);
     }
-  }, 15000);
+  }, 10000);
 }
 
 /* ========================================================
