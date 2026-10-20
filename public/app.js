@@ -54,6 +54,10 @@ function mapDeckNameToCategory(deckName) {
   return 'charisma';
 }
 
+function getLocalDateString() {
+  return new Date().toLocaleDateString('en-CA');
+}
+
 /* ========================================================
    HARDWARE / SYSTEM BACK BUTTON HANDLER
 ======================================================== */
@@ -103,7 +107,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   
   if (savedEmail && savedEmail.includes('@')) {
     try {
-      const endpoint = `/api/sync-user?email=${encodeURIComponent(savedEmail)}&action=get_profile`;
+      const localDate = getLocalDateString();
+      const endpoint = `/api/sync-user?email=${encodeURIComponent(savedEmail)}&action=get_profile&clientDate=${encodeURIComponent(localDate)}`;
       const response = await fetch(endpoint);
       
       if (response.ok) {
@@ -112,6 +117,12 @@ document.addEventListener("DOMContentLoaded", async () => {
           currentUserProfile = data.profile;
           totalWinsCount = parseInt(data.profile.total_wins, 10) || totalWinsCount;
           totalFocusReclaimed = parseFloat(data.profile.focus_reclaimed) || totalFocusReclaimed;
+
+          if (data.profile.last_click_date === localDate) {
+            const cloudClicks = parseInt(data.profile.daily_clicks, 10) || 0;
+            localStorage.setItem('nudge_click_count', cloudClicks.toString());
+            localStorage.setItem('nudge_click_date', localDate);
+          }
         }
       }
     } catch (e) {
@@ -155,6 +166,7 @@ async function handleAuthAction() {
 
   const userEmail = emailInput.value.trim().toLowerCase();
   const promoCode = promoInput ? promoInput.value.trim().toUpperCase() : '';
+  const localDate = getLocalDateString();
 
   if (!isOtpRequested) {
     authBtn.innerText = "SENDING ACCESS CODE...";
@@ -195,7 +207,7 @@ async function handleAuthAction() {
   authBtn.disabled = true;
 
   try {
-    const endpoint = `/api/sync-user?email=${encodeURIComponent(userEmail)}&token=${encodeURIComponent(otpCode)}&action=verify_otp&promo_code=${encodeURIComponent(promoCode)}`;
+    const endpoint = `/api/sync-user?email=${encodeURIComponent(userEmail)}&token=${encodeURIComponent(otpCode)}&action=verify_otp&promo_code=${encodeURIComponent(promoCode)}&clientDate=${encodeURIComponent(localDate)}`;
     const response = await fetch(endpoint);
     const data = await response.json();
 
@@ -207,6 +219,12 @@ async function handleAuthAction() {
       totalFocusReclaimed = parseFloat(data.profile.focus_reclaimed) || 0.0;
       localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
       localStorage.setItem('nudge_focus_reclaimed', totalFocusReclaimed.toString());
+
+      if (data.profile.last_click_date === localDate) {
+        const cloudClicks = parseInt(data.profile.daily_clicks, 10) || 0;
+        localStorage.setItem('nudge_click_count', cloudClicks.toString());
+        localStorage.setItem('nudge_click_date', localDate);
+      }
 
       startPassTicker();
       updateMetricDashboard();
@@ -1022,6 +1040,75 @@ function startBackgroundInterceptMonitor() {
 }
 
 /* ========================================================
+   LOCAL TIMEZONE DATE & CLOUD-SYNCED QUOTA ENGINE
+======================================================== */
+function getDailyClicksCount() {
+  const today = getLocalDateString();
+  const savedDate = localStorage.getItem('nudge_click_date');
+
+  if (savedDate !== today) {
+    localStorage.setItem('nudge_click_date', today);
+    localStorage.setItem('nudge_click_count', '0');
+    return 0;
+  }
+
+  if (currentUserProfile && currentUserProfile.last_click_date === today) {
+    const cloudCount = parseInt(currentUserProfile.daily_clicks, 10) || 0;
+    const localCount = parseInt(localStorage.getItem('nudge_click_count') || '0', 10);
+    const highestCount = Math.max(cloudCount, localCount);
+    localStorage.setItem('nudge_click_count', highestCount.toString());
+    return highestCount;
+  }
+
+  return parseInt(localStorage.getItem('nudge_click_count') || '0', 10);
+}
+
+function incrementDailyClicks() {
+  const count = getDailyClicksCount() + 1;
+  const today = getLocalDateString();
+  localStorage.setItem('nudge_click_date', today);
+  localStorage.setItem('nudge_click_count', count.toString());
+
+  if (currentUserProfile) {
+    currentUserProfile.daily_clicks = count;
+    currentUserProfile.last_click_date = today;
+  }
+
+  updateMetricDashboard();
+  syncLifetimeProgressToCloud();
+}
+
+async function syncLifetimeProgressToCloud() {
+  const userEmail = localStorage.getItem('nudge_user_email');
+  if (!userEmail || userEmail === 'anonymous_tester') return;
+
+  const currentClicks = getDailyClicksCount();
+  const today = getLocalDateString();
+
+  try {
+    const response = await fetch('/api/sync-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: userEmail,
+        total_wins: totalWinsCount,
+        focus_reclaimed: totalFocusReclaimed,
+        daily_clicks: currentClicks,
+        clientDate: today
+      })
+    });
+    const data = await response.json();
+    if (data && data.profile) {
+      currentUserProfile = data.profile;
+      updatePassCountdown();
+      applyPremiumUIVisuals(isUserPremiumOrPass());
+    }
+  } catch (e) {
+    console.warn("Silent sync fallback:", e);
+  }
+}
+
+/* ========================================================
    PAYWALL & SUBSCRIPTION GATEWAY
 ======================================================== */
 function openPaywallModal() {
@@ -1077,23 +1164,6 @@ async function simulatePurchase() {
   }
 }
 
-function getDailyClicksCount() {
-  const today = new Date().toISOString().split('T')[0];
-  const savedDate = localStorage.getItem('nudge_click_date');
-  if (savedDate !== today) {
-    localStorage.setItem('nudge_click_date', today);
-    localStorage.setItem('nudge_click_count', '0');
-    return 0;
-  }
-  return parseInt(localStorage.getItem('nudge_click_count') || '0', 10);
-}
-
-function incrementDailyClicks() {
-  const count = getDailyClicksCount() + 1;
-  localStorage.setItem('nudge_click_count', count.toString());
-  updateMetricDashboard();
-}
-
 async function checkStripeRedirectStatus() {
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('session') === 'success') {
@@ -1104,30 +1174,5 @@ async function checkStripeRedirectStatus() {
     alert("🎉 Payment confirmed! Synchronizing access with Supabase...");
     window.history.replaceState({}, document.title, window.location.pathname);
     await syncLifetimeProgressToCloud();
-  }
-}
-
-async function syncLifetimeProgressToCloud() {
-  const userEmail = localStorage.getItem('nudge_user_email');
-  if (!userEmail || userEmail === 'anonymous_tester') return;
-
-  try {
-    const response = await fetch('/api/sync-user', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: userEmail,
-        total_wins: totalWinsCount,
-        focus_reclaimed: totalFocusReclaimed
-      })
-    });
-    const data = await response.json();
-    if (data.profile) {
-      currentUserProfile = data.profile;
-      updatePassCountdown();
-      applyPremiumUIVisuals(isUserPremiumOrPass());
-    }
-  } catch (e) {
-    console.warn("Silent sync fallback:", e);
   }
 }
