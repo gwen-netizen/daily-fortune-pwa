@@ -11,9 +11,18 @@ module.exports = async function handler(req, res) {
 
   const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-  async function sanitizePassStatus(profile) {
+  function getClientDate(req) {
+    const headerDate = req.query?.clientDate || req.body?.clientDate;
+    if (headerDate && /^\d{4}-\d{2}-\d{2}$/.test(headerDate)) {
+      return headerDate;
+    }
+    return new Date().toISOString().split('T')[0];
+  }
+
+  async function sanitizePassStatus(profile, clientDate) {
     if (!profile) return profile;
 
+    // 1. Check Pass Expiration
     if (profile.pass_expires_at) {
       const expiresAt = new Date(profile.pass_expires_at).getTime();
       const now = Date.now();
@@ -29,6 +38,17 @@ module.exports = async function handler(req, res) {
       } else {
         profile.premium_user = true;
       }
+    }
+
+    // 2. Daily Usage Rollover (Cloud sync against date)
+    const today = clientDate || new Date().toISOString().split('T')[0];
+    if (profile.last_click_date !== today) {
+      profile.daily_clicks = 0;
+      profile.last_click_date = today;
+      await supabase
+        .from('user_profiles')
+        .update({ daily_clicks: 0, last_click_date: today })
+        .eq('email', profile.email);
     }
 
     return profile;
@@ -50,11 +70,11 @@ module.exports = async function handler(req, res) {
   }
 
   /* ========================================================
-     POST: METRIC & PROGRESS SYNCHRONIZATION
+     POST: PROGRESS & USAGE SYNCHRONIZATION
   ======================================================== */
   if (req.method === 'POST') {
     try {
-      const { email, promo_claimed } = req.body;
+      const { email, promo_claimed, daily_clicks, clientDate } = req.body;
       if (!email) return res.status(400).json({ error: "Email is required" });
 
       const lowerEmail = email.trim().toLowerCase();
@@ -69,8 +89,14 @@ module.exports = async function handler(req, res) {
         total_wins: totalWins,
         focus_reclaimed: focusReclaimed
       };
+
       if (promo_claimed !== undefined) {
         updatePayload.promo_claimed = promo_claimed;
+      }
+
+      if (typeof daily_clicks === 'number') {
+        updatePayload.daily_clicks = daily_clicks;
+        updatePayload.last_click_date = clientDate || new Date().toISOString().split('T')[0];
       }
 
       let profileData = null;
@@ -90,7 +116,7 @@ module.exports = async function handler(req, res) {
         profileData = data && data.length > 0 ? data[0] : null;
       }
 
-      profileData = await sanitizePassStatus(profileData);
+      profileData = await sanitizePassStatus(profileData, clientDate);
       return res.status(200).json({ success: true, profile: profileData });
     } catch (err) {
       console.error("Supabase Write Error:", err);
@@ -99,94 +125,44 @@ module.exports = async function handler(req, res) {
   }
 
   /* ========================================================
-     GET: OTP AUTHENTICATION & PROFILE RETRIEVAL
+     GET: OTP AUTH & PROFILE FETCH
   ======================================================== */
   if (req.method === 'GET') {
-    const { email, action, token, promo_code } = req.query;
+    const { email, action, token, promo_code, clientDate } = req.query;
     if (!email) return res.status(400).json({ error: "Email parameter missing" });
 
     const lowerEmail = email.trim().toLowerCase();
 
     try {
-      // 1. REQUEST 6-DIGIT OTP ACCESS CODE
       if (action === 'request_otp') {
         const { error } = await supabase.auth.signInWithOtp({ 
           email: lowerEmail,
           options: { shouldCreateUser: true }
         });
-        
-        if (error) {
-          console.warn("Supabase OTP send notice:", error.message);
-          return res.status(400).json({ error: error.message });
-        }
+        if (error) return res.status(400).json({ error: error.message });
         return res.status(200).json({ success: true, sent: true });
       }
 
-      // 2. VERIFY OTP ACCESS CODE
       if (action === 'verify_otp') {
         if (!token) return res.status(400).json({ error: "Access code is required." });
 
         let verifiedAuthData = null;
-        const otpTypes = ['email', 'signup', 'magiclink'];
-
-        for (const otpType of otpTypes) {
+        for (const otpType of ['email', 'signup', 'magiclink']) {
           const { data, error } = await supabase.auth.verifyOtp({
             email: lowerEmail,
             token: token.trim(),
             type: otpType
           });
-
           if (!error && data?.session) {
             verifiedAuthData = data;
             break;
           }
         }
 
-        // Test/Demo bypass backup code for rate-limited testing environments
         if (!verifiedAuthData && token.trim() !== '120120' && token.trim() !== '000000') {
-          return res.status(401).json({ error: "Invalid or expired access code. Please check your inbox or request a new code." });
+          return res.status(401).json({ error: "Invalid or expired access code." });
         }
 
-        let profileData = await getProfileSafely(lowerEmail);
-
-        if (!profileData) {
-          const { data: newProfile, error: insertError } = await supabase
-            .from('user_profiles')
-            .insert({
-              email: lowerEmail,
-              premium_user: false,
-              total_wins: 0,
-              focus_reclaimed: 0.0,
-              promo_claimed: false
-            })
-            .select()
-            .limit(1);
-
-          if (!insertError && newProfile && newProfile.length > 0) {
-            profileData = newProfile[0];
-          }
-        }
-
-        if (profileData && promo_code === 'PREMIUM99' && !profileData.premium_user && !profileData.promo_claimed) {
-          const passExpiry = new Date(Date.now() + (48 * 3600 * 1000)).toISOString();
-          const { data: updated } = await supabase
-            .from('user_profiles')
-            .update({ premium_user: true, pass_expires_at: passExpiry, promo_claimed: true })
-            .eq('email', profileData.email)
-            .select()
-            .limit(1);
-          if (updated && updated.length > 0) profileData = updated[0];
-        }
-
-        profileData = await sanitizePassStatus(profileData);
-        return res.status(200).json({ 
-          success: true, 
-          profile: profileData || { email: lowerEmail, premium_user: false, total_wins: 0, focus_reclaimed: 0.0 } 
-        });
-      }
-
-      // 3. FETCH EXISTING PROFILE (AUTO-BOOT FOR ALREADY LOGGED IN USERS)
-      if (action === 'get_profile') {
         let profileData = await getProfileSafely(lowerEmail);
 
         if (!profileData) {
@@ -197,6 +173,8 @@ module.exports = async function handler(req, res) {
               premium_user: false,
               total_wins: 0,
               focus_reclaimed: 0.0,
+              daily_clicks: 0,
+              last_click_date: clientDate || new Date().toISOString().split('T')[0],
               promo_claimed: false
             })
             .select()
@@ -216,11 +194,33 @@ module.exports = async function handler(req, res) {
           if (updated && updated.length > 0) profileData = updated[0];
         }
 
-        profileData = await sanitizePassStatus(profileData);
-        return res.status(200).json({
-          success: true,
-          profile: profileData || { email: lowerEmail, premium_user: false, pass_expires_at: null, total_wins: 0, focus_reclaimed: 0.0 }
-        });
+        profileData = await sanitizePassStatus(profileData, clientDate);
+        return res.status(200).json({ success: true, profile: profileData });
+      }
+
+      if (action === 'get_profile') {
+        let profileData = await getProfileSafely(lowerEmail);
+
+        if (!profileData) {
+          const { data: newProfile } = await supabase
+            .from('user_profiles')
+            .insert({
+              email: lowerEmail,
+              premium_user: false,
+              total_wins: 0,
+              focus_reclaimed: 0.0,
+              daily_clicks: 0,
+              last_click_date: clientDate || new Date().toISOString().split('T')[0],
+              promo_claimed: false
+            })
+            .select()
+            .limit(1);
+
+          if (newProfile && newProfile.length > 0) profileData = newProfile[0];
+        }
+
+        profileData = await sanitizePassStatus(profileData, clientDate);
+        return res.status(200).json({ success: true, profile: profileData });
       }
 
       return res.status(400).json({ error: "Invalid action parameter." });
