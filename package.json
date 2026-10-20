@@ -1,7 +1,7 @@
 {
   "name": "120-reset",
   "version": "1.0.0",
-  "description": "120 Reset - Behavioral circuit breaker for executive dysfunction and burnout",
+  "description": "120 Reset - Fast relief for brainlock. Break task paralysis in 120 seconds. No willpower required.",
   "main": "app.js",
   "dependencies": {
     "stripe": "^14.24.0",
