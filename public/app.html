@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>120Reset — Fast Relief for Mental Friction</title>
   <link rel="canonical" href="https://120reset.vercel.app/app.html">
-  <meta name="theme-color" content="#000000">
+  <meta name="theme-color" content="#FAF7F2">
   <link rel="icon" type="image/png" sizes="192x192" href="/images/icon-192.png">
+  <link rel="apple-touch-icon" href="/images/icon-192.png">
   <link rel="stylesheet" href="/styles.css">
   <link rel="manifest" href="/manifest.json">
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -17,7 +18,7 @@
 
   <div class="app-container">
 
-    <!-- SCREEN 0: WELCOME SCREEN (SHOWN TO EXISTING LOGGED IN USERS) -->
+    <!-- SCREEN 0: WELCOME SCREEN (RETURNING LOGGED-IN USERS) -->
     <div id="screen-welcome" class="screen welcome-screen-styled">
       <div class="welcome-header-zone">
         <div class="kicker-wrapper">
@@ -60,14 +61,13 @@
       </div>
     </div>
 
-    <!-- SCREEN 1: ONBOARDING & 2-STEP EMAIL + OTP AUTHENTICATION SCREEN -->
+    <!-- SCREEN 1: ONBOARDING & 2-STEP EMAIL + OTP AUTHENTICATION -->
     <div id="screen-onboarding-1" class="screen">
       <div style="margin: auto 0; width: 100%;">
         <span class="badge" style="margin-bottom: 12px;">CLINICALLY BACKED PROTOCOL</span>
         <h1 class="title-large" style="margin-bottom: 8px;">120<br>Reset</h1>
         <p class="body-text" style="margin-bottom: 16px;">The behavioral circuit breaker. Interrupt screen addiction and task paralysis instantly in exactly 120 seconds.</p>
         
-        <!-- STEP 1: EMAIL & PROMO INPUTS -->
         <div id="auth-email-group" style="width: 100%; text-align: left; margin-bottom: 10px;">
           <label style="font-size: 11px; font-weight: 700; color: var(--premium-color); letter-spacing: 0.5px; text-transform: uppercase;">Focus Email Identity</label>
           <input type="email" id="user-auth-email" placeholder="name@example.com" 
@@ -80,13 +80,12 @@
                  style="width: 100%; padding: 12px 14px; border: 2px dashed var(--border-color); border-radius: 14px; font-size: 14px; margin-top: 4px; outline: none; background: #FFFFFF; color: var(--text-color); font-weight: 700; letter-spacing: 1px;">
         </div>
 
-        <!-- STEP 2: 6-DIGIT OTP ACCESS CODE INPUT -->
         <div id="auth-otp-group" style="display: none; width: 100%; text-align: left; margin-bottom: 14px;">
           <label style="font-size: 11px; font-weight: 700; color: #DC2626; letter-spacing: 0.5px; text-transform: uppercase;">Enter 6-Digit Access Code</label>
           <input type="text" id="user-auth-otp" placeholder="123456" maxlength="6" inputmode="numeric"
                  style="width: 100%; padding: 14px; border: 2px solid #DC2626; border-radius: 14px; font-size: 20px; font-weight: 800; letter-spacing: 6px; text-align: center; margin-top: 4px; outline: none; background: #FFF8F8; color: var(--text-color);">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
-            <span style="font-size: 11px; color: #7A7571;">Check your email inbox for code</span>
+            <span style="font-size: 11px; color: #7A7571;">Check your inbox for code</span>
             <button type="button" onclick="resendOtpCode()" style="background: none; border: none; font-size: 11px; font-weight: 700; color: var(--premium-color); text-decoration: underline; cursor: pointer;">Resend</button>
           </div>
         </div>
@@ -128,7 +127,7 @@
       </div>
     </div>
 
-    <!-- SCREEN 3: TARGET FOCUS AREA DASHBOARD -->
+    <!-- SCREEN 3: DASHBOARD -->
     <div id="screen-dashboard" class="screen">
       <div style="width: 100%;">
         <div id="screen3-status-banner" style="width: 100%; padding: 10px 14px; border-radius: 14px; font-size: 12px; margin-bottom: 12px; border: 1.5px solid var(--border-color); text-align: center;"></div>
@@ -310,7 +309,7 @@
       </div>
     </div>
 
-    <!-- REORDERED PRICING MODAL: $0.99 -> $2.99/mo -> $14.99[cite: 9] -->
+    <!-- REORDERED PRICING MODAL: $0.99 -> $2.99/mo -> $14.99 -->
     <div id="paywall-overlay" class="paywall-modal">
       <div class="paywall-sheet">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -321,7 +320,7 @@
         <p class="body-text" style="margin-bottom: 18px; font-size: 13px;">Unlock behavioral overrides modeled on clinical executive functioning systems.</p>
         
         <div class="tier-card-stack">
-          <!-- CARD 1: 48-Hour Pass ($0.99)[cite: 9] -->
+          <!-- CARD 1: 48-Hour Pass ($0.99) -->
           <div class="tier-card selected" data-plan="pass" onclick="selectTier(this)">
             <div class="tier-card-content">
               <div class="tier-top-row">
@@ -332,7 +331,7 @@
             </div>
           </div>
 
-          <!-- CARD 2: Continuous Momentum Monthly ($2.99/mo)[cite: 9] -->
+          <!-- CARD 2: Continuous Momentum Monthly ($2.99/mo) -->
           <div class="tier-card" data-plan="monthly" onclick="selectTier(this)">
             <div class="tier-card-content">
               <div class="tier-top-row">
@@ -343,7 +342,7 @@
             </div>
           </div>
 
-          <!-- CARD 3: Lifetime Freedom ($29.99 Slashed to $14.99)[cite: 9] -->
+          <!-- CARD 3: Lifetime Freedom ($29.99 Slashed to $14.99) -->
           <div class="tier-card tier-card-featured" data-plan="lifetime" onclick="selectTier(this)">
             <div class="tier-floating-pill">LIMITED TIME ONLY</div>
             <div class="tier-card-content">
