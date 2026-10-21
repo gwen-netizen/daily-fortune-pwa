@@ -269,7 +269,7 @@ async function resendOtpCode() {
 async function shareReferralLink() {
   const refCode = currentUserProfile?.referral_code || '';
   const shareUrl = refCode ? `https://120reset.vercel.app/?ref=${encodeURIComponent(refCode)}` : 'https://120reset.vercel.app';
-  const shareText = `I use 120Reset to clear brainlock and stop doom-scrolling in 120 seconds. Try it here:`;
+  const shareText = 'A quick 2-minute reset for when you hit a mental wall today:';
 
   if (navigator.share) {
     try {
