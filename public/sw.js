@@ -1,4 +1,4 @@
-const CACHE_NAME = '120reset-v45';
+const CACHE_NAME = '120reset-v46';
 
 self.addEventListener('install', event => {
     self.skipWaiting();
