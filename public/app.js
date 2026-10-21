@@ -96,11 +96,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   startBackgroundInterceptMonitor();
   await checkStripeRedirectStatus();
 
+  // ONLY auto-fill if a friend gave them a direct referral/promo URL parameter
   const urlParams = new URLSearchParams(window.location.search);
-  const promoParam = urlParams.get('promo');
+  const refParam = urlParams.get('ref') || urlParams.get('promo');
   const promoInput = document.getElementById('user-promo-code');
-  if (promoInput && promoParam) {
-    promoInput.value = promoParam.trim().toUpperCase();
+  if (promoInput && refParam) {
+    promoInput.value = refParam.trim().toUpperCase();
   }
 
   const savedEmail = localStorage.getItem('nudge_user_email');
@@ -165,7 +166,7 @@ async function handleAuthAction() {
   }
 
   const userEmail = emailInput.value.trim().toLowerCase();
-  const promoCode = promoInput ? promoInput.value.trim().toUpperCase() : '';
+  const enteredCode = promoInput ? promoInput.value.trim().toUpperCase() : '';
   const localDate = getLocalDateString();
 
   if (!isOtpRequested) {
@@ -207,7 +208,7 @@ async function handleAuthAction() {
   authBtn.disabled = true;
 
   try {
-    const endpoint = `/api/sync-user?email=${encodeURIComponent(userEmail)}&token=${encodeURIComponent(otpCode)}&action=verify_otp&promo_code=${encodeURIComponent(promoCode)}&clientDate=${encodeURIComponent(localDate)}`;
+    const endpoint = `/api/sync-user?email=${encodeURIComponent(userEmail)}&token=${encodeURIComponent(otpCode)}&action=verify_otp&promo_code=${encodeURIComponent(enteredCode)}&clientDate=${encodeURIComponent(localDate)}`;
     const response = await fetch(endpoint);
     const data = await response.json();
 
@@ -259,6 +260,34 @@ async function resendOtpCode() {
     }
   } catch (e) {
     alert(`Resend Notice: ${e.message}`);
+  }
+}
+
+/* ========================================================
+   REFERRAL SYSTEM & SHARE DRAWER (WEB SHARE API)
+======================================================== */
+async function shareReferralLink() {
+  const refCode = currentUserProfile?.referral_code || '';
+  const shareUrl = refCode ? `https://120reset.vercel.app/?ref=${encodeURIComponent(refCode)}` : 'https://120reset.vercel.app';
+  const shareText = `I use 120Reset to clear brainlock and stop doom-scrolling in 120 seconds. Try it here:`;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: '120Reset — Fast Relief for Mental Friction',
+        text: shareText,
+        url: shareUrl
+      });
+    } catch (e) {
+      // User cancelled share drawer
+    }
+  } else {
+    try {
+      await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
+      alert("📋 Invite link copied to clipboard!");
+    } catch (err) {
+      prompt("Copy your invite link:", shareUrl);
+    }
   }
 }
 
@@ -358,6 +387,17 @@ function updateMetricDashboard() {
       dailyUsesEl.innerText = `${used}/4`;
       dailyUsesEl.style.color = used >= 4 ? "var(--timer-color)" : "var(--accent-color)";
     }
+  }
+
+  // Update referral card details on dashboard
+  const refCodeEl = document.getElementById('user-referral-code-display');
+  const refCountEl = document.getElementById('referral-completed-count');
+  if (refCodeEl && currentUserProfile?.referral_code) {
+    refCodeEl.innerText = currentUserProfile.referral_code;
+  }
+  if (refCountEl) {
+    const count = currentUserProfile?.total_referrals_completed || 0;
+    refCountEl.innerText = `${count} Friend${count === 1 ? '' : 's'} Helped`;
   }
 
   applyPremiumUIVisuals(hasAccess);
@@ -531,14 +571,14 @@ function startTriggerPhase() {
 }
 
 /* ========================================================
-   TASK FETCHING: NON-REPEATING DIVERSE FOCUS ROTATION
+   TASK FETCHING: NON-REPEATING DIVERSE ROTATION
 ======================================================== */
 async function executeTurnaroundSpin() {
   const hasAccess = isUserPremiumOrPass();
   const dailyClicks = getDailyClicksCount();
 
   if (!hasAccess && dailyClicks >= 4) {
-    alert("🔒 Daily Limit Reached (4/4 Intercepts Used Today)!\n\nUpgrade or get a 2-Day Pass ($0.99) for unlimited daily access.");
+    alert("🔒 Daily Limit Reached (4/4 Intercepts Used Today)!\n\nHelp a friend to get 48 hours free, or unlock the 2-Day Pass ($0.99).");
     openPaywallModal();
     return;
   }
@@ -771,7 +811,7 @@ function runAnotherRound() {
 }
 
 /* ========================================================
-   PRESET INTERCEPTS (TOGGLEABLE & PERSISTENT)
+   PRESET INTERCEPTS (PERSISTENT & TOGGLEABLE)
 ======================================================== */
 function getStoredPresetIntercepts() {
   const stored = localStorage.getItem('nudge_preset_intercepts');
@@ -966,7 +1006,7 @@ function startBackgroundInterceptMonitor() {
       const currentTimeStr = `${String(currentHours).padStart(2, '0')}:${String(currentMinutes).padStart(2, '0')}`;
       const dateStr = now.toDateString();
 
-      // 1. MONITOR PRESETS (With 5-min catch-up for sleeping iOS tabs)
+      // 1. MONITOR PRESETS
       const presets = getStoredPresetIntercepts();
       presets.forEach(p => {
         if (!p.enabled || !p.time) return;
@@ -983,7 +1023,6 @@ function startBackgroundInterceptMonitor() {
 
           dispatchNotification("120 Reset Circuit Breaker", `Scheduled Intercept: ${p.label}. Tap to break the loop.`);
 
-          // SCENARIO B: DIRECT IN-APP SCREEN HIJACK TO BIG RED START BUTTON
           const activeScreen = document.querySelector('.screen.active');
           if (activeScreen && activeScreen.id !== 'screen-countdown') {
             selectedCategory = mapDeckNameToCategory(p.deck);
@@ -1016,7 +1055,6 @@ function startBackgroundInterceptMonitor() {
 
           dispatchNotification("120 Reset Circuit Breaker", `Scheduled Intercept: ${c.friction} (${c.deck}).`);
 
-          // SCENARIO B: DIRECT IN-APP SCREEN HIJACK
           const activeScreen = document.querySelector('.screen.active');
           if (activeScreen && activeScreen.id !== 'screen-countdown') {
             selectedCategory = mapDeckNameToCategory(c.deck);
