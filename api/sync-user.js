@@ -11,18 +11,35 @@ module.exports = async function handler(req, res) {
 
   const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-  function getClientDate(req) {
-    const headerDate = req.query?.clientDate || req.body?.clientDate;
-    if (headerDate && /^\d{4}-\d{2}-\d{2}$/.test(headerDate)) {
-      return headerDate;
+  function generateUniqueRefCode() {
+    const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+    let suffix = '';
+    for (let i = 0; i < 4; i++) {
+      suffix += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    return new Date().toISOString().split('T')[0];
+    return `120R-${suffix}`;
+  }
+
+  async function ensureReferralCode(profile) {
+    if (!profile) return profile;
+    if (!profile.referral_code) {
+      const code = generateUniqueRefCode();
+      const { data } = await supabase
+        .from('user_profiles')
+        .update({ referral_code: code })
+        .eq('email', profile.email)
+        .select()
+        .limit(1);
+      if (data && data.length > 0) return data[0];
+      profile.referral_code = code;
+    }
+    return profile;
   }
 
   async function sanitizePassStatus(profile, clientDate) {
     if (!profile) return profile;
 
-    // 1. Check Pass Expiration
+    // 1. Check Pass Expiry
     if (profile.pass_expires_at) {
       const expiresAt = new Date(profile.pass_expires_at).getTime();
       const now = Date.now();
@@ -40,7 +57,7 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    // 2. Daily Usage Rollover (Cloud sync against date)
+    // 2. Local-Date Quota Rollover
     const today = clientDate || new Date().toISOString().split('T')[0];
     if (profile.last_click_date !== today) {
       profile.daily_clicks = 0;
@@ -51,7 +68,7 @@ module.exports = async function handler(req, res) {
         .eq('email', profile.email);
     }
 
-    return profile;
+    return await ensureReferralCode(profile);
   }
 
   async function getProfileSafely(email) {
@@ -70,7 +87,7 @@ module.exports = async function handler(req, res) {
   }
 
   /* ========================================================
-     POST: PROGRESS & USAGE SYNCHRONIZATION
+     POST: PROGRESS SYNC & REFERRAL REWARD TRIGGER (OPTION A)
   ======================================================== */
   if (req.method === 'POST') {
     try {
@@ -99,6 +116,34 @@ module.exports = async function handler(req, res) {
         updatePayload.last_click_date = clientDate || new Date().toISOString().split('T')[0];
       }
 
+      // CRITERIA: User completes at least 1 task win -> Reward Referrer with 48h unlimited pass
+      if (totalWins >= 1 && existingProfile && existingProfile.referred_by && !existingProfile.referral_reward_claimed) {
+        updatePayload.referral_reward_claimed = true;
+
+        const referrerCode = existingProfile.referred_by.trim().toUpperCase();
+        const { data: referrerMatches } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('referral_code', referrerCode)
+          .limit(1);
+
+        if (referrerMatches && referrerMatches.length > 0) {
+          const referrer = referrerMatches[0];
+          // OPTION A: Reset referrer pass to 48 hours from right now
+          const refreshedPassExpiry = new Date(Date.now() + (48 * 3600 * 1000)).toISOString();
+          const updatedReferralCount = (referrer.total_referrals_completed || 0) + 1;
+
+          await supabase
+            .from('user_profiles')
+            .update({
+              premium_user: true,
+              pass_expires_at: refreshedPassExpiry,
+              total_referrals_completed: updatedReferralCount
+            })
+            .eq('email', referrer.email);
+        }
+      }
+
       let profileData = null;
 
       if (existingProfile) {
@@ -112,6 +157,7 @@ module.exports = async function handler(req, res) {
       } else {
         updatePayload.email = lowerEmail;
         updatePayload.premium_user = false;
+        updatePayload.referral_code = generateUniqueRefCode();
         const { data } = await supabase.from('user_profiles').insert(updatePayload).select().limit(1);
         profileData = data && data.length > 0 ? data[0] : null;
       }
@@ -163,27 +209,49 @@ module.exports = async function handler(req, res) {
           return res.status(401).json({ error: "Invalid or expired access code." });
         }
 
+        // Check if user exists BEFORE any record is created
         let profileData = await getProfileSafely(lowerEmail);
+        const isNewUser = !profileData;
+        const cleanedInputCode = promo_code ? promo_code.trim().toUpperCase() : '';
 
         if (!profileData) {
+          const newProfilePayload = {
+            email: lowerEmail,
+            premium_user: false,
+            total_wins: 0,
+            focus_reclaimed: 0.0,
+            daily_clicks: 0,
+            last_click_date: clientDate || new Date().toISOString().split('T')[0],
+            promo_claimed: false,
+            referral_code: generateUniqueRefCode(),
+            referral_reward_claimed: false,
+            total_referrals_completed: 0
+          };
+
+          // If a referral code was manually entered (or carried by invite link)
+          if (cleanedInputCode.startsWith('120R-')) {
+            const { data: refMatches } = await supabase
+              .from('user_profiles')
+              .select('referral_code')
+              .eq('referral_code', cleanedInputCode)
+              .limit(1);
+
+            if (refMatches && refMatches.length > 0) {
+              newProfilePayload.referred_by = cleanedInputCode;
+            }
+          }
+
           const { data: newProfile } = await supabase
             .from('user_profiles')
-            .insert({
-              email: lowerEmail,
-              premium_user: false,
-              total_wins: 0,
-              focus_reclaimed: 0.0,
-              daily_clicks: 0,
-              last_click_date: clientDate || new Date().toISOString().split('T')[0],
-              promo_claimed: false
-            })
+            .insert(newProfilePayload)
             .select()
             .limit(1);
 
           if (newProfile && newProfile.length > 0) profileData = newProfile[0];
         }
 
-        if (profileData && promo_code === 'PREMIUM99' && !profileData.premium_user && !profileData.promo_claimed) {
+        // STRICT: Only brand-new accounts can claim PREMIUM99 manually
+        if (isNewUser && profileData && cleanedInputCode === 'PREMIUM99' && !profileData.promo_claimed) {
           const passExpiry = new Date(Date.now() + (48 * 3600 * 1000)).toISOString();
           const { data: updated } = await supabase
             .from('user_profiles')
@@ -211,7 +279,10 @@ module.exports = async function handler(req, res) {
               focus_reclaimed: 0.0,
               daily_clicks: 0,
               last_click_date: clientDate || new Date().toISOString().split('T')[0],
-              promo_claimed: false
+              promo_claimed: false,
+              referral_code: generateUniqueRefCode(),
+              referral_reward_claimed: false,
+              total_referrals_completed: 0
             })
             .select()
             .limit(1);
