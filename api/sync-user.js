@@ -39,7 +39,7 @@ module.exports = async function handler(req, res) {
   async function sanitizePassStatus(profile, clientDate) {
     if (!profile) return profile;
 
-    // 1. Check Pass Expiry
+    // 1. Check Pass Expiration
     if (profile.pass_expires_at) {
       const expiresAt = new Date(profile.pass_expires_at).getTime();
       const now = Date.now();
@@ -87,7 +87,7 @@ module.exports = async function handler(req, res) {
   }
 
   /* ========================================================
-     POST: PROGRESS SYNC & REFERRAL REWARD TRIGGER (OPTION A)
+     POST: PROGRESS SYNC & OPTION A REFERRAL REWARD TRIGGER
   ======================================================== */
   if (req.method === 'POST') {
     try {
@@ -116,7 +116,7 @@ module.exports = async function handler(req, res) {
         updatePayload.last_click_date = clientDate || new Date().toISOString().split('T')[0];
       }
 
-      // CRITERIA: User completes at least 1 task win -> Reward Referrer with 48h unlimited pass
+      // CRITERIA: Referred friend completes at least 1 task win -> Reset Referrer pass to 48h
       if (totalWins >= 1 && existingProfile && existingProfile.referred_by && !existingProfile.referral_reward_claimed) {
         updatePayload.referral_reward_claimed = true;
 
@@ -129,7 +129,6 @@ module.exports = async function handler(req, res) {
 
         if (referrerMatches && referrerMatches.length > 0) {
           const referrer = referrerMatches[0];
-          // OPTION A: Reset referrer pass to 48 hours from right now
           const refreshedPassExpiry = new Date(Date.now() + (48 * 3600 * 1000)).toISOString();
           const updatedReferralCount = (referrer.total_referrals_completed || 0) + 1;
 
@@ -209,7 +208,7 @@ module.exports = async function handler(req, res) {
           return res.status(401).json({ error: "Invalid or expired access code." });
         }
 
-        // Check if user exists BEFORE any record is created
+        // Verify if user already exists BEFORE creating any record
         let profileData = await getProfileSafely(lowerEmail);
         const isNewUser = !profileData;
         const cleanedInputCode = promo_code ? promo_code.trim().toUpperCase() : '';
@@ -228,7 +227,7 @@ module.exports = async function handler(req, res) {
             total_referrals_completed: 0
           };
 
-          // If a referral code was manually entered (or carried by invite link)
+          // If a referral code was entered
           if (cleanedInputCode.startsWith('120R-')) {
             const { data: refMatches } = await supabase
               .from('user_profiles')
@@ -250,7 +249,7 @@ module.exports = async function handler(req, res) {
           if (newProfile && newProfile.length > 0) profileData = newProfile[0];
         }
 
-        // STRICT: Only brand-new accounts can claim PREMIUM99 manually
+        // STRICT: Only brand-new registrations can activate PREMIUM99 manually
         if (isNewUser && profileData && cleanedInputCode === 'PREMIUM99' && !profileData.promo_claimed) {
           const passExpiry = new Date(Date.now() + (48 * 3600 * 1000)).toISOString();
           const { data: updated } = await supabase
