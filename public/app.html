@@ -61,7 +61,6 @@
   <section class="screen" id="screen-onboarding-2">
     <div class="friction-subheading">Select what has you stuck right now:</div>
     
-    <!-- Brain Viewport with Persistent Visibility Indicator -->
     <div class="brain-viewport-container" id="brain-viewport-s2">
       <div class="brain-status-indicator" id="brain-status-s2">100% VISIBILITY • CLEAR SIGNAL</div>
     </div>
@@ -104,7 +103,6 @@
       <button class="btn-change-friction" onclick="switchScreen('screen-onboarding-2', true)">Edit Tensions ↺</button>
     </div>
 
-    <!-- Brain Viewport with Persistent Visibility Indicator -->
     <div class="brain-viewport-container" id="brain-viewport-s3">
       <div class="brain-status-indicator" id="brain-status-s3">100% VISIBILITY • CLEAR SIGNAL</div>
     </div>
@@ -168,32 +166,39 @@
     </div>
 
     <div style="width: 100%; text-align: center;">
-      <p class="body-text" id="trigger-instructions">Take one slow nasal breath. Press START to calibrate your micro-reset.</p>
+      <p class="body-text" id="trigger-instructions">Exhale slowly... allowing focus to narrow completely.</p>
+      
       <button class="btn-back-focus" onclick="switchScreen('screen-dashboard', true)">← Return to Decks</button>
     </div>
   </section>
 
-  <!-- SCREEN 5: 120-SECOND COUNTDOWN (CENTERED INSTRUCTIONS & CALM TIMER) -->
+  <!-- SCREEN 5: 120-SECOND COUNTDOWN -->
   <section class="screen" id="screen-countdown">
-    <div class="countdown-task-centerpiece">
-      <div id="target-task-focus-area" class="focus-area-badge">FOCUS AREA: MOTOR IGNITION</div>
+    
+    <div class="task-hero-card" style="width: 100%; text-align: left !important; padding: 24px 20px;">
+      <div id="target-task-focus-area" class="focus-area-badge" style="margin-top: 0; margin-bottom: 12px; text-align: left;">FOCUS AREA: MOTOR IGNITION</div>
+      
       <div id="target-task-text" class="task-instruction-headline">Loading protocol...</div>
       
-      <!-- Calming, Stress-Free Timer Below Instructions -->
-      <div class="calm-timer-pill">
-        <span class="calm-timer-icon">⏱️</span>
-        <span class="calm-timer-digits" id="timer-display">02:00</span>
+      <div style="display: flex; align-items: center; gap: 6px; margin-top: 14px; opacity: 0.9;">
+        <span style="font-size: 14px;">⏱️</span>
+        <span id="timer-display" style="font-family: var(--font-mono); font-size: 14px; color: var(--text-primary);">02:00</span>
       </div>
-      <p class="calm-timer-caption">Take your time. Focus only on this single physical motion.</p>
+      
+      <div style="font-size: 14px; color: var(--text-primary); margin-top: 6px; line-height: 1.4;">
+        Take your time. Focus only on this single physical motion.
+      </div>
     </div>
 
     <div style="width: 100%; display: flex; flex-direction: column; gap: 8px; margin-top: auto;">
       <button class="btn-primary" onclick="finishEarly()">Done Early &amp; Reclaim Focus ✓</button>
-      <button class="btn-secondary" onclick="cancelTimer()">Cancel Reset</button>
+      
+      <!-- Corrected exactly as requested -->
+      <button class="btn-secondary" onclick="cancelTimer()">Abort</button>
     </div>
   </section>
 
-  <!-- SCREEN 6: VICTORY SCREEN (ENLARGED AFFIRMATIONS & CLAIM STACK WIN BUTTON) -->
+  <!-- SCREEN 6: VICTORY SCREEN -->
   <section class="screen" id="screen-victory">
     <div style="text-align: center; width: 100%;">
       <span class="badge" style="color:var(--accent-safe); border-color:rgba(194,243,221,0.35); background:rgba(194,243,221,0.12);">
@@ -205,8 +210,7 @@
       </p>
     </div>
 
-    <!-- Hero Card with High-Impact Affirmation Copy -->
-    <div class="task-hero-card victory-affirmation-card" style="width: 100%; margin: auto 0;">
+    <div class="task-hero-card" style="width: 100%; margin: auto 0;">
       <div id="victory-validation-copy" class="victory-affirmation-headline">
         Action clears anxiety. You took the physical move. Keep your momentum.
       </div>
@@ -215,12 +219,14 @@
 
     <div id="standard-victory-actions" style="width:100%; display:flex; flex-direction:column; gap:8px;">
       <button class="btn-primary" onclick="runAnotherRound()">Run Another Round <span>↺</span></button>
+      
       <button class="btn-secondary" onclick="switchScreen('screen-dashboard', true)">Claim Stack Win</button>
     </div>
 
     <div id="overwhelm-victory-actions" style="width:100%; display:none; flex-direction:column; gap:8px;">
       <button class="btn-primary" id="btn-overwhelm-next" onclick="advanceOverwhelmNextMove()">Continue to Next Move →</button>
       <button class="btn-primary" id="btn-overwhelm-reset" style="display:none;" onclick="claimRewardStack()">Claim 4x Protocol Stack →</button>
+      
       <button class="btn-secondary" onclick="switchScreen('screen-dashboard', true)">Claim Stack Win</button>
     </div>
   </section>
@@ -282,7 +288,7 @@
 
 <!-- CUSTOM INTERCEPT CREATOR MODAL -->
 <div class="modal-backdrop" id="custom-intercept-modal">
-  <div class="modal-sheet">
+  <div class="modal-sheet modal-compact">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
       <h3 style="font-size:16px; font-weight:800;">New Time Intercept</h3>
       <button onclick="closeCustomInterceptModal()" style="background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer;">✕</button>
@@ -295,7 +301,7 @@
 
 <!-- REFERRAL MODAL -->
 <div class="modal-backdrop" id="referral-reward-modal">
-  <div class="modal-sheet">
+  <div class="modal-sheet modal-compact">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
       <h3 style="font-size:16px; font-weight:800;">Gift a 48h Pass</h3>
       <button onclick="closeModal('referral-reward-modal')" style="background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer;">✕</button>
@@ -309,7 +315,7 @@
   </div>
 </div>
 
-<!-- PROFILE MODAL (PREVIOUS FORMAT RETAINED + ENLARGED NUMBERS) -->
+<!-- PROFILE MODAL -->
 <div class="modal-backdrop" id="profile-drawer-modal">
   <div class="modal-sheet">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
@@ -317,7 +323,6 @@
       <button onclick="closeModal('profile-drawer-modal')" style="background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer;">✕</button>
     </div>
 
-    <!-- Direct Email Switch & Sync Control -->
     <div style="background:rgba(8,17,31,0.6); border:1px solid var(--card-border-strong); border-radius:14px; padding:12px 14px; margin-bottom:14px;">
       <label style="display:block; font-family:var(--font-mono); font-size:10px; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px;">Logged-in User Account</label>
       <div style="display:flex; gap:8px;">
@@ -329,15 +334,14 @@
 
     <div id="profile-pass-status-card" style="background:rgba(18,34,53,0.6); border:1px solid var(--card-border); border-radius:14px; padding:14px; margin-bottom:14px;"></div>
 
-    <!-- PREVIOUS 2-BOX FORMAT RETAINED (WITH NUMBERS ENLARGED TO 26PX) -->
     <div style="display:flex; gap:10px; margin-bottom:16px;">
-      <div style="flex:1; background:rgba(8,17,31,0.65); border:1px solid var(--card-border); padding:12px 8px; border-radius:12px; text-align:center;">
-        <div style="font-family:var(--font-mono); font-size:10px; font-weight:700; color:var(--text-muted); letter-spacing:0.08em; margin-bottom:4px;">WINS</div>
-        <div id="profile-stat-wins" style="font-family:var(--font-mono); font-size:26px; font-weight:800; color:var(--accent-gold); line-height:1.1;">0</div>
+      <div style="flex:1; background:rgba(8,17,31,0.6); padding:10px; border-radius:10px; text-align:center;">
+        <div style="font-size:10px; color:var(--text-muted);">WINS</div>
+        <div id="profile-stat-wins" style="font-size:26px; font-weight:800; color:var(--accent-gold);">0</div>
       </div>
-      <div style="flex:1; background:rgba(8,17,31,0.65); border:1px solid var(--card-border); padding:12px 8px; border-radius:12px; text-align:center;">
-        <div style="font-family:var(--font-mono); font-size:10px; font-weight:700; color:var(--text-muted); letter-spacing:0.08em; margin-bottom:4px;">FOCUS RECLAIMED</div>
-        <div id="profile-stat-focus" style="font-family:var(--font-mono); font-size:26px; font-weight:800; color:var(--accent-safe); line-height:1.1;">0.0m</div>
+      <div style="flex:1; background:rgba(8,17,31,0.6); padding:10px; border-radius:10px; text-align:center;">
+        <div style="font-size:10px; color:var(--text-muted);">FOCUS RECLAIMED</div>
+        <div id="profile-stat-focus" style="font-size:26px; font-weight:800; color:var(--accent-safe);">0.0m</div>
       </div>
     </div>
 
