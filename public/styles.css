@@ -13,7 +13,6 @@
   --text-muted: #95a3b4;
   --text-dim: #526073;
 
-  /* Neura Friction Signature Accents */
   --accent-gold: #f3c547;
   --accent-gold-rgb: 243, 197, 71;
   --accent-coral: #ff5d5d;
@@ -80,9 +79,6 @@ body::before {
   background: transparent;
 }
 
-/* ========================================================
-   SCREEN SHELL
-======================================================== */
 .screen {
   background-color: var(--panel-bg);
   backdrop-filter: blur(20px);
@@ -118,9 +114,6 @@ body::before {
 .screen::-webkit-scrollbar { display: none; }
 .screen { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* ========================================================
-   SCREEN 0: WELCOME SCREEN
-======================================================== */
 .welcome-screen-styled {
   background: radial-gradient(circle at 50% 22%, #183354 0%, #0d1b2c 55%, #08111f 100%) !important;
   color: var(--text-primary) !important;
@@ -138,11 +131,7 @@ body::before {
 
 .welcome-header-zone { width: 100%; text-align: center; }
 
-.kicker-wrapper {
-  margin-bottom: 12px;
-  display: flex;
-  justify-content: center;
-}
+.kicker-wrapper { margin-bottom: 12px; display: flex; justify-content: center; }
 
 .brand-kicker-glow {
   display: inline-block;
@@ -171,12 +160,7 @@ body::before {
 
 .highlight-text { color: var(--accent-gold); }
 
-.welcome-centerpiece {
-  margin: auto 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
+.welcome-centerpiece { margin: auto 0; display: flex; justify-content: center; align-items: center; }
 
 .pulse-outer-aura {
   position: relative;
@@ -231,13 +215,7 @@ body::before {
   margin-top: 5px;
 }
 
-.welcome-perks-row {
-  display: flex;
-  gap: 10px;
-  width: 100%;
-  justify-content: center;
-  margin-bottom: 18px;
-}
+.welcome-perks-row { display: flex; gap: 10px; width: 100%; justify-content: center; margin-bottom: 18px; }
 
 .perk-chip {
   flex: 1;
@@ -258,33 +236,6 @@ body::before {
 
 .welcome-action-zone { width: 100%; text-align: center; }
 
-.btn-welcome-cta {
-  width: 100%;
-  background-color: var(--accent-gold);
-  color: #08111f;
-  border: 1px solid rgba(243, 197, 71, 0.6);
-  border-radius: 14px;
-  padding: 16px;
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  cursor: pointer;
-  box-shadow: 0 8px 30px rgba(243, 197, 71, 0.4);
-  transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-}
-.btn-welcome-cta:active {
-  transform: scale(0.98);
-  box-shadow: 0 3px 12px rgba(243, 197, 71, 0.3);
-  background-color: #dfb236;
-}
-
-/* ========================================================
-   GLOBAL TYPOGRAPHY & BUTTONS
-======================================================== */
 .badge {
   display: inline-block;
   background: rgba(243, 197, 71, 0.12);
@@ -350,9 +301,6 @@ body::before {
   background: rgba(20, 41, 67, 0.8);
 }
 
-/* ========================================================
-   BRAIN VIEWPORT CONTAINER & STATUS BADGE
-======================================================== */
 .brain-viewport-container {
   width: 100%;
   height: 48%;
@@ -402,16 +350,7 @@ body::before {
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
 }
 
-/* ========================================================
-   SCREEN 2: MULTI-SELECT FRICTION CARDS
-======================================================== */
-.friction-cards-rack {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  margin-bottom: 10px;
-}
+.friction-cards-rack { display: flex; flex-direction: column; gap: 7px; margin-bottom: 10px; width: 100%; }
 
 .friction-chip {
   width: 100%;
@@ -424,7 +363,6 @@ body::before {
   justify-content: space-between;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  text-align: left;
 }
 
 .friction-chip:hover {
@@ -432,11 +370,7 @@ body::before {
   border-color: var(--card-border-strong);
 }
 
-.friction-chip-content {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+.friction-chip-content { display: flex; align-items: center; gap: 10px; }
 
 .friction-chip-icon {
   font-size: 18px;
@@ -450,11 +384,7 @@ body::before {
   border: 1px solid var(--card-border);
 }
 
-.friction-chip-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-primary);
-}
+.friction-chip-title { font-size: 14px; font-weight: 700; color: var(--text-primary); }
 
 .friction-chip.selected-red {
   background: linear-gradient(100deg, rgba(var(--accent-gold-rgb), 0.18), rgba(13, 27, 44, 0.75));
@@ -491,39 +421,12 @@ body::before {
   transition: all 0.15s ease;
 }
 
-.friction-chip.selected-red .friction-checkbox-pill {
-  background: var(--accent-gold);
-  border-color: var(--accent-gold);
-  color: #08111f;
-}
-.friction-chip.selected-orange .friction-checkbox-pill {
-  background: var(--accent-coral);
-  border-color: var(--accent-coral);
-  color: #FFF;
-}
-.friction-chip.selected-yellow .friction-checkbox-pill {
-  background: var(--accent-orange);
-  border-color: var(--accent-orange);
-  color: #08111f;
-}
+.friction-chip.selected-red .friction-checkbox-pill { background: var(--accent-gold); border-color: var(--accent-gold); color: #08111f; }
+.friction-chip.selected-orange .friction-checkbox-pill { background: var(--accent-coral); border-color: var(--accent-coral); color: #FFF; }
+.friction-chip.selected-yellow .friction-checkbox-pill { background: var(--accent-orange); border-color: var(--accent-orange); color: #08111f; }
 
-/* ========================================================
-   SCREEN 3: SELECT REMEDY & DECKS
-======================================================== */
-.remedy-header-row {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 4px 0 8px 0;
-}
-
-.remedy-title {
-  font-size: 15px;
-  font-weight: 800;
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
-}
+.remedy-header-row { display: flex; justify-content: space-between; align-items: center; margin: 4px 0 8px 0; width: 100%; }
+.remedy-title { font-size: 15px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.01em; }
 
 .btn-change-friction {
   background: rgba(243, 197, 71, 0.12);
@@ -562,13 +465,7 @@ body::before {
   border-color: rgba(194, 243, 221, 0.35);
 }
 
-.deck-list {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  margin-bottom: 8px;
-}
+.deck-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 8px; width: 100%; }
 
 .deck-item {
   width: 100%;
@@ -588,22 +485,12 @@ body::before {
   box-shadow: 0 0 20px rgba(var(--accent-gold-rgb), 0.22);
 }
 
-.deck-meta {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  margin-bottom: 2px;
-}
+.deck-meta { font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: 0.1em; margin-bottom: 2px; }
 .deck-meta.free { color: var(--text-muted); }
 .deck-meta.premium { color: var(--accent-gold); }
-
 .deck-name { font-size: 14px; font-weight: 800; color: var(--text-primary); line-height: 1.25; }
 .deck-desc { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
 
-/* ========================================================
-   BOTTOM UTILITY DOCK
-======================================================== */
 .bottom-utility-dock {
   width: 100%;
   display: flex;
@@ -627,21 +514,12 @@ body::before {
   border-radius: 10px;
   transition: all 0.15s ease;
 }
-.dock-btn:hover, .dock-btn:active {
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.05);
-}
-
+.dock-btn:hover, .dock-btn:active { color: var(--text-primary); background: rgba(255, 255, 255, 0.05); }
 .dock-btn-icon { font-size: 17px; line-height: 1; }
-.dock-btn-label {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-}
+.dock-btn-label { font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: 0.04em; }
 
 /* ========================================================
-   MODALS / DRAWERS (AUTO CONTENT-HUGGING & CONSTRAINED)
+   MODALS / DRAWERS (AUTO CONTENT-HUGGING FIX)
 ======================================================== */
 .modal-backdrop, .paywall-modal {
   position: absolute;
@@ -671,7 +549,7 @@ body::before {
   max-width: 440px;
   margin: 0 auto;
   height: auto !important;
-  max-height: 82vh !important;
+  max-height: 85vh !important;
   display: flex;
   flex-direction: column;
   background: #0d1b2c;
@@ -686,9 +564,12 @@ body::before {
   touch-action: pan-y;
 }
 
-/* Thumb Pull-Down Handle */
-.paywall-sheet::before,
-.modal-sheet::before {
+.modal-sheet.modal-compact {
+  max-height: 60vh !important;
+  padding: 14px 20px 22px 20px;
+}
+
+.paywall-sheet::before, .modal-sheet::before {
   content: '';
   display: block;
   width: 38px;
@@ -704,13 +585,7 @@ body::before {
   transform: translateY(0);
 }
 
-/* Paywall Cards */
-.tier-card-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
+.tier-card-stack { display: flex; flex-direction: column; gap: 10px; }
 .tier-card {
   border: 1px solid var(--card-border);
   border-radius: 14px;
@@ -720,37 +595,13 @@ body::before {
   transition: all 0.2s ease;
   text-align: left;
 }
-.tier-card.selected {
-  border-color: var(--accent-gold);
-  background: rgba(var(--accent-gold-rgb), 0.12);
-}
-
-.tier-top-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.tier-plan-title {
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--text-primary);
-}
-
-.tier-price-highlight {
-  font-family: var(--font-mono);
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--text-primary);
-}
+.tier-card.selected { border-color: var(--accent-gold); background: rgba(var(--accent-gold-rgb), 0.12); }
+.tier-top-row { display: flex; justify-content: space-between; align-items: center; }
+.tier-plan-title { font-size: 14px; font-weight: 800; color: var(--text-primary); }
+.tier-price-highlight { font-family: var(--font-mono); font-size: 16px; font-weight: 500; color: var(--text-primary); }
 .tier-price-highlight.price-green { color: var(--accent-safe); }
 .tier-price-highlight.price-red { color: var(--accent-coral); }
-
-.tier-sub-caption {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-top: 4px;
-}
+.tier-sub-caption { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
 
 /* ========================================================
    SCREEN 4: TRIGGER PHASE
@@ -798,106 +649,52 @@ body::before {
 }
 
 /* ========================================================
-   SCREEN 5: CENTERED INSTRUCTIONS & CALM TIMER
-======================================================== */
-.countdown-task-centerpiece {
-  margin: auto 0;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 0 8px;
-}
-
-.focus-area-badge {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  font-weight: 600;
-  letter-spacing: 0.10em;
-  color: var(--accent-gold);
-  text-transform: uppercase;
-}
-
-.task-instruction-headline {
-  font-size: 23px;
-  font-weight: 800;
-  color: #FFFFFF;
-  line-height: 1.45;
-  letter-spacing: -0.015em;
-  margin: 16px 0 20px 0;
-  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.5);
-  max-width: 380px;
-}
-
-.task-instruction-headline .sentence-paragraph {
-  margin-bottom: 8px;
-}
-.task-instruction-headline .sentence-paragraph:last-child {
-  margin-bottom: 0;
-}
-
-.calm-timer-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(13, 27, 44, 0.75);
-  border: 1px solid var(--card-border-strong);
-  padding: 6px 16px;
-  border-radius: 9999px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
-}
-
-.calm-timer-icon {
-  font-size: 15px;
-  line-height: 1;
-}
-
-.calm-timer-digits {
-  font-family: var(--font-mono);
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  color: var(--accent-gold);
-}
-
-.calm-timer-caption {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-top: 10px;
-  max-width: 280px;
-  line-height: 1.4;
-  text-align: center;
-}
-
-/* ========================================================
-   SCREEN 6: VICTORY & CONFIDENCE AFFIRMATIONS
+   SCREEN 5: TASK DISPLAY & INSTRUCTIONS
 ======================================================== */
 .task-hero-card {
   background: rgba(13, 27, 44, 0.75);
   border: 1.5px solid var(--card-border-strong);
   border-radius: 20px;
   padding: 24px 20px;
-  text-align: center;
+  text-align: left;
 }
 
+.focus-area-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--accent-gold);
+  margin-top: 0;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+}
+
+/* Screenshot 1 Fix: Enlarged and centered instructions */
+.task-instruction-headline {
+  font-size: 23px;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.45;
+}
+
+.task-instruction-headline .sentence-paragraph { margin-bottom: 8px; }
+.task-instruction-headline .sentence-paragraph:last-child { margin-bottom: 0; }
+
+/* ========================================================
+   SCREEN 6: VICTORY & AFFIRMATIONS
+======================================================== */
 .victory-affirmation-headline {
   font-size: 21px !important;
   font-weight: 800 !important;
   color: #FFFFFF !important;
   line-height: 1.45 !important;
   letter-spacing: -0.01em;
-  text-align: center;
-  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.5);
+  text-align: left;
 }
 
-.victory-affirmation-headline .sentence-paragraph {
-  margin-bottom: 8px;
-}
-.victory-affirmation-headline .sentence-paragraph:last-child {
-  margin-bottom: 0;
-}
+.victory-affirmation-headline .sentence-paragraph { margin-bottom: 8px; }
+.victory-affirmation-headline .sentence-paragraph:last-child { margin-bottom: 0; }
 
 .victory-unwind-banner {
   margin-top: 14px;
