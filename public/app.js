@@ -1,6 +1,6 @@
 /**
  * 120Reset Client Engine (public/app.js)
- * Live Supabase User Sync & Premium Unlock Engine
+ * Live Supabase User Sync, Gesture Pull-Down & Premium Unlock Engine
  */
 
 let currentUserProfile = null;
@@ -167,9 +167,6 @@ function syncNeuraFrictions() {
   }
 }
 
-/* ========================================================
-   SCREEN 2 PREMIUM BADGES UPDATE
-======================================================== */
 function updatePremiumDeckBadges() {
   const hasAccess = isUserPremiumOrPass();
   document.querySelectorAll('.deck-meta.premium').forEach(badge => {
@@ -183,9 +180,6 @@ function updatePremiumDeckBadges() {
   });
 }
 
-/* ========================================================
-   SUPABASE EMAIL AUTO-DETECTION HELPER
-======================================================== */
 function resolveCurrentAccountEmail() {
   const urlParams = new URLSearchParams(window.location.search);
   const emailParam = urlParams.get('email');
@@ -195,7 +189,6 @@ function resolveCurrentAccountEmail() {
     return clean;
   }
 
-  // Auto-detect Supabase Auth session token from localStorage
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     if (key && (key.startsWith('sb-') || key.includes('auth-token') || key === 'supabase.auth.token')) {
@@ -215,11 +208,79 @@ function resolveCurrentAccountEmail() {
 }
 
 /* ========================================================
+   BOTTOM SHEET SWIPE-TO-DISMISS GESTURE (THUMB SLIDE DOWN)
+======================================================== */
+function initBottomSheetSwipeDown() {
+  const sheets = document.querySelectorAll('.modal-sheet, .paywall-sheet');
+
+  sheets.forEach(sheet => {
+    let startY = 0;
+    let currentY = 0;
+    let isDragging = false;
+    let startTime = 0;
+
+    sheet.addEventListener('touchstart', (e) => {
+      if (sheet.scrollTop > 0) return;
+      startY = e.touches[0].clientY;
+      currentY = startY;
+      startTime = Date.now();
+      isDragging = true;
+    }, { passive: true });
+
+    sheet.addEventListener('touchmove', (e) => {
+      if (!isDragging) return;
+      currentY = e.touches[0].clientY;
+      const deltaY = currentY - startY;
+
+      if (deltaY > 0 && sheet.scrollTop <= 0) {
+        if (e.cancelable) e.preventDefault();
+        sheet.style.transition = 'none';
+        sheet.style.transform = `translateY(${deltaY}px)`;
+      } else if (deltaY < 0) {
+        sheet.style.transform = '';
+      }
+    }, { passive: false });
+
+    sheet.addEventListener('touchend', () => {
+      if (!isDragging) return;
+      isDragging = false;
+      const deltaY = currentY - startY;
+      const elapsed = Date.now() - startTime;
+      const velocity = deltaY / Math.max(elapsed, 1);
+
+      sheet.style.transition = 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)';
+
+      if (deltaY > 75 || (velocity > 0.4 && deltaY > 30)) {
+        sheet.style.transform = 'translateY(100%)';
+        setTimeout(() => {
+          sheet.style.transform = '';
+          sheet.style.transition = '';
+          const parentModal = sheet.closest('.modal-backdrop, .paywall-modal');
+          if (parentModal) {
+            parentModal.classList.remove('active');
+          }
+        }, 220);
+      } else {
+        sheet.style.transform = 'translateY(0)';
+        setTimeout(() => {
+          sheet.style.transform = '';
+          sheet.style.transition = '';
+        }, 250);
+      }
+
+      startY = 0;
+      currentY = 0;
+    }, { passive: true });
+  });
+}
+
+/* ========================================================
    INITIALIZATION & BOOT
 ======================================================== */
 document.addEventListener("DOMContentLoaded", async () => {
   localStorage.setItem('120reset_returning_user', 'true');
 
+  initBottomSheetSwipeDown();
   renderPresetIntercepts();
   renderCustomIntercepts();
   startBackgroundInterceptMonitor();
@@ -719,9 +780,6 @@ function runAnotherRound() {
   executeTurnaroundSpin();
 }
 
-/* ========================================================
-   DAILY RESET LIMITS & PASS ACCESS
-======================================================== */
 function getDailyClicksCount() {
   const today = getLocalDateString();
   const savedDate = localStorage.getItem('nudge_click_date');
@@ -838,9 +896,6 @@ async function syncLifetimeProgressToCloud() {
   }
 }
 
-/* ========================================================
-   MODALS, DRAWERS & ACCOUNT PROFILE
-======================================================== */
 function openPaywallModal() {
   const modal = document.getElementById('paywall-overlay');
   if (modal) modal.classList.add('active');
@@ -909,9 +964,6 @@ function handleUserSignOut() {
   }
 }
 
-/* ========================================================
-   STRIPE PAYMENT GATEWAY
-======================================================== */
 async function simulatePurchase() {
   const selectedTierBox = document.querySelector('.tier-card.selected');
   if (!selectedTierBox) { alert("Please select an option to continue."); return; }
@@ -956,9 +1008,6 @@ async function checkStripeRedirectStatus() {
   }
 }
 
-/* ========================================================
-   INTERCEPTS ENGINE
-======================================================== */
 function getStoredPresetIntercepts() {
   const stored = localStorage.getItem('nudge_preset_intercepts');
   if (!stored) {
