@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;700&family=Manrope:wght@400;500;600;700;800&display=swap');
 
 :root {
   color-scheme: dark;
@@ -115,13 +115,8 @@ body::before {
   z-index: 10;
 }
 
-.screen::-webkit-scrollbar {
-  display: none;
-}
-.screen {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
+.screen::-webkit-scrollbar { display: none; }
+.screen { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* ========================================================
    SCREEN 0: WELCOME SCREEN
@@ -177,9 +172,7 @@ body::before {
   text-align: center;
 }
 
-.highlight-text {
-  color: var(--accent-gold);
-}
+.highlight-text { color: var(--accent-gold); }
 
 .welcome-centerpiece {
   margin: auto 0;
@@ -288,11 +281,7 @@ body::before {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
-.perk-icon {
-  font-size: 20px;
-  line-height: 1;
-}
-
+.perk-icon { font-size: 20px; line-height: 1; }
 .perk-label {
   font-size: 11px;
   font-weight: 700;
@@ -402,19 +391,8 @@ body::before {
   background: rgba(20, 41, 67, 0.8);
 }
 
-.btn-bypass {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 6px;
-  text-decoration: underline;
-}
-
 /* ========================================================
-   50% BRAIN VIEWPORT CONTAINER
+   50% BRAIN VIEWPORT CONTAINER & VISIBILITY PILL (SCREENSHOT 1)
 ======================================================== */
 .brain-viewport-container {
   width: 100%;
@@ -434,22 +412,24 @@ body::before {
   overflow: hidden;
 }
 
+/* Screenshot 1 Fix: Top z-index ensures indicator sits permanently on top of all canvas layers */
 .brain-status-indicator {
   position: absolute;
   top: 10px;
   right: 12px;
   font-family: var(--font-mono);
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.08em;
-  padding: 4px 10px;
-  border-radius: 6px;
-  background: rgba(8, 17, 31, 0.95);
+  padding: 5px 12px;
+  border-radius: 8px;
+  background: rgba(8, 17, 31, 0.92);
   border: 1px solid var(--card-border-strong);
   color: var(--text-primary);
   pointer-events: none;
-  z-index: 5;
+  z-index: 25 !important;
   text-transform: uppercase;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
 }
 
 .friction-subheading {
@@ -570,7 +550,7 @@ body::before {
 }
 
 /* ========================================================
-   SCREEN 3: SELECT REMEDY & RETURN BUTTON
+   SCREEN 3: SELECT REMEDY & DECKS
 ======================================================== */
 .remedy-header-row {
   width: 100%;
@@ -674,7 +654,7 @@ body::before {
 }
 
 /* ========================================================
-   BOTTOM UTILITY DOCK (SCREENS 2 & 3)
+   BOTTOM UTILITY DOCK
 ======================================================== */
 .bottom-utility-dock {
   width: 100%;
@@ -713,7 +693,7 @@ body::before {
 }
 
 /* ========================================================
-   MODALS / DRAWERS (WITH THUMB GRAB HANDLE)
+   MODALS / DRAWERS (SCREENSHOT 2 FIX: CLEAN AUTO-FITTING)
 ======================================================== */
 .modal-backdrop, .paywall-modal {
   position: absolute;
@@ -721,15 +701,16 @@ body::before {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(8, 17, 31, 0.40);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
+  background: rgba(8, 17, 31, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   z-index: 99;
   display: flex;
   align-items: flex-end;
+  justify-content: center;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.35s ease, visibility 0.35s ease;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
 .modal-backdrop.active, .paywall-modal.active {
@@ -737,10 +718,12 @@ body::before {
   visibility: visible;
 }
 
+/* Screenshot 2 Fix: Auto-fitting heights instead of forcing giant empty space */
 .paywall-sheet, .modal-sheet {
   width: 100%;
-  height: 72% !important;
-  max-height: 72% !important;
+  max-width: 440px;
+  height: auto !important;
+  max-height: 82vh !important;
   display: flex;
   flex-direction: column;
   background: #0d1b2c;
@@ -753,6 +736,12 @@ body::before {
   transform: translateY(100%);
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   touch-action: pan-y;
+}
+
+/* Compact modifier specifically for short dialogs like Referral & Intercepts */
+.modal-sheet.modal-compact {
+  max-height: 52vh !important;
+  padding: 14px 20px 22px 20px;
 }
 
 /* Thumb Pull-Down Handle */
@@ -773,6 +762,55 @@ body::before {
   transform: translateY(0);
 }
 
+/* ========================================================
+   ENLARGED PROFILE STATS BAR (SCREENSHOT 3 FIX)
+======================================================== */
+.profile-stats-bar-grid {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.stat-card-box {
+  flex: 1;
+  background: rgba(8, 17, 31, 0.85);
+  border: 1px solid var(--card-border);
+  padding: 14px 10px;
+  border-radius: 14px;
+  text-align: center;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.4);
+}
+
+.stat-label-caption {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+/* Screenshot 3 Fix: Dramatic 28px font enlargement with bold terminal presence */
+.stat-display-value {
+  font-family: var(--font-mono);
+  font-size: 28px !important;
+  font-weight: 800 !important;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.stat-wins-gold {
+  color: var(--accent-gold) !important;
+  text-shadow: 0 0 16px rgba(var(--accent-gold-rgb), 0.35);
+}
+
+.stat-focus-green {
+  color: var(--accent-safe) !important;
+  text-shadow: 0 0 16px rgba(194, 243, 221, 0.35);
+}
+
+/* Paywall Cards */
 .tier-card-stack {
   display: flex;
   flex-direction: column;
@@ -853,9 +891,7 @@ body::before {
   box-shadow: 0 0 40px rgba(var(--accent-gold-rgb), 0.55);
   transition: transform 0.1s ease;
 }
-.big-red-btn:active {
-  transform: scale(0.95);
-}
+.big-red-btn:active { transform: scale(0.95); }
 
 .btn-back-focus {
   background: none;
