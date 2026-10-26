@@ -1,7 +1,6 @@
 /**
  * 120Reset Client Engine (public/app.js)
- * Clean Architecture with Standalone NeuraBrain Canvas Module
- * Sequential Flow: Welcome (0) -> Frictions (1) -> Dashboard (2) -> Trigger -> Countdown -> Victory
+ * Live Supabase User Sync & Premium Unlock Engine
  */
 
 let currentUserProfile = null;
@@ -15,7 +14,6 @@ let overwhelmCurrentStep = 1;
 let totalWinsCount = 0;
 let totalFocusReclaimed = 0.0;
 
-// Multi-select friction states (up to 3)
 window.activeSelectedFrictions = new Set();
 let brainConstrictionRatio = 0.0;
 
@@ -108,7 +106,7 @@ window.addEventListener('popstate', () => {
 });
 
 /* ========================================================
-   TASK COMPLETION CREDIT & VISIBILITY CALIBRATION
+   TASK COMPLETION CREDIT & VISIBILITY
 ======================================================== */
 function getTasksCreditToday() {
   const today = getLocalDateString();
@@ -170,7 +168,54 @@ function syncNeuraFrictions() {
 }
 
 /* ========================================================
-   INITIALIZATION & SEQUENTIAL BOOT
+   SCREEN 2 PREMIUM BADGES UPDATE
+======================================================== */
+function updatePremiumDeckBadges() {
+  const hasAccess = isUserPremiumOrPass();
+  document.querySelectorAll('.deck-meta.premium').forEach(badge => {
+    if (hasAccess) {
+      badge.innerText = "PREMIUM AREA UNLOCKED ✓";
+      badge.style.color = "var(--accent-safe)";
+    } else {
+      badge.innerText = "PREMIUM UPGRADE ⚡";
+      badge.style.color = "var(--accent-gold)";
+    }
+  });
+}
+
+/* ========================================================
+   SUPABASE EMAIL AUTO-DETECTION HELPER
+======================================================== */
+function resolveCurrentAccountEmail() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const emailParam = urlParams.get('email');
+  if (emailParam && emailParam.includes('@')) {
+    const clean = emailParam.trim().toLowerCase();
+    localStorage.setItem('nudge_user_email', clean);
+    return clean;
+  }
+
+  // Auto-detect Supabase Auth session token from localStorage
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && (key.startsWith('sb-') || key.includes('auth-token') || key === 'supabase.auth.token')) {
+      try {
+        const item = JSON.parse(localStorage.getItem(key));
+        const emailFound = item?.user?.email || item?.currentSession?.user?.email;
+        if (emailFound && emailFound.includes('@')) {
+          const clean = emailFound.trim().toLowerCase();
+          localStorage.setItem('nudge_user_email', clean);
+          return clean;
+        }
+      } catch (e) {}
+    }
+  }
+
+  return localStorage.getItem('nudge_user_email') || '';
+}
+
+/* ========================================================
+   INITIALIZATION & BOOT
 ======================================================== */
 document.addEventListener("DOMContentLoaded", async () => {
   localStorage.setItem('120reset_returning_user', 'true');
@@ -181,13 +226,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   await checkStripeRedirectStatus();
   initBrainConstrictionState();
 
-  // Mount standalone NeuraBrain on Screen 1 container
   const s2Container = document.getElementById('brain-viewport-s2');
   if (window.NeuraBrain && s2Container) {
     window.NeuraBrain.mount(s2Container);
   }
 
-  // Parse incoming friction parameter from index.html CTA
   const urlParams = new URLSearchParams(window.location.search);
   const frictionParam = urlParams.get('friction');
   if (frictionParam && ['mindless_scrolling', 'task_paralysis', 'low_lethargy'].includes(frictionParam)) {
@@ -201,13 +244,28 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateBrainStatusText();
   }
 
-  // Fetch Supabase user profile
-  const savedEmail = localStorage.getItem('nudge_user_email') || 'beta_tester@120reset.app';
-  localStorage.setItem('nudge_user_email', savedEmail);
+  const activeEmail = resolveCurrentAccountEmail();
+  if (activeEmail) {
+    await fetchUserProfileFromCloud(activeEmail);
+  } else {
+    currentUserProfile = { email: 'beta_tester@120reset.app', premium_user: false, pass_expires_at: null };
+  }
+
+  startPassTicker();
+  updateMetricDashboard();
+  updatePremiumDeckBadges();
+
+  switchScreen('screen-welcome', false);
+});
+
+async function fetchUserProfileFromCloud(email) {
+  if (!email || !email.includes('@')) return null;
+  const cleanEmail = email.trim().toLowerCase();
+  localStorage.setItem('nudge_user_email', cleanEmail);
 
   try {
     const localDate = getLocalDateString();
-    const endpoint = `/api/sync-user?email=${encodeURIComponent(savedEmail)}&action=get_profile&clientDate=${encodeURIComponent(localDate)}`;
+    const endpoint = `/api/sync-user?email=${encodeURIComponent(cleanEmail)}&action=get_profile&clientDate=${encodeURIComponent(localDate)}`;
     const response = await fetch(endpoint);
     
     if (response.ok) {
@@ -216,20 +274,50 @@ document.addEventListener("DOMContentLoaded", async () => {
         currentUserProfile = data.profile;
         totalWinsCount = parseInt(data.profile.total_wins, 10) || totalWinsCount;
         totalFocusReclaimed = parseFloat(data.profile.focus_reclaimed) || totalFocusReclaimed;
+        updateMetricDashboard();
+        updatePremiumDeckBadges();
+        return data.profile;
       }
     }
   } catch (e) {
-    if (!currentUserProfile) {
-      currentUserProfile = { email: savedEmail, premium_user: false, pass_expires_at: null };
-    }
+    console.warn("Cloud profile fetch fallback:", e);
+  }
+  return null;
+}
+
+async function syncUserAccountEmail() {
+  const inputEl = document.getElementById('profile-email-input');
+  const msgEl = document.getElementById('sync-feedback-msg');
+  if (!inputEl) return;
+
+  const targetEmail = inputEl.value.trim().toLowerCase();
+  if (!targetEmail || !targetEmail.includes('@')) {
+    alert("Please enter a valid email address.");
+    return;
   }
 
-  startPassTicker();
-  updateMetricDashboard();
+  if (msgEl) {
+    msgEl.style.display = 'block';
+    msgEl.style.color = 'var(--accent-gold)';
+    msgEl.innerText = 'Connecting to Supabase...';
+  }
 
-  // Sequential boot starts strictly on Screen 0 (Welcome)
-  switchScreen('screen-welcome', false);
-});
+  const profile = await fetchUserProfileFromCloud(targetEmail);
+
+  if (profile) {
+    if (msgEl) {
+      const isPrem = isUserPremiumOrPass();
+      msgEl.style.color = 'var(--accent-safe)';
+      msgEl.innerText = `✓ Connected: ${profile.email} (${isPrem ? 'Premium Unlocked' : 'Free Tier'})`;
+    }
+    openProfileModal();
+  } else {
+    if (msgEl) {
+      msgEl.style.color = 'var(--accent-coral)';
+      msgEl.innerText = 'Error syncing with database. Check API deployment.';
+    }
+  }
+}
 
 function handleWelcomeContinue() {
   switchScreen('screen-onboarding-2', true);
@@ -321,7 +409,6 @@ function switchScreen(screenId, shouldPushHistory = true) {
       pushNavigationState(screenId);
     }
 
-    // Remount NeuraBrain stage between Screen 1 and Screen 2
     if (screenId === 'screen-onboarding-2' || screenId === 'screen-dashboard') {
       const targetContainer = document.getElementById(screenId === 'screen-onboarding-2' ? 'brain-viewport-s2' : 'brain-viewport-s3');
       if (targetContainer && window.NeuraBrain) {
@@ -332,6 +419,7 @@ function switchScreen(screenId, shouldPushHistory = true) {
     if (screenId === 'screen-dashboard' || screenId === 'screen-onboarding-2' || screenId === 'screen-victory') {
       updatePassCountdown();
       updateBrainStatusText();
+      updatePremiumDeckBadges();
     }
   }
 }
@@ -371,9 +459,6 @@ function startTriggerPhase() {
   }
 }
 
-/* ========================================================
-   TASK EXECUTION & CLOUD API DISPATCH
-======================================================== */
 async function executeTurnaroundSpin() {
   const hasAccess = isUserPremiumOrPass();
   const dailyClicks = getDailyClicksCount();
@@ -393,7 +478,7 @@ async function executeTurnaroundSpin() {
 
   const categoryKey = selectedCategory || 'charisma';
   const frictionKey = Array.from(window.activeSelectedFrictions)[0] || 'mindless_scrolling';
-  const userEmail = localStorage.getItem('nudge_user_email') || 'beta_tester@120reset.app';
+  const userEmail = resolveCurrentAccountEmail();
 
   const seenKey = `nudge_seen_${categoryKey}`;
   const seenIndices = JSON.parse(localStorage.getItem(seenKey) || '[]');
@@ -635,7 +720,7 @@ function runAnotherRound() {
 }
 
 /* ========================================================
-   DAILY RESET LIMITS & 48-HOUR PASS TICKER
+   DAILY RESET LIMITS & PASS ACCESS
 ======================================================== */
 function getDailyClicksCount() {
   const today = getLocalDateString();
@@ -679,7 +764,10 @@ function isUserPremiumOrPass() {
     const expiryMs = parseDbTimestamp(currentUserProfile.pass_expires_at);
     return Date.now() < expiryMs;
   }
-  return currentUserProfile.premium_user === true || currentUserProfile.premium_user === 'true';
+  return currentUserProfile.premium_user === true || 
+         currentUserProfile.premium_user === 'true' || 
+         currentUserProfile.is_premium === true || 
+         currentUserProfile.is_premium === 'true';
 }
 
 function getPassRemainingSeconds() {
@@ -717,13 +805,13 @@ function updatePassCountdown() {
 
 function updateMetricDashboard() {
   updatePassCountdown();
+  updatePremiumDeckBadges();
 }
 
-/* ========================================================
-   SUPABASE CLOUD SYNC & RECOVERY
-======================================================== */
 async function syncLifetimeProgressToCloud() {
-  const userEmail = localStorage.getItem('nudge_user_email') || 'beta_tester@120reset.app';
+  const userEmail = resolveCurrentAccountEmail();
+  if (!userEmail) return;
+
   const currentClicks = getDailyClicksCount();
   const today = getLocalDateString();
 
@@ -743,6 +831,7 @@ async function syncLifetimeProgressToCloud() {
     if (data && data.profile) {
       currentUserProfile = data.profile;
       updatePassCountdown();
+      updatePremiumDeckBadges();
     }
   } catch (e) {
     console.warn("Supabase background sync fallback:", e);
@@ -779,13 +868,13 @@ function openReferralModal() {
 function openProfileModal() {
   const modal = document.getElementById('profile-drawer-modal');
   if (modal) {
-    const emailEl = document.getElementById('profile-email-display');
+    const emailInput = document.getElementById('profile-email-input');
     const winsEl = document.getElementById('profile-stat-wins');
     const focusEl = document.getElementById('profile-stat-focus');
     const passCard = document.getElementById('profile-pass-status-card');
 
-    const email = localStorage.getItem('nudge_user_email') || 'beta_tester@120reset.app';
-    if (emailEl) emailEl.innerText = email;
+    const email = resolveCurrentAccountEmail();
+    if (emailInput) emailInput.value = email;
     if (winsEl) winsEl.innerText = totalWinsCount.toString();
     if (focusEl) focusEl.innerText = `${totalFocusReclaimed.toFixed(1)}m`;
 
@@ -816,12 +905,12 @@ function closeModal(modalId) {
 function handleUserSignOut() {
   if (confirm("Reset local beta session?")) {
     localStorage.clear();
-    window.location.href = '/';
+    window.location.href = '/app.html';
   }
 }
 
 /* ========================================================
-   STRIPE PAYMENT GATEWAY INTEGRATION
+   STRIPE PAYMENT GATEWAY
 ======================================================== */
 async function simulatePurchase() {
   const selectedTierBox = document.querySelector('.tier-card.selected');
@@ -829,7 +918,7 @@ async function simulatePurchase() {
 
   const planType = selectedTierBox.getAttribute('data-plan') || 'monthly';
   const paywallBtn = document.querySelector('#paywall-overlay .btn-primary');
-  const userEmail = localStorage.getItem('nudge_user_email') || 'beta_tester@120reset.app';
+  const userEmail = resolveCurrentAccountEmail() || 'beta_tester@120reset.app';
 
   if (paywallBtn) { paywallBtn.innerText = "SECURING GATEWAY..."; paywallBtn.disabled = true; }
 
@@ -858,6 +947,10 @@ async function simulatePurchase() {
 async function checkStripeRedirectStatus() {
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('session') === 'success') {
+    const returnedEmail = urlParams.get('email');
+    if (returnedEmail && returnedEmail.includes('@')) {
+      localStorage.setItem('nudge_user_email', returnedEmail.trim().toLowerCase());
+    }
     window.history.replaceState({}, document.title, window.location.pathname);
     await syncLifetimeProgressToCloud();
   }
