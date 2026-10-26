@@ -1,360 +1,456 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#08111f">
-  <meta name="description" content="120Reset: The somatic circuit breaker app that unfreezes your motor cortex in 120 seconds.">
-  <link rel="manifest" href="manifest.webmanifest">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#08111f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  
+  <title>120Reset | Circuit Breaker</title>
+  <meta name="description" content="A somatic circuit breaker for digital friction." />
+
+  <!-- Preconnect to Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
-  <title>120Reset — The Circuit Breaker</title>
+  
+  <link rel="stylesheet" href="/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 <body>
 
-<div class="app-container">
+  <!-- FIXED BACKGROUND -->
+  <div class="fixed-bg"></div>
 
-  <!-- SCREEN 0: WELCOME SCREEN -->
-  <section class="screen welcome-screen-styled active" id="screen-welcome">
-    <div class="welcome-header-zone">
-      <div class="kicker-wrapper">
-        <span class="brand-kicker-glow">120RESET PROTOCOL</span>
+  <!-- NEURAL FOG CANVAS -->
+  <canvas id="fogCanvas"></canvas>
+
+  <div class="app-container">
+
+    <!-- SCREEN 0: WELCOME SCREEN (UPDATED) -->
+    <div id="screen-welcome" class="screen welcome-screen-styled active">
+      <div class="welcome-header-zone">
+        <div class="kicker-wrapper">
+          <span class="brand-kicker-glow">120RESET PROTOCOL</span>
+        </div>
+        <h1 class="welcome-hero-title">
+          Break the mental freeze <span class="highlight-text">in 120 seconds.</span>
+        </h1>
       </div>
-      <h1 class="welcome-hero-title">Break the mental freeze <span class="highlight-text">in 120 seconds.</span></h1>
-    </div>
 
-    <div class="welcome-centerpiece">
-      <div class="pulse-outer-aura">
-        <div class="kinetic-core-circle">
-          <span class="core-spark-icon">⚡</span>
-          <div class="core-number">120<span class="core-unit">s</span></div>
-          <span class="core-status-pill">CIRCUIT BREAKER</span>
+      <div class="welcome-centerpiece">
+        <div class="pulse-outer-aura">
+          <!-- The circle is now the button to proceed -->
+          <div class="kinetic-core-circle" style="cursor: pointer;" onclick="switchScreen('screen-onboarding-2', true)">
+            <span style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 2px;">ENTER</span>
+            <span class="core-spark-icon">⚡</span>
+            <div class="core-number">120<span class="core-unit">s</span></div>
+            <span class="core-status-pill">CIRCUIT BREAKER</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="welcome-perks-row">
+        <div class="perk-chip">
+          <span class="perk-icon">🧠</span>
+          <span class="perk-label">Somatic Vagus Reset</span>
+        </div>
+        <div class="perk-chip">
+          <span class="perk-icon">⚡</span>
+          <span class="perk-label">Instant Motor Ignition</span>
+        </div>
+        <div class="perk-chip">
+          <span class="perk-icon">🛡️</span>
+          <span class="perk-label">Friction Intercept</span>
         </div>
       </div>
     </div>
 
-    <div class="welcome-perks-row">
-      <div class="perk-chip">
-        <span class="perk-icon">🧠</span>
-        <span class="perk-label">Somatic Vagus Reset</span>
-      </div>
-      <div class="perk-chip">
-        <span class="perk-icon">⚡</span>
-        <span class="perk-label">Instant Motor Ignition</span>
-      </div>
-      <div class="perk-chip">
-        <span class="perk-icon">🛡️</span>
-        <span class="perk-label">Friction Intercept</span>
-      </div>
-    </div>
-
-    <div class="welcome-action-zone">
-      <button class="btn-welcome-cta" onclick="handleWelcomeContinue()">
-        Enter Protocol <span>→</span>
-      </button>
-    </div>
-  </section>
-
-  <!-- SCREEN 1/2: SELECT FRICTIONS -->
-  <section class="screen" id="screen-onboarding-2">
-    <div class="friction-subheading">Select what has you stuck right now:</div>
-    
-    <div class="brain-viewport-container" id="brain-viewport-s2">
-      <div class="brain-status-indicator" id="brain-status-s2">100% VISIBILITY • CLEAR SIGNAL</div>
-    </div>
-
-    <div class="friction-cards-rack">
-      <div class="friction-chip" data-friction="mindless_scrolling" onclick="toggleFrictionSelection(this, 'mindless_scrolling')">
-        <div class="friction-chip-content">
-          <span class="friction-chip-icon">📱</span>
-          <div class="friction-chip-title">Mindless scrolling</div>
+    <!-- SCREEN 1: ONBOARDING EMAIL + OTP (PRESERVED IN DOM, BYPASSED IN BETA) -->
+    <div id="screen-onboarding-1" class="screen">
+      <div style="margin: auto 0; width: 100%;">
+        <span class="badge" style="margin-bottom: 12px;">CLINICALLY BACKED PROTOCOL</span>
+        <h1 class="title-large" style="margin-bottom: 8px;">120<br>Reset</h1>
+        <p class="body-text" style="margin-bottom: 16px;">The behavioral circuit breaker. Interrupt screen addiction and task paralysis instantly in exactly 120 seconds.</p>
+        
+        <div id="auth-email-group" style="width: 100%; text-align: left; margin-bottom: 10px;">
+          <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase;">Focus Email Identity</label>
+          <input type="email" id="user-auth-email" placeholder="name@example.com" 
+                 style="width: 100%; padding: 14px; border: 1px solid var(--card-border); border-radius: 14px; font-size: 15px; margin-top: 4px; outline: none; background: rgba(13, 27, 44, 0.65); color: #FFFFFF;">
         </div>
-        <div class="friction-checkbox-pill">✓</div>
-      </div>
 
-      <div class="friction-chip" data-friction="task_paralysis" onclick="toggleFrictionSelection(this, 'task_paralysis')">
-        <div class="friction-chip-content">
-          <span class="friction-chip-icon">🧊</span>
-          <div class="friction-chip-title">Task paralysis</div>
+        <div id="auth-promo-group" style="width: 100%; text-align: left; margin-bottom: 14px;">
+          <label style="font-size: 11px; font-weight: 700; color: var(--text-dim); letter-spacing: 0.5px; text-transform: uppercase;">Promo or Referral Code (Optional)</label>
+          <input type="text" id="user-promo-code" placeholder="Enter code if you have one" oninput="this.value = this.value.toUpperCase();"
+                 style="width: 100%; padding: 12px 14px; border: 1.5px dashed var(--card-border); border-radius: 14px; font-size: 14px; margin-top: 4px; outline: none; background: rgba(13, 27, 44, 0.45); color: #FFFFFF; font-weight: 700; letter-spacing: 1px;">
         </div>
-        <div class="friction-checkbox-pill">✓</div>
-      </div>
 
-      <div class="friction-chip" data-friction="low_lethargy" onclick="toggleFrictionSelection(this, 'low_lethargy')">
-        <div class="friction-chip-content">
-          <span class="friction-chip-icon">🌫️</span>
-          <div class="friction-chip-title">Brain fog &amp; lethargy</div>
+        <div id="auth-otp-group" style="display: none; width: 100%; text-align: left; margin-bottom: 14px;">
+          <label style="font-size: 11px; font-weight: 700; color: var(--accent-coral); letter-spacing: 0.5px; text-transform: uppercase;">Enter 6-Digit Access Code</label>
+          <input type="text" id="user-auth-otp" placeholder="123456" maxlength="6" inputmode="numeric"
+                 style="width: 100%; padding: 14px; border: 2px solid var(--accent-coral); border-radius: 14px; font-size: 20px; font-weight: 800; letter-spacing: 6px; text-align: center; margin-top: 4px; outline: none; background: rgba(255, 93, 93, 0.1); color: #FFFFFF;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+            <span style="font-size: 11px; color: var(--text-dim);">Check your inbox for code</span>
+            <button type="button" onclick="resendOtpCode()" style="background: none; border: none; font-size: 11px; font-weight: 700; color: var(--accent-coral); text-decoration: underline; cursor: pointer;">Resend</button>
+          </div>
         </div>
-        <div class="friction-checkbox-pill">✓</div>
+      </div>
+
+      <div style="width: 100%; margin-top: auto;">
+        <button id="btn-auth-action" class="btn-primary" onclick="switchScreen('screen-onboarding-2', true)">Continue to App &rarr;</button>
       </div>
     </div>
 
-    <button class="btn-primary" onclick="confirmFrictionsAndOpenDashboard()">
-      Continue to Remedy Decks <span>→</span>
-    </button>
-  </section>
-
-  <!-- SCREEN 3: DASHBOARD & REMEDY DECKS -->
-  <section class="screen" id="screen-dashboard">
-    <div class="remedy-header-row">
-      <span class="remedy-title">Active Neural State</span>
-      <button class="btn-change-friction" onclick="switchScreen('screen-onboarding-2', true)">Edit Tensions ↺</button>
-    </div>
-
-    <div class="brain-viewport-container" id="brain-viewport-s3">
-      <div class="brain-status-indicator" id="brain-status-s3">100% VISIBILITY • CLEAR SIGNAL</div>
-    </div>
-
-    <div class="remedy-header-row" style="margin-top: 8px;">
-      <span class="remedy-title">Select Focus Protocol</span>
-      <span class="remedy-quota-pill" id="remedy-quota-badge">(0/4 Free)</span>
-    </div>
-
-    <div class="deck-list">
-      <div class="deck-item selected" onclick="selectDeck(this, false, 'charisma')">
-        <div class="deck-meta free">CORE PROTOCOL · 120s</div>
-        <div class="deck-name">The Charisma Deck</div>
-        <div class="deck-desc">Command the room. Posture, vocal anchor, unshakeable presence.</div>
-      </div>
-
-      <div class="deck-item" onclick="selectDeck(this, false, 'wealth')">
-        <div class="deck-meta free">CORE PROTOCOL · 120s</div>
-        <div class="deck-name">The Financial Reset Deck</div>
-        <div class="deck-desc">Unlock financial clarity. Disarm impulsive money anxiety.</div>
-      </div>
-
-      <div class="deck-item" onclick="selectDeck(this, true, 'dopamine')">
-        <div class="deck-meta premium" id="dopamine-deck-badge">PREMIUM UPGRADE ⚡</div>
-        <div class="deck-name">The Dopamine Swap Deck</div>
-        <div class="deck-desc">Break the freeze instantly. Rapid dopamine redirection.</div>
-      </div>
-
-      <div class="deck-item" onclick="selectDeck(this, true, 'overwhelm')">
-        <div class="deck-meta premium" id="overwhelm-deck-badge">PREMIUM UPGRADE ⚡</div>
-        <div class="deck-name">The Anti-Overwhelm Protocol</div>
-        <div class="deck-desc">Shatter task paralysis with 4 progressive micro-actions.</div>
-      </div>
-    </div>
-
-    <div class="bottom-utility-dock">
-      <button class="dock-btn" onclick="openInterceptsDrawer()">
-        <span class="dock-btn-icon">⏰</span>
-        <span class="dock-btn-label">INTERCEPTS</span>
-      </button>
-      <button class="dock-btn" onclick="openReferralModal()">
-        <span class="dock-btn-icon">🎁</span>
-        <span class="dock-btn-label">GET PASS</span>
-      </button>
-      <button class="dock-btn" onclick="openProfileModal()">
-        <span class="dock-btn-icon">👤</span>
-        <span class="dock-btn-label">PROFILE</span>
-      </button>
-    </div>
-  </section>
-
-  <!-- SCREEN 4: TRIGGER PHASE -->
-  <section class="screen" id="screen-trigger">
-    <div style="text-align:center; width:100%;">
-      <span class="badge" id="active-deck-kicker">CIRCUIT BREAKER ARMED</span>
-      <h2 class="title-large" id="active-deck-title" style="margin-top:12px;">Command the room.</h2>
-    </div>
-
-    <div class="spin-outer-ring" style="margin: auto 0;">
-      <button class="big-red-btn" onclick="executeTurnaroundSpin()">START</button>
-    </div>
-
-    <div style="width: 100%; text-align: center;">
-      <p class="body-text" id="trigger-instructions">Exhale slowly... allowing focus to narrow completely.</p>
+    <!-- SCREEN 2: IDENTIFY FRICTION LINE -->
+    <div id="screen-onboarding-2" class="screen">
+      <h2 class="title-large" style="margin-bottom: 14px; font-size: 22px;">Select what has you stuck right now:</h2>
       
-      <button class="btn-back-focus" onclick="switchScreen('screen-dashboard', true)">← Return to Decks</button>
-    </div>
-  </section>
-
-  <!-- SCREEN 5: 120-SECOND COUNTDOWN -->
-  <section class="screen" id="screen-countdown">
-    
-    <div class="task-hero-card" style="width: 100%; text-align: left !important; padding: 24px 20px;">
-      <div id="target-task-focus-area" class="focus-area-badge" style="margin-top: 0; margin-bottom: 12px; text-align: left;">FOCUS AREA: MOTOR IGNITION</div>
-      
-      <div id="target-task-text" class="task-instruction-headline">Loading protocol...</div>
-      
-      <div style="display: flex; align-items: center; gap: 6px; margin-top: 14px; opacity: 0.9;">
-        <span style="font-size: 14px;">⏱️</span>
-        <span id="timer-display" style="font-family: var(--font-mono); font-size: 14px; color: var(--text-primary);">02:00</span>
+      <!-- 50% BRAIN VIEWPORT -->
+      <div id="brain-viewport-s2" class="brain-viewport-container">
+        <!-- Visualization injected here by app.js -->
+        <div class="brain-status-indicator" id="brain-status-s2">100% VISIBILITY • CLEAR SIGNAL</div>
       </div>
-      
-      <div style="font-size: 14px; color: var(--text-primary); margin-top: 6px; line-height: 1.4;">
-        Take your time. Focus only on this single physical motion.
-      </div>
-    </div>
 
-    <div style="width: 100%; display: flex; flex-direction: column; gap: 8px; margin-top: auto;">
-      <button class="btn-primary" onclick="finishEarly()">Done Early &amp; Reclaim Focus ✓</button>
-      
-      <!-- Corrected exactly as requested -->
-      <button class="btn-secondary" onclick="cancelTimer()">Abort</button>
-    </div>
-  </section>
-
-  <!-- SCREEN 6: VICTORY SCREEN -->
-  <section class="screen" id="screen-victory">
-    <div style="text-align: center; width: 100%;">
-      <span class="badge" style="color:var(--accent-safe); border-color:rgba(194,243,221,0.35); background:rgba(194,243,221,0.12);">
-        IMPACT CONFIRMED
-      </span>
-      <h2 class="title-large" id="victory-title-text" style="margin-top: 10px;">Loop Broken.</h2>
-      <p class="body-text" id="victory-points-reclaimed-badge" style="color:var(--accent-gold); font-weight:700; margin-top:4px;">
-        +120s Focus Reclaimed
-      </p>
-    </div>
-
-    <div class="task-hero-card" style="width: 100%; margin: auto 0;">
-      <div id="victory-validation-copy" class="victory-affirmation-headline">
-        Action clears anxiety. You took the physical move. Keep your momentum.
-      </div>
-      <div id="victory-unwind-notice" class="victory-unwind-banner"></div>
-    </div>
-
-    <div id="standard-victory-actions" style="width:100%; display:flex; flex-direction:column; gap:8px;">
-      <button class="btn-primary" onclick="runAnotherRound()">Run Another Round <span>↺</span></button>
-      
-      <button class="btn-secondary" onclick="switchScreen('screen-dashboard', true)">Claim Stack Win</button>
-    </div>
-
-    <div id="overwhelm-victory-actions" style="width:100%; display:none; flex-direction:column; gap:8px;">
-      <button class="btn-primary" id="btn-overwhelm-next" onclick="advanceOverwhelmNextMove()">Continue to Next Move →</button>
-      <button class="btn-primary" id="btn-overwhelm-reset" style="display:none;" onclick="claimRewardStack()">Claim 4x Protocol Stack →</button>
-      
-      <button class="btn-secondary" onclick="switchScreen('screen-dashboard', true)">Claim Stack Win</button>
-    </div>
-  </section>
-
-</div>
-
-<!-- PAYWALL MODAL -->
-<div class="paywall-modal" id="paywall-overlay">
-  <div class="paywall-sheet">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-      <h3 style="font-size:17px; font-weight:800;">Unlock Unlimited Access</h3>
-      <button onclick="closePaywall()" style="background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer;">✕</button>
-    </div>
-
-    <div class="tier-card-stack">
-      <div class="tier-card selected" data-plan="pass" onclick="selectTier(this)">
-        <div class="tier-top-row">
-          <span class="tier-plan-title">⚡ 48-Hour Unlimited Pass</span>
-          <span class="tier-price-highlight price-green">$0.99</span>
+      <div style="width: 100%; display: flex; flex-direction: column; gap: 8px; margin-top: 8px; margin-bottom: 14px;">
+        <div class="friction-chip" data-friction="mindless_scrolling" onclick="toggleFrictionSelection(this, 'mindless_scrolling')">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 20px;">📱</span>
+            <div style="font-size: 15px; font-weight: 700; color: var(--text-primary);">Mindless scrolling</div>
+          </div>
+          <div class="friction-checkbox-pill">✓</div>
         </div>
-        <div class="tier-sub-caption">48 hours of unrestricted resets for urgent focus deadlines.</div>
+        <div class="friction-chip" data-friction="task_paralysis" onclick="toggleFrictionSelection(this, 'task_paralysis')">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 20px;">🧊</span>
+            <div style="font-size: 15px; font-weight: 700; color: var(--text-primary);">Task paralysis</div>
+          </div>
+          <div class="friction-checkbox-pill">✓</div>
+        </div>
+        <div class="friction-chip" data-friction="low_lethargy" onclick="toggleFrictionSelection(this, 'low_lethargy')">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 20px;">🌫️</span>
+            <div style="font-size: 15px; font-weight: 700; color: var(--text-primary);">Brain fog &amp; lethargy</div>
+          </div>
+          <div class="friction-checkbox-pill">✓</div>
+        </div>
       </div>
 
-      <div class="tier-card" data-plan="monthly" onclick="selectTier(this)">
-        <div class="tier-top-row">
-          <span class="tier-plan-title">Continuous Momentum</span>
-          <span class="tier-price-highlight">$2.99<span style="font-size:11px;">/mo</span></span>
-        </div>
-        <div class="tier-sub-caption">Unlimited daily resets, all premium decks, and auto-intercepts.</div>
-      </div>
-
-      <div class="tier-card" data-plan="lifetime" onclick="selectTier(this)">
-        <div class="tier-top-row">
-          <span class="tier-plan-title">Lifetime Freedom Pass</span>
-          <span class="tier-price-highlight price-red">$14.99</span>
-        </div>
-        <div class="tier-sub-caption">One-time payment. Permanent unrestricted access forever.</div>
+      <div style="width: 100%; margin-top: auto;">
+        <button class="btn-primary" onclick="confirmFrictionsAndOpenDashboard()">Continue to Remedy Decks &rarr;</button>
       </div>
     </div>
 
-    <button class="btn-primary" style="margin-top:16px;" onclick="simulatePurchase()">
-      Unlock Access Now <span>→</span>
-    </button>
+    <!-- SCREEN 3: DASHBOARD / SELECT DECK -->
+    <div id="screen-dashboard" class="screen">
+      
+      <!-- 50% BRAIN VIEWPORT -->
+      <div id="brain-viewport-s3" class="brain-viewport-container">
+        <div class="brain-status-indicator" id="brain-status-s3">100% VISIBILITY • CLEAR SIGNAL</div>
+      </div>
+
+      <!-- REMEDY HEADER WITH RETURN BUTTON TO SCREEN 2 -->
+      <div class="remedy-header-row">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div class="remedy-title">Select Remedy</div>
+          <button class="btn-change-friction" onclick="switchScreen('screen-onboarding-2')">
+            ← Change Friction
+          </button>
+        </div>
+        <span class="remedy-quota-pill" id="remedy-quota-badge">(0/4 Free)</span>
+      </div>
+
+      <!-- 4 REMEDY CARDS -->
+      <div class="deck-list">
+        <div class="deck-item selected" data-category="charisma" onclick="selectDeck(this, false, 'charisma')">
+          <div class="deck-meta free">CORE ENGINE</div>
+          <div class="deck-name">The Charisma Deck</div>
+          <div class="deck-desc">Command the room.</div>
+        </div>
+        <div class="deck-item" data-category="wealth" onclick="selectDeck(this, false, 'wealth')">
+          <div class="deck-meta free">CORE ENGINE</div>
+          <div class="deck-name">The Financial Reset Deck</div>
+          <div class="deck-desc">Unlock financial clarity.</div>
+        </div>
+        <div class="deck-item" data-category="dopamine" onclick="selectDeck(this, true, 'dopamine')">
+          <div class="deck-meta premium">PREMIUM UPGRADE</div>
+          <div class="deck-name">⚡ The Dopamine Swap Deck</div>
+          <div class="deck-desc">Break the freeze instantly.</div>
+        </div>
+        <div class="deck-item" data-category="overwhelm" onclick="selectDeck(this, true, 'overwhelm')">
+          <div class="deck-meta premium">PREMIUM UPGRADE</div>
+          <div class="deck-name">🧠 The Anti-Overwhelm Deck</div>
+          <div class="deck-desc">Shatter task paralysis.</div>
+        </div>
+      </div>
+
+      <!-- ACTION BUTTON -->
+      <div style="width: 100%;">
+        <button class="btn-primary" onclick="startTriggerPhase()">Open Circuit Breaker &rarr;</button>
+      </div>
+
+      <!-- BOTTOM ROW UTILITY DOCK -->
+      <div class="bottom-utility-dock">
+        <button class="dock-btn" onclick="openInterceptsDrawer()">
+          <span class="dock-btn-icon">⏱️</span>
+          <span class="dock-btn-label">Intercepts</span>
+        </button>
+        <button class="dock-btn" onclick="openReferralModal()">
+          <span class="dock-btn-icon">🎁</span>
+          <span class="dock-btn-label">Free 48h</span>
+        </button>
+        <button class="dock-btn" onclick="openPaywallModal()">
+          <span class="dock-btn-icon">⚡</span>
+          <span class="dock-btn-label">Pass</span>
+        </button>
+        <button class="dock-btn" onclick="openProfileModal()">
+          <span class="dock-btn-icon">👤</span>
+          <span class="dock-btn-label">Profile</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- SCREEN 4: TRIGGER SCREEN -->
+    <div id="screen-trigger" class="screen">
+      <div style="margin-top: 10px; width: 100%; text-align: center;">
+        <h2 class="title-large" id="active-deck-title" style="font-size: 24px;">Command the room.</h2>
+      </div>
+
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; margin: auto 0;">
+        <div class="spin-outer-ring" style="margin: 0 auto 16px auto;">
+          <button class="big-red-btn" onclick="executeTurnaroundSpin()">START</button>
+        </div>
+
+        <button id="btn-change-focus" class="btn-back-focus" onclick="switchScreen('screen-dashboard')">
+          &larr; Change Focus Area
+        </button>
+      </div>
+
+      <div id="trigger-slideup-notification" class="slideup-notification-card">
+        <div class="notification-line-1" id="trigger-instructions">Take one slow breath before pushing.</div>
+        <div class="notification-line-2">Commit to the next 120 seconds completely.</div>
+      </div>
+    </div>
+
+    <!-- SCREEN 5: COUNTDOWN SCREEN -->
+    <div id="screen-countdown" class="screen">
+      <div style="width: 100%; margin: auto 0;">
+        <div class="task-hero-card">
+          <div id="target-task-text" class="task-headline-text">Loading calibrated task...</div>
+          <div id="target-task-focus-area" class="focus-area-badge">FOCUS AREA: CORE BIOMECHANICS</div>
+        </div>
+
+        <div class="timer-assist-container">
+          <span class="timer-assist-icon">⏱️</span>
+          <span class="timer-assist-digits" id="timer-display">02:00</span>
+        </div>
+        
+        <p class="timer-assist-subtext">Do not multitask.<br>Follow through to see the results.</p>
+      </div>
+
+      <div style="width: 100%; margin-top: auto; display: flex; flex-direction: column; gap: 8px;">
+        <button class="btn-primary" onclick="finishEarly()">I Completed The Move Early &rarr;</button>
+        <button class="btn-bypass" onclick="cancelTimer()">Abort Protocol</button>
+      </div>
+    </div>
+
+    <!-- SCREEN 6: VICTORY SCREEN -->
+    <div id="screen-victory" class="screen">
+      <div style="margin: auto 0; width: 100%;">
+        <div style="font-size: 42px; margin-bottom: 6px;" id="victory-header-badge">🏆</div>
+        <h2 class="title-large" id="victory-title-text" style="margin-bottom: 4px;">Impact Calibrated.</h2>
+        <div id="victory-points-reclaimed-badge" style="font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: var(--accent-safe); margin-bottom: 14px;">+120s Focus Reclaimed</div>
+        
+        <div style="background: rgba(13, 27, 44, 0.7); border: 1px solid var(--card-border-strong); padding: 18px; border-radius: 18px; text-align: left;">
+          <div style="font-family: var(--font-mono); font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 6px;">NEUROLOGICAL REWIRE</div>
+          <div id="victory-validation-copy" style="font-size: 15px; font-weight: 600; color: var(--text-primary); line-height: 1.5;">
+            The freeze is broken. Action clears anxiety.
+          </div>
+        </div>
+
+        <div id="victory-unwind-notice" style="margin-top: 12px; padding: 10px 14px; background: rgba(194, 243, 221, 0.12); border: 1px solid rgba(194, 243, 221, 0.3); border-radius: 12px; font-family: var(--font-mono); font-size: 11px; color: var(--accent-safe); font-weight: 700;">
+          ✨ Cords unwound! Neural constriction reduced.
+        </div>
+      </div>
+
+      <div id="overwhelm-victory-actions" style="display: none; width: 100%; flex-direction: column; gap: 8px; margin-top: auto;">
+        <button id="btn-overwhelm-next" class="btn-primary" onclick="advanceOverwhelmNextMove()">Continue to Move 2 &rarr;</button>
+        <button id="btn-overwhelm-reset" class="btn-primary" style="display: none;" onclick="claimRewardStack()">Claim 4x Protocol Stack &rarr;</button>
+      </div>
+
+      <div id="standard-victory-actions" style="display: flex; width: 100%; flex-direction: column; gap: 8px; margin-top: auto;">
+        <button class="btn-primary" onclick="claimRewardStack()">Claim Focus Stack &rarr;</button>
+        <button class="btn-secondary" onclick="runAnotherRound()">Run Another 120s Circuit</button>
+      </div>
+    </div>
+
+    <!-- MODAL 1: INTERCEPTS DRAWER -->
+    <div id="intercepts-drawer-modal" class="modal-backdrop">
+      <div class="modal-sheet">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <span class="badge" style="color: var(--accent-cyan); border-color: rgba(86, 205, 255, 0.35); background: rgba(86, 205, 255, 0.12);">SCHEDULED INTERCEPTS</span>
+          <button style="background: none; border: none; font-size: 22px; color: var(--text-muted); cursor: pointer;" onclick="closeModal('intercepts-drawer-modal')">&times;</button>
+        </div>
+        <h3 style="font-size: 18px; font-weight: 800; color: var(--text-primary); margin-bottom: 4px;">Slump Time Circuit Breakers</h3>
+        <p class="body-text" style="margin-bottom: 14px;">Toggle automated intercepts during your most vulnerable scrolling hours.</p>
+
+        <div class="lifeline-list" id="lifeline-container" style="display: flex; flex-direction: column; gap: 8px;">
+          <div id="preset-intercepts-injection-point"></div>
+          <div id="custom-intercepts-injection-point"></div>
+
+          <button id="custom-intercept-add-btn" class="btn-secondary" style="border: 1.5px dashed var(--accent-gold); margin-top: 6px;" onclick="openCustomInterceptModal()">
+            <span id="custom-intercept-text">⚡ + Add Custom Intercept</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL 2: REFERRAL REWARD -->
+    <div id="referral-reward-modal" class="modal-backdrop">
+      <div class="modal-sheet">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <span class="badge">REFERRAL REWARD</span>
+          <button style="background: none; border: none; font-size: 22px; color: var(--text-muted); cursor: pointer;" onclick="closeModal('referral-reward-modal')">&times;</button>
+        </div>
+        <h3 style="font-size: 17px; font-weight: 800; color: var(--text-primary); margin-bottom: 4px;">Help a friend. Get 48 hours free unlimited.</h3>
+        <p class="body-text" style="margin-bottom: 14px;">
+          Send your invite link to a friend. Once they complete their first 120s task win, your account instantly unlocks or resets to a full 48 hours of unlimited access.
+        </p>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: rgba(13, 27, 44, 0.65); border: 1.5px dashed var(--card-border); border-radius: 12px; margin-bottom: 14px;">
+          <div>
+            <div style="font-family: var(--font-mono); font-size: 9.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Your Referral Code</div>
+            <div id="user-referral-code-display" style="font-family: var(--font-mono); font-size: 17px; font-weight: 700; color: var(--text-primary); letter-spacing: 1.5px;">120R-...</div>
+          </div>
+          <div id="referral-completed-count" style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--accent-safe); background: rgba(194, 243, 221, 0.15); padding: 4px 8px; border-radius: 6px;">0 Friends Helped</div>
+        </div>
+
+        <button class="btn-primary" onclick="shareReferralLink()">
+          📤 Share Invite Link &rarr;
+        </button>
+      </div>
+    </div>
+
+    <!-- MODAL 3: PROFILE DRAWER (UPDATED) -->
+    <div id="profile-drawer-modal" class="modal-backdrop">
+      <div class="modal-sheet">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <span class="badge" style="color: var(--text-muted); border-color: var(--card-border-strong); background: rgba(255, 255, 255, 0.05);">ACCOUNT METRICS</span>
+          <button style="background: none; border: none; font-size: 22px; color: var(--text-muted); cursor: pointer;" onclick="closeModal('profile-drawer-modal')">&times;</button>
+        </div>
+
+        <div style="margin-bottom: 16px; text-align: left;">
+          <div style="font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Logged-in User</div>
+          <div id="profile-email-display" style="font-size: 16px; font-weight: 800; color: var(--text-primary); word-break: break-all;">beta_tester@120reset.app</div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+          <div style="background: rgba(13, 27, 44, 0.65); border: 1px solid var(--card-border); border-radius: 14px; padding: 12px; text-align: left;">
+            <!-- Increased font size to 26px -->
+            <div id="profile-stat-wins" style="font-family: var(--font-mono); font-size: 26px; font-weight: 700; color: var(--text-primary);">1</div>
+            <div style="font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total Wins</div>
+          </div>
+          <div style="background: rgba(13, 27, 44, 0.65); border: 1px solid var(--card-border); border-radius: 14px; padding: 12px; text-align: left;">
+            <!-- Increased font size to 26px -->
+            <div id="profile-stat-focus" style="font-family: var(--font-mono); font-size: 26px; font-weight: 700; color: var(--accent-safe);">0.4m</div>
+            <div style="font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Focus Reclaimed</div>
+          </div>
+        </div>
+
+        <div id="profile-pass-status-card" style="padding: 12px 14px; border-radius: 14px; border: 1px solid var(--card-border); background: rgba(13, 27, 44, 0.65); margin-bottom: 16px; text-align: left; font-size: 12.5px;">
+          Status loading...
+        </div>
+
+        <button class="btn-secondary" style="color: var(--accent-coral); border-color: rgba(255, 93, 93, 0.35);" onclick="handleUserSignOut()">
+          🔄 Reset Beta Progress
+        </button>
+      </div>
+    </div>
+
+    <!-- MODAL 4: PAYWALL / SUBSCRIPTION SHEET -->
+    <div id="paywall-overlay" class="paywall-modal">
+      <div class="paywall-sheet">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span class="badge" style="background: rgba(255, 93, 93, 0.15); color: var(--accent-coral); border-color: rgba(255, 93, 93, 0.35);">UNLIMITED ACCESS</span>
+          <button style="background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text-muted);" onclick="closePaywall()">&times;</button>
+        </div>
+        <h2 class="title-large" style="font-size: 21px; margin-bottom: 4px;">Break Free From the Loops</h2>
+        <p class="body-text" style="margin-bottom: 16px; font-size: 13px;">Unlock behavioral overrides modeled on clinical executive functioning systems.</p>
+        
+        <div class="tier-card-stack">
+          <div class="tier-card selected" data-plan="pass" onclick="selectTier(this)">
+            <div class="tier-top-row">
+              <span class="tier-plan-title">2-Day Unlimited Pass</span>
+              <span class="tier-price-highlight price-green">$0.99</span>
+            </div>
+            <div class="tier-sub-caption">48 hours of unrestricted intercepts &amp; all premium decks.</div>
+          </div>
+
+          <div class="tier-card" data-plan="monthly" onclick="selectTier(this)">
+            <div class="tier-top-row">
+              <span class="tier-plan-title">Continuous Momentum</span>
+              <span class="tier-price-highlight">$2.99/mo</span>
+            </div>
+            <div class="tier-sub-caption">Billed monthly. Cancel anytime with zero friction.</div>
+          </div>
+
+          <div class="tier-card" data-plan="lifetime" onclick="selectTier(this)">
+            <div class="tier-top-row">
+              <span class="tier-plan-title">Lifetime Freedom Access</span>
+              <span class="tier-price-highlight price-red">$14.99</span>
+            </div>
+            <div class="tier-sub-caption">One-time payment. Permanent access forever.</div>
+          </div>
+        </div>
+
+        <div style="width: 100%; margin-top: 16px;">
+          <button class="btn-primary" onclick="simulatePurchase()">Unlock Access Now</button>
+          <button class="btn-bypass" style="display: block; margin: 10px auto 0 auto;" onclick="closePaywall()">Continue with Free Limit (4/4)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CUSTOM INTERCEPT CREATION MODAL -->
+    <div id="custom-intercept-modal" class="modal-backdrop">
+      <div class="modal-sheet">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <span class="badge">SCHEDULED CIRCUIT BREAKER</span>
+          <button style="background: none; border: none; font-size: 20px; color: var(--text-muted); cursor: pointer;" onclick="closeCustomInterceptModal()">&times;</button>
+        </div>
+        <h2 class="title-large" style="font-size: 19px; margin-bottom: 4px;">Set Custom Intercept</h2>
+        <p class="body-text" style="margin-bottom: 14px;">Anchor an intervention at your recurring slump time.</p>
+
+        <div style="display: flex; flex-direction: column; gap: 12px; text-align: left; margin-bottom: 16px;">
+          <div>
+            <label style="font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">TIME OF DAY</label>
+            <input type="time" id="custom-time-input" value="15:30" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--card-border); background: rgba(13, 27, 44, 0.7); color: #FFF; font-size: 15px; font-weight: 700; margin-top: 4px;">
+          </div>
+          <div>
+            <label style="font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">IDENTIFY POTENTIAL PAIN POINT</label>
+            <select id="custom-friction-input" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--card-border); background: rgba(13, 27, 44, 0.7); color: #FFF; font-size: 14px; margin-top: 4px;">
+              <option value="Mindless Scrolling">Mindless Scrolling</option>
+              <option value="Task Paralysis">Task Paralysis</option>
+              <option value="Brain Fog &amp; Lethargy">Brain Fog &amp; Lethargy</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">CHOOSE YOUR SOLUTION DECK</label>
+            <select id="custom-deck-input" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--card-border); background: rgba(13, 27, 44, 0.7); color: #FFF; font-size: 14px; margin-top: 4px;">
+              <option value="The Anti-Overwhelm Deck">The Anti-Overwhelm Deck</option>
+              <option value="The Dopamine Swap Deck">The Dopamine Swap Deck</option>
+              <option value="The Financial Reset Deck">The Financial Reset Deck</option>
+              <option value="The Charisma Deck">The Charisma Deck</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn-primary" onclick="saveCustomIntercept()">Save &amp; Arm Intercept &rarr;</button>
+      </div>
+    </div>
+
   </div>
-</div>
 
-<!-- INTERCEPTS MODAL -->
-<div class="modal-backdrop" id="intercepts-drawer-modal">
-  <div class="modal-sheet">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-      <h3 style="font-size:16px; font-weight:800;">Scheduled Intercepts</h3>
-      <button onclick="closeModal('intercepts-drawer-modal')" style="background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer;">✕</button>
-    </div>
-    <div id="preset-intercepts-injection-point"></div>
-    <div id="custom-intercepts-injection-point"></div>
-    <button class="btn-secondary" style="margin-top:12px;" onclick="openCustomInterceptModal()">+ Add Custom Intercept</button>
-  </div>
-</div>
-
-<!-- CUSTOM INTERCEPT CREATOR MODAL -->
-<div class="modal-backdrop" id="custom-intercept-modal">
-  <div class="modal-sheet modal-compact">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-      <h3 style="font-size:16px; font-weight:800;">New Time Intercept</h3>
-      <button onclick="closeCustomInterceptModal()" style="background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer;">✕</button>
-    </div>
-    <label style="font-size:11px; font-family:var(--font-mono); color:var(--text-muted); text-transform:uppercase;">Time of Day</label>
-    <input type="time" id="custom-time-input" value="14:30" style="width:100%; padding:10px; background:#08111f; border:1px solid var(--card-border-strong); color:#FFF; border-radius:10px; margin:6px 0 12px 0;">
-    <button class="btn-primary" onclick="saveCustomIntercept()">Save &amp; Arm Intercept</button>
-  </div>
-</div>
-
-<!-- REFERRAL MODAL -->
-<div class="modal-backdrop" id="referral-reward-modal">
-  <div class="modal-sheet modal-compact">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-      <h3 style="font-size:16px; font-weight:800;">Gift a 48h Pass</h3>
-      <button onclick="closeModal('referral-reward-modal')" style="background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer;">✕</button>
-    </div>
-    <p class="body-text" style="font-size:13px; line-height:1.45; margin-bottom:8px;">Invite a friend to 120Reset. When they run their first reset, both of you get an instant <b>48-Hour Unlimited Pass</b>.</p>
-    <div style="background:rgba(8,17,31,0.85); border:1px dashed var(--accent-gold); border-radius:12px; padding:12px; margin:10px 0 14px 0; text-align:center;">
-      <span style="font-size:10px; font-family:var(--font-mono); color:var(--text-muted); letter-spacing:0.12em;">YOUR INVITE CODE</span>
-      <div id="user-referral-code-display" style="font-family:var(--font-mono); font-size:24px; font-weight:800; color:var(--accent-gold); margin-top:4px; letter-spacing:0.06em;">120R-SYNC</div>
-    </div>
-    <button class="btn-primary" onclick="shareReferralLink()">Copy &amp; Share Invite Link <span>↗</span></button>
-  </div>
-</div>
-
-<!-- PROFILE MODAL -->
-<div class="modal-backdrop" id="profile-drawer-modal">
-  <div class="modal-sheet">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-      <h3 style="font-size:16px; font-weight:800;">Account Profile</h3>
-      <button onclick="closeModal('profile-drawer-modal')" style="background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer;">✕</button>
-    </div>
-
-    <div style="background:rgba(8,17,31,0.6); border:1px solid var(--card-border-strong); border-radius:14px; padding:12px 14px; margin-bottom:14px;">
-      <label style="display:block; font-family:var(--font-mono); font-size:10px; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px;">Logged-in User Account</label>
-      <div style="display:flex; gap:8px;">
-        <input type="email" id="profile-email-input" placeholder="Enter your Supabase email" style="flex:1; padding:10px 12px; border-radius:10px; background:#07111e; border:1px solid var(--card-border); color:#FFF; font-family:var(--font-mono); font-size:12px;">
-        <button class="btn-secondary" style="width:auto; padding:0 14px; font-size:12px; font-weight:800;" onclick="syncUserAccountEmail()">Sync</button>
-      </div>
-      <div id="sync-feedback-msg" style="font-size:11px; margin-top:6px; display:none;"></div>
-    </div>
-
-    <div id="profile-pass-status-card" style="background:rgba(18,34,53,0.6); border:1px solid var(--card-border); border-radius:14px; padding:14px; margin-bottom:14px;"></div>
-
-    <div style="display:flex; gap:10px; margin-bottom:16px;">
-      <div style="flex:1; background:rgba(8,17,31,0.6); padding:10px; border-radius:10px; text-align:center;">
-        <div style="font-size:10px; color:var(--text-muted);">WINS</div>
-        <div id="profile-stat-wins" style="font-size:26px; font-weight:800; color:var(--accent-gold);">0</div>
-      </div>
-      <div style="flex:1; background:rgba(8,17,31,0.6); padding:10px; border-radius:10px; text-align:center;">
-        <div style="font-size:10px; color:var(--text-muted);">FOCUS RECLAIMED</div>
-        <div id="profile-stat-focus" style="font-size:26px; font-weight:800; color:var(--accent-safe);">0.0m</div>
-      </div>
-    </div>
-
-    <button class="btn-secondary" onclick="handleUserSignOut()">Sign Out &amp; Clear Session</button>
-  </div>
-</div>
-
-<audio id="victory-chime" preload="auto">
-  <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEzM2Cj2+20cDEzYKPc8LpvMTNgo9zwtm8xM2Cj3O+2bzEzYKPd77ZvMTNgo93vtm8xM2Cj3e+2bzEzYKPd77ZvMTNgo93vtm8xM2Cj3e+2bzEzYKPd77ZvMQ==" type="audio/wav">
-</audio>
-
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-<script src="neuron-fibers.js"></script>
-<script src="app.js"></script>
+  <script src="/app.js"></script>
 </body>
 </html>
