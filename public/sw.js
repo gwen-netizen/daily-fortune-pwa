@@ -1,4 +1,4 @@
-const CACHE_NAME = '120reset-v11';
+const CACHE_NAME = '120reset-v12';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
