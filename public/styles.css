@@ -136,10 +136,7 @@ body::before {
   height: calc(100% - 20px) !important;
 }
 
-.welcome-header-zone {
-  width: 100%;
-  text-align: center;
-}
+.welcome-header-zone { width: 100%; text-align: center; }
 
 .kicker-wrapper {
   margin-bottom: 12px;
@@ -201,14 +198,8 @@ body::before {
 }
 
 @keyframes breathingOrbGlow {
-  0%, 100% {
-    transform: scale(0.96);
-    box-shadow: 0 0 28px rgba(243, 197, 71, 0.25);
-  }
-  50% {
-    transform: scale(1.06);
-    box-shadow: 0 0 48px rgba(243, 197, 71, 0.45);
-  }
+  0%, 100% { transform: scale(0.96); box-shadow: 0 0 28px rgba(243, 197, 71, 0.25); }
+  50% { transform: scale(1.06); box-shadow: 0 0 48px rgba(243, 197, 71, 0.45); }
 }
 
 .kinetic-core-circle {
@@ -225,30 +216,11 @@ body::before {
   justify-content: center;
   align-items: center;
   text-align: center;
-  -webkit-font-smoothing: antialiased;
 }
 
-.core-spark-icon {
-  font-size: 22px;
-  margin-bottom: 2px;
-  line-height: 1;
-}
-
-.core-number {
-  font-size: 36px;
-  font-weight: 800;
-  color: var(--text-primary);
-  line-height: 1;
-  letter-spacing: -0.5px;
-}
-
-.core-unit {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--accent-gold);
-  margin-left: 2px;
-}
-
+.core-spark-icon { font-size: 22px; margin-bottom: 2px; line-height: 1; }
+.core-number { font-size: 36px; font-weight: 800; color: var(--text-primary); line-height: 1; letter-spacing: -0.5px; }
+.core-unit { font-size: 20px; font-weight: 700; color: var(--accent-gold); margin-left: 2px; }
 .core-status-pill {
   font-family: var(--font-mono);
   font-size: 10px;
@@ -282,18 +254,9 @@ body::before {
 }
 
 .perk-icon { font-size: 20px; line-height: 1; }
-.perk-label {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-primary);
-  line-height: 1.3;
-  text-align: center;
-}
+.perk-label { font-size: 11px; font-weight: 700; color: var(--text-primary); line-height: 1.3; text-align: center; }
 
-.welcome-action-zone {
-  width: 100%;
-  text-align: center;
-}
+.welcome-action-zone { width: 100%; text-align: center; }
 
 .btn-welcome-cta {
   width: 100%;
@@ -344,11 +307,7 @@ body::before {
   line-height: 1.15;
 }
 
-.body-text {
-  font-size: 13px;
-  color: var(--text-muted);
-  line-height: 1.5;
-}
+.body-text { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
 
 .btn-primary {
   width: 100%;
@@ -392,7 +351,7 @@ body::before {
 }
 
 /* ========================================================
-   50% BRAIN VIEWPORT CONTAINER & VISIBILITY PILL (SCREENSHOT 1)
+   BRAIN VIEWPORT CONTAINER & STATUS BADGE
 ======================================================== */
 .brain-viewport-container {
   width: 100%;
@@ -412,7 +371,6 @@ body::before {
   overflow: hidden;
 }
 
-/* Screenshot 1 Fix: Top z-index ensures indicator sits permanently on top of all canvas layers */
 .brain-status-indicator {
   position: absolute;
   top: 10px;
@@ -640,18 +598,8 @@ body::before {
 .deck-meta.free { color: var(--text-muted); }
 .deck-meta.premium { color: var(--accent-gold); }
 
-.deck-name {
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--text-primary);
-  line-height: 1.25;
-}
-
-.deck-desc {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-top: 1px;
-}
+.deck-name { font-size: 14px; font-weight: 800; color: var(--text-primary); line-height: 1.25; }
+.deck-desc { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
 
 /* ========================================================
    BOTTOM UTILITY DOCK
@@ -693,7 +641,7 @@ body::before {
 }
 
 /* ========================================================
-   MODALS / DRAWERS (SCREENSHOT 2 FIX: CLEAN AUTO-FITTING)
+   MODALS / DRAWERS (AUTO CONTENT-HUGGING & CONSTRAINED)
 ======================================================== */
 .modal-backdrop, .paywall-modal {
   position: absolute;
@@ -701,9 +649,9 @@ body::before {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(8, 17, 31, 0.55);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(8, 17, 31, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   z-index: 99;
   display: flex;
   align-items: flex-end;
@@ -718,10 +666,10 @@ body::before {
   visibility: visible;
 }
 
-/* Screenshot 2 Fix: Auto-fitting heights instead of forcing giant empty space */
 .paywall-sheet, .modal-sheet {
   width: 100%;
   max-width: 440px;
+  margin: 0 auto;
   height: auto !important;
   max-height: 82vh !important;
   display: flex;
@@ -730,18 +678,12 @@ body::before {
   border: 1px solid var(--card-border-strong);
   border-bottom: none;
   border-radius: 28px 28px 0 0;
-  padding: 14px 20px 24px 20px;
+  padding: 16px 20px 24px 20px;
   overflow-y: auto;
   box-shadow: 0 -15px 50px rgba(0, 0, 0, 0.85);
   transform: translateY(100%);
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   touch-action: pan-y;
-}
-
-/* Compact modifier specifically for short dialogs like Referral & Intercepts */
-.modal-sheet.modal-compact {
-  max-height: 52vh !important;
-  padding: 14px 20px 22px 20px;
 }
 
 /* Thumb Pull-Down Handle */
@@ -760,54 +702,6 @@ body::before {
 .modal-backdrop.active .modal-sheet,
 .paywall-modal.active .paywall-sheet {
   transform: translateY(0);
-}
-
-/* ========================================================
-   ENLARGED PROFILE STATS BAR (SCREENSHOT 3 FIX)
-======================================================== */
-.profile-stats-bar-grid {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-
-.stat-card-box {
-  flex: 1;
-  background: rgba(8, 17, 31, 0.85);
-  border: 1px solid var(--card-border);
-  padding: 14px 10px;
-  border-radius: 14px;
-  text-align: center;
-  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.4);
-}
-
-.stat-label-caption {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-muted);
-  letter-spacing: 0.10em;
-  text-transform: uppercase;
-  margin-bottom: 4px;
-}
-
-/* Screenshot 3 Fix: Dramatic 28px font enlargement with bold terminal presence */
-.stat-display-value {
-  font-family: var(--font-mono);
-  font-size: 28px !important;
-  font-weight: 800 !important;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-}
-
-.stat-wins-gold {
-  color: var(--accent-gold) !important;
-  text-shadow: 0 0 16px rgba(var(--accent-gold-rgb), 0.35);
-}
-
-.stat-focus-green {
-  color: var(--accent-safe) !important;
-  text-shadow: 0 0 16px rgba(194, 243, 221, 0.35);
 }
 
 /* Paywall Cards */
@@ -859,7 +753,7 @@ body::before {
 }
 
 /* ========================================================
-   SCREEN 4, 5, 6: TRIGGER, COUNTDOWN & VICTORY
+   SCREEN 4: TRIGGER PHASE
 ======================================================== */
 .spin-outer-ring {
   width: 170px;
@@ -903,55 +797,114 @@ body::before {
   cursor: pointer;
 }
 
+/* ========================================================
+   SCREEN 5: CENTERED INSTRUCTIONS & CALM TIMER
+======================================================== */
+.countdown-task-centerpiece {
+  margin: auto 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 8px;
+}
+
+.focus-area-badge {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.10em;
+  color: var(--accent-gold);
+  text-transform: uppercase;
+}
+
+.task-instruction-headline {
+  font-size: 23px;
+  font-weight: 800;
+  color: #FFFFFF;
+  line-height: 1.45;
+  letter-spacing: -0.015em;
+  margin: 16px 0 20px 0;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.5);
+  max-width: 380px;
+}
+
+.task-instruction-headline .sentence-paragraph {
+  margin-bottom: 8px;
+}
+.task-instruction-headline .sentence-paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.calm-timer-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(13, 27, 44, 0.75);
+  border: 1px solid var(--card-border-strong);
+  padding: 6px 16px;
+  border-radius: 9999px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.calm-timer-icon {
+  font-size: 15px;
+  line-height: 1;
+}
+
+.calm-timer-digits {
+  font-family: var(--font-mono);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--accent-gold);
+}
+
+.calm-timer-caption {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 10px;
+  max-width: 280px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* ========================================================
+   SCREEN 6: VICTORY & CONFIDENCE AFFIRMATIONS
+======================================================== */
 .task-hero-card {
   background: rgba(13, 27, 44, 0.75);
   border: 1.5px solid var(--card-border-strong);
   border-radius: 20px;
-  padding: 22px 18px;
+  padding: 24px 20px;
   text-align: center;
-  margin-bottom: 20px;
 }
-.task-headline-text {
-  font-size: 17px;
+
+.victory-affirmation-headline {
+  font-size: 21px !important;
+  font-weight: 800 !important;
+  color: #FFFFFF !important;
+  line-height: 1.45 !important;
+  letter-spacing: -0.01em;
+  text-align: center;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.5);
+}
+
+.victory-affirmation-headline .sentence-paragraph {
+  margin-bottom: 8px;
+}
+.victory-affirmation-headline .sentence-paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.victory-unwind-banner {
+  margin-top: 14px;
+  font-size: 13px;
   font-weight: 700;
-  color: var(--text-primary);
-  line-height: 1.5;
-}
-.sentence-paragraph { margin-bottom: 6px; }
-.sentence-paragraph:last-child { margin-bottom: 0; }
-.focus-area-badge {
   font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  color: var(--accent-gold);
-  margin-top: 10px;
-}
-
-.timer-assist-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin: 16px 0 8px 0;
-}
-.timer-assist-icon { font-size: 26px; }
-.timer-assist-digits {
-  font-family: var(--font-mono);
-  font-size: 52px;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-  color: var(--text-primary);
-}
-
-.timer-assist-subtext {
-  font-size: 12px;
-  color: var(--text-muted);
-  text-align: center !important;
-  line-height: 1.5;
-  width: 100%;
-  display: block;
-  margin: 12px auto 0 auto;
+  letter-spacing: 0.04em;
 }
 
 .lifeline-item {
