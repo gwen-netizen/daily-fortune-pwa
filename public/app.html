@@ -1,1050 +1,343 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#07111e">
-<meta name="description" content="120reset breaks doom-scrolling, task paralysis, and executive freeze in 120 seconds.">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<title>120reset — Break the loop in 120 seconds</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
-
-:root {
-  color-scheme: dark;
-  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --ink: #f8fafc;
-  --text-body: #cbd5e1;
-  --muted: #94a3b8;
-  --dim: #64748b;
-  --night: #07111e;
-  --line: rgba(221, 233, 242, 0.14);
-  --line-strong: rgba(221, 233, 242, 0.28);
-  --active: #f3c547;
-}
-
-* { 
-  box-sizing: border-box; 
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-}
-html { min-width: 320px; background: var(--night); scroll-behavior: smooth; }
-body { 
-  margin: 0; 
-  min-width: 320px; 
-  background: var(--night); 
-  color: var(--ink); 
-  overflow-x: hidden; 
-  font-size: 16px; 
-  line-height: 1.6;
-}
-button, a { font: inherit; }
-a { color: inherit; }
-button:focus-visible, a:focus-visible { outline: 2px solid var(--active); outline-offset: 4px; }
-
-.app-shell {
-  min-height: 100svh;
-  isolation: isolate;
-  overflow: hidden;
-  background: radial-gradient(circle at 60% 18%, #15344f 0, var(--night) 46%, #030810 100%);
-  display: flex;
-  flex-direction: column;
-}
-.app-shell:before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -2;
-  opacity: 0.12;
-  pointer-events: none;
-  background-image: linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-  background-size: 72px 72px;
-  mask-image: radial-gradient(ellipse at center, #000, transparent 75%);
-}
-
-.app-nav, .sales-page {
-  width: min(1120px, calc(100% - 48px));
-  margin-inline: auto;
-}
-
-.sales-page {
-  flex: 1;
-}
-
-/* Header & Nav */
-.app-nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 28px 0;
-}
-.brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  text-decoration: none;
-  letter-spacing: -0.04em;
-  font-weight: 800;
-  font-size: 1.25rem;
-}
-.brand-mark {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border: 1.5px solid rgba(243, 197, 71, 0.7);
-  border-radius: 50%;
-  color: var(--active);
-  font-family: 'DM Mono', monospace;
-  font-size: 0.82rem;
-  font-weight: 500;
-  background: rgba(243, 197, 71, 0.06);
-}
-.nav-tag {
-  color: var(--muted);
-  font-family: 'DM Mono', monospace;
-  font-size: 0.76rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-/* ========================================================
-   HERO SECTION
-======================================================== */
-.hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
-  gap: 6vw;
-  align-items: center;
-  padding: 56px clamp(24px, 5vw, 60px) 64px;
-  border: 1px solid var(--line);
-  border-radius: 24px;
-  background: #07111e;
-  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.35);
-  margin-bottom: 20px;
-}
-.hero-copy { max-width: 540px; }
-.hero-visual {
-  width: 100%;
-  aspect-ratio: 4 / 5;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45), 0 0 0 1px var(--line-strong);
-  background: #07111e;
-}
-.hero-video-clip {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center top;
-  display: block;
-}
-.eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--active);
-  font-family: 'DM Mono', monospace;
-  font-size: 0.76rem;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-.eyebrow:before {
-  content: '';
-  width: 20px;
-  height: 2px;
-  background: currentColor;
-}
-.hero-copy h1 {
-  max-width: 11ch;
-  margin: 18px 0 20px;
-  font-size: clamp(2.8rem, 5.5vw, 4.6rem);
-  line-height: 1.05;
-  letter-spacing: -0.04em;
-  font-weight: 800;
-}
-.hero h1 em, .reset-heading h2 em, .science-heading h2 em, .intercept-copy h2 em, .final-copy h2 em {
-  color: var(--active);
-  font-style: normal;
-}
-.hero-lede {
-  max-width: 500px;
-  margin: 0 0 30px;
-  color: var(--text-body);
-  font-size: 1.15rem;
-  line-height: 1.65;
-}
-.hero-actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-/* Buttons */
-.button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  min-height: 52px;
-  padding: 0 28px;
-  border-radius: 9999px;
-  text-decoration: none;
-  font-size: 0.95rem;
-  font-weight: 800;
-  letter-spacing: 0.01em;
-  transition: transform 0.18s, box-shadow 0.18s;
-  cursor: pointer;
-}
-.button span { font-size: 1.15rem; line-height: 1; }
-.button-primary {
-  color: #07111e;
-  background: var(--active);
-  box-shadow: 0 10px 26px rgba(243, 197, 71, 0.28);
-  border: none;
-}
-.button-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 34px rgba(243, 197, 71, 0.38);
-}
-.button-secondary {
-  color: var(--ink);
-  background: rgba(13, 27, 44, 0.75);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid var(--line-strong);
-}
-.button-secondary:hover {
-  transform: translateY(-2px);
-  background: rgba(22, 44, 72, 0.9);
-}
-.micro-proof {
-  margin: 14px 0 0;
-  color: var(--muted);
-  font-size: 0.92rem;
-}
-
-/* ========================================================
-   NARRATIVE CONNECTOR & THREAD STYLES
-======================================================== */
-.narrative-bridge {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 36px 0 24px;
-  position: relative;
-}
-.narrative-bridge::before {
-  content: '';
-  width: 1px;
-  height: 48px;
-  background: linear-gradient(180deg, var(--line-strong) 0%, var(--active) 50%, var(--line-strong) 100%);
-  margin-bottom: 16px;
-  opacity: 0.7;
-}
-.bridge-tag {
-  color: var(--active);
-  font-family: 'DM Mono', monospace;
-  font-size: 0.78rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  margin-bottom: 8px;
-}
-.bridge-text {
-  max-width: 580px;
-  margin: 0 auto;
-  color: var(--text-body);
-  font-size: 1.05rem;
-  line-height: 1.55;
-  font-weight: 500;
-}
-.bridge-text strong {
-  color: var(--ink);
-}
-
-/* ========================================================
-   RESET DEMO CARD
-======================================================== */
-.reset-card {
-  padding: 42px clamp(20px, 4vw, 52px) 46px;
-  border: 1px solid var(--line);
-  border-radius: 24px;
-  background: rgba(9, 24, 39, 0.75);
-  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.3);
-  margin-bottom: 20px;
-}
-.reset-heading { margin-bottom: 26px; }
-.reset-heading h2 {
-  margin: 12px 0 0;
-  font-size: clamp(2.1rem, 3.8vw, 3.4rem);
-  line-height: 1.08;
-  letter-spacing: -0.04em;
-  font-weight: 800;
-}
-.demo-launch { text-align: center; padding: 16px 0 20px; }
-.demo-launch p {
-  margin: 0 auto;
-  max-width: 500px;
-  color: var(--text-body);
-  font-size: 1.08rem;
-  line-height: 1.6;
-}
-.spin-outer-ring {
-  width: 172px;
-  height: 172px;
-  margin: 0 auto 20px;
-  border-radius: 50%;
-  border: 2px dashed rgba(243, 197, 71, 0.45);
-  box-shadow: 0 0 35px rgba(243, 197, 71, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: ringRotate 20s linear infinite;
-}
-.big-red-btn {
-  width: 142px;
-  height: 142px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #f3c547 0%, #d89f22 80%);
-  border: 2px solid #ffe18b;
-  color: #08111f;
-  font-size: 24px;
-  font-weight: 900;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  box-shadow: 0 0 40px rgba(243, 197, 71, 0.55);
-  transition: transform 0.1s ease;
-}
-.big-red-btn:active { transform: scale(0.96); }
-@keyframes ringRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-.task-deck { padding: 24px 0 10px; border-top: 1px solid var(--line); }
-.task-deck-heading {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 16px;
-  color: var(--active);
-  font-family: 'DM Mono', monospace;
-  font-size: 0.78rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.choice-list { display: grid; gap: 11px; }
-.choice {
-  position: relative;
-  display: grid;
-  grid-template-columns: 38px 1fr auto;
-  align-items: center;
-  gap: 15px;
-  width: 100%;
-  min-height: 68px;
-  padding: 12px 18px 12px 14px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: rgba(13, 27, 44, 0.6);
-  color: var(--ink);
-  text-align: left;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-.choice:hover {
-  transform: translateX(-3px);
-  border-color: rgba(var(--choice-rgb), 0.8);
-  background: rgba(20, 42, 68, 0.8);
-}
-.choice-index {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border: 1.5px solid rgba(var(--choice-rgb), 0.55);
-  border-radius: 50%;
-  color: var(--choice);
-  font-family: 'DM Mono', monospace;
-  font-size: 0.8rem;
-  font-weight: 500;
-}
-.choice-name { font-size: 1rem; font-weight: 600; color: var(--ink); }
-.choice-arrow { color: var(--choice); font-size: 1.2rem; font-weight: 800; }
-
-.task-card {
-  max-width: 500px;
-  margin: 0 auto;
-  padding: 24px 22px 24px;
-  border: 1px solid var(--line-strong);
-  border-radius: 20px;
-  background: rgba(11, 23, 38, 0.95);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
-}
-.task-card.is-active {
-  border-color: rgba(243, 197, 71, 0.5);
-  background: radial-gradient(circle at 50% 0%, rgba(243, 197, 71, 0.08) 0%, rgba(11, 23, 38, 0.95) 70%);
-}
-.task-card-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--line);
-  margin-bottom: 18px;
-}
-.task-meta-tag { display: inline-flex; align-items: center; gap: 10px; }
-.task-index {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(243, 197, 71, 0.55);
-  color: var(--active);
-  font-family: 'DM Mono', monospace;
-  font-size: 0.78rem;
-  font-weight: 500;
-  line-height: 1;
-}
-.task-title-badge {
-  color: var(--ink);
-  font-size: 1.05rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-.task-timer-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 12px;
-  border-radius: 9999px;
-  background: rgba(243, 197, 71, 0.1);
-  border: 1px solid rgba(243, 197, 71, 0.3);
-}
-.timer-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--active);
-  box-shadow: 0 0 8px var(--active);
-  animation: pulseDot 1s ease-in-out infinite alternate;
-}
-@keyframes pulseDot { from { opacity: 0.35; } to { opacity: 1; } }
-.task-time {
-  color: var(--active);
-  font-family: 'DM Mono', monospace;
-  font-size: 0.92rem;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-}
-.task-body { text-align: left; }
-.task-cue {
-  display: inline-block;
-  margin: 0 0 8px;
-  color: var(--active);
-  font-family: 'DM Mono', monospace;
-  font-size: 0.74rem;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-.task-action-box {
-  margin: 0;
-  padding: 18px 20px;
-  border-radius: 12px;
-  background: rgba(13, 27, 44, 0.85);
-  border-left: 3.5px solid var(--active);
-  border: 1px solid var(--line);
-  border-left-width: 3.5px;
-  color: #ffffff;
-  font-size: clamp(1.15rem, 2.2vw, 1.3rem);
-  font-weight: 700;
-  line-height: 1.5;
-  letter-spacing: -0.01em;
-}
-.task-step-list { display: flex; flex-direction: column; gap: 8px; }
-.task-step-item { display: flex; align-items: baseline; gap: 8px; }
-.task-step-num {
-  color: var(--active);
-  font-family: 'DM Mono', monospace;
-  font-size: 0.95rem;
-  font-weight: 500;
-}
-
-/* ========================================================
-   THE SCIENCE SECTION
-======================================================== */
-.science-section {
-  padding: 20px 0 75px;
-  border-top: none;
-}
-.science-heading h2 {
-  margin: 14px 0 10px;
-  font-size: clamp(2.1rem, 3.8vw, 3.4rem);
-  line-height: 1.1;
-  letter-spacing: -0.04em;
-  font-weight: 800;
-}
-.science-lede {
-  margin: 0 0 32px;
-  color: var(--text-body);
-  font-size: 1.1rem;
-  line-height: 1.6;
-}
-.science-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-}
-.science-step {
-  padding: 26px 22px 28px;
-  border-top: 2.5px solid var(--active);
-  border-radius: 0 0 14px 14px;
-  background: rgba(13, 27, 44, 0.45);
-  border-left: 1px solid var(--line);
-  border-right: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-  transition: transform 0.2s ease, background-color 0.2s ease;
-}
-.science-step:hover {
-  transform: translateY(-2px);
-  background: rgba(18, 36, 58, 0.6);
-}
-.science-step-time {
-  display: inline-block;
-  color: var(--active);
-  font-family: 'DM Mono', monospace;
-  font-size: 0.88rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.science-step h3 {
-  margin: 12px 0 4px;
-  font-size: 1.3rem;
-  font-weight: 800;
-  color: var(--ink);
-  letter-spacing: -0.02em;
-}
-.science-step-sub {
-  display: block;
-  font-size: 0.94rem;
-  font-weight: 600;
-  color: var(--active);
-  margin-bottom: 12px;
-}
-.science-step p {
-  margin: 0;
-  color: var(--text-body);
-  font-size: 0.98rem;
-  line-height: 1.65;
-  font-weight: 500;
-}
-
-/* ========================================================
-   TIMER INTERCEPT SECTION
-======================================================== */
-.intercept-section {
-  display: grid;
-  grid-template-columns: 1fr 0.9fr;
-  gap: 6vw;
-  align-items: center;
-  padding: 20px 0 75px;
-  border-top: none;
-}
-.intercept-copy h2 {
-  margin: 14px 0 18px;
-  font-size: clamp(2.2rem, 3.8vw, 3.6rem);
-  line-height: 1.1;
-  letter-spacing: -0.04em;
-  font-weight: 800;
-}
-.intercept-copy p {
-  max-width: 460px;
-  margin: 0;
-  color: var(--text-body);
-  font-size: 1.1rem;
-  line-height: 1.65;
-}
-.intercept-card {
-  padding: 32px 28px;
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  background: rgba(9, 24, 39, 0.85);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
-}
-.intercept-pill {
-  display: inline-block;
-  padding: 5px 12px;
-  border: 1px solid rgba(243, 197, 71, 0.35);
-  border-radius: 9999px;
-  color: var(--active);
-  font-family: 'DM Mono', monospace;
-  font-size: 0.74rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.intercept-card h3 {
-  margin: 14px 0 16px;
-  font-size: 1.5rem;
-  letter-spacing: -0.02em;
-  font-weight: 800;
-}
-.intercept-card label {
-  display: block;
-  margin-top: 16px;
-  color: var(--muted);
-  font-family: 'DM Mono', monospace;
-  font-size: 0.74rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.intercept-card input, .intercept-card select {
-  display: block;
-  width: 100%;
-  margin-top: 6px;
-  padding: 13px 15px;
-  border: 1px solid var(--line-strong);
-  border-radius: 12px;
-  background: #0b1929;
-  color: var(--ink);
-  font-size: 0.95rem;
-  font-family: inherit;
-  font-weight: 500;
-}
-.intercept-card .button {
-  width: 100%;
-  margin-top: 22px;
-  border: 0;
-  cursor: pointer;
-}
-.intercept-card small {
-  display: block;
-  margin-top: 12px;
-  color: var(--muted);
-  font-size: 0.88rem;
-  text-align: center;
-}
-.intercept-card.is-armed { border-color: var(--active); }
-
-/* ========================================================
-   FINAL STRIP
-======================================================== */
-.final-strip {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 70px 0 75px;
-  border-top: 1px solid var(--line);
-}
-.final-copy { max-width: 580px; }
-.final-copy h2 {
-  margin: 18px 0 26px;
-  font-size: clamp(2.4rem, 4.6vw, 3.8rem);
-  line-height: 1.05;
-  letter-spacing: -0.04em;
-  font-weight: 800;
-}
-
-/* ========================================================
-   GLOBAL FOOTER STYLING
-======================================================== */
-footer.custom-global-footer {
-  width: 100%;
-  padding: 40px 0;
-  background-color: #000000;
-  border-top: 1px solid #18181b;
-  text-align: center;
-}
-footer.custom-global-footer .footer-container {
-  max-width: 64rem;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.5rem;
-}
-@media (min-width: 768px) {
-  footer.custom-global-footer .footer-container {
-    flex-direction: row;
-    justify-content: space-between;
-  }
-}
-footer.custom-global-footer p {
-  font-size: 0.75rem;
-  color: #71717a;
-  font-weight: 400;
-  margin: 0;
-}
-footer.custom-global-footer .footer-links {
-  display: flex;
-  gap: 2rem;
-  font-size: 0.75rem;
-  color: #71717a;
-  font-weight: 400;
-}
-footer.custom-global-footer .footer-links a {
-  color: #71717a;
-  text-decoration: none;
-  transition: color 0.15s ease;
-}
-footer.custom-global-footer .footer-links a:hover {
-  color: #a1a1aa;
-}
-
-/* ========================================================
-   MOBILE RESPONSIVENESS
-======================================================== */
-@media(max-width: 800px) {
-  body { font-size: 15.5px; }
-  .app-nav, .sales-page { width: min(100% - 32px, 1120px); }
-  .hero { 
-    display: flex;
-    flex-direction: column-reverse;
-    gap: 32px;
-    padding: 38px 20px 44px; 
-    border-radius: 20px;
-    margin-bottom: 28px;
-  }
-  .hero-visual {
-    width: 100%;
-    max-width: 380px;
-    aspect-ratio: 4 / 5;
-    margin: 0 auto;
-  }
-  .hero-copy h1 { font-size: clamp(2.6rem, 11vw, 3.8rem); }
-  .reset-card { padding: 28px 18px 34px; }
-  .task-card { padding: 20px 16px 20px; }
-  .task-action-box { font-size: 1.1rem; padding: 14px 16px; }
-  .science-grid { grid-template-columns: 1fr; gap: 16px; }
-  .intercept-section { grid-template-columns: 1fr; gap: 32px; padding: 30px 0 55px; }
-  .final-strip { padding: 50px 0 55px; }
-  .final-copy h2 { font-size: clamp(2.2rem, 10vw, 3.2rem); margin: 16px 0 22px; }
-  .narrative-bridge { padding: 32px 20px 24px; }
-  .narrative-bridge::before { height: 40px; margin-bottom: 12px; }
-}
-@media(prefers-reduced-motion: reduce) {
-  *, *:before, *:after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    scroll-behavior: auto !important;
-  }
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#08111f">
+  <meta name="description" content="120Reset: The somatic circuit breaker app that unfreezes your motor cortex in 120 seconds.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <title>120Reset — The Circuit Breaker</title>
 </head>
 <body>
-<div id="app"></div>
-<script>
-const tasksData = {
-  scrolling: {
-    index: '01',
-    title: 'Mindless scrolling',
-    appKey: 'mindless_scrolling',
-    cue: 'SAY ALOUD:',
-    actionHtml: '“The loop is cut. I am back in the room.”'
-  },
-  paralysis: {
-    index: '02',
-    title: 'Task paralysis',
-    appKey: 'task_paralysis',
-    cue: 'FOLLOW SEQUENCE:',
-    actionHtml: '<div class="task-step-list"><div class="task-step-item"><span class="task-step-num">1.</span> <span>Exhale fully &amp; hold</span></div><div class="task-step-item"><span class="task-step-num">2.</span> <span>Click your target tab</span></div><div class="task-step-item"><span class="task-step-num">3.</span> <span>Inhale</span></div></div>'
-  },
-  lethargy: {
-    index: '03',
-    title: 'Brain fog & lethargy',
-    appKey: 'low_lethargy',
-    cue: 'SAY FIRMLY:',
-    actionHtml: '“Drop the tension. Signal clear.”'
-  }
-};
 
-let currentTestedFriction = 'scrolling';
+<div class="app-container">
 
-const app = document.querySelector('#app');
-app.innerHTML = `
-  <div class="app-shell">
-    <header class="app-nav">
-      <a class="brand" href="/" aria-label="120reset home"><span class="brand-mark">120</span><span>120reset</span></a>
-      <span class="nav-tag">somatic circuit breaker</span>
-    </header>
-    <main class="sales-page">
-      
-      <!-- HERO SECTION -->
-      <section class="hero" aria-labelledby="page-title">
-        <div class="hero-copy">
-          <span class="eyebrow">when your brain won't start</span>
-          <h1 id="page-title">Break the loop<br><em>in 120 seconds.</em></h1>
-          <p class="hero-lede">A physical circuit breaker app for doom-scrolling, task paralysis, and the moment your nervous system says “not now.”</p>
-          <div class="hero-actions">
-            <a class="button button-primary app-cta-link" href="app.html">Get free instant access <span>→</span></a>
-            <a class="button button-secondary" href="#reset-demo">Try 10-Second Test ↓</a>
-          </div>
-          <p class="micro-proof">No account · no setup · works directly in your browser</p>
-        </div>
-        <div class="hero-visual">
-          <video class="hero-video-clip" autoplay loop muted playsinline poster="/images/hero.png">
-            <source src="/hero-bg.mp4" type="video/mp4">
-            <source src="hero-bg.mp4" type="video/mp4">
-          </video>
-        </div>
-      </section>
-
-      <!-- NARRATIVE BRIDGE 1 -->
-      <div class="narrative-bridge">
-        <span class="bridge-tag">Immediate Sensation</span>
-        <p class="bridge-text">You don't need another productivity lecture. <strong>Physically interrupt the downward spiral</strong> before you lose another hour.</p>
+  <!-- SCREEN 0: WELCOME SCREEN (STEP 1 OF RESTORED SEQUENTIAL FLOW) -->
+  <section class="screen welcome-screen-styled active" id="screen-welcome">
+    <div class="welcome-header-zone">
+      <div class="kicker-wrapper">
+        <span class="brand-kicker-glow">120RESET PROTOCOL</span>
       </div>
+      <h1 class="welcome-hero-title">Break the mental freeze <span class="highlight-text">in 120 seconds.</span></h1>
+    </div>
 
-      <!-- TEST RESET DEMO -->
-      <section class="reset-card" id="reset-demo" aria-labelledby="demo-title">
-        <div class="reset-heading">
+    <div class="welcome-centerpiece">
+      <div class="pulse-outer-aura">
+        <div class="kinetic-core-circle">
+          <span class="core-spark-icon">⚡</span>
+          <div class="core-number">120<span class="core-unit">s</span></div>
+          <span class="core-status-pill">CIRCUIT BREAKER</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="welcome-perks-row">
+      <div class="perk-chip">
+        <span class="perk-icon">🧠</span>
+        <span class="perk-label">Somatic Vagus Reset</span>
+      </div>
+      <div class="perk-chip">
+        <span class="perk-icon">⚡</span>
+        <span class="perk-label">Instant Motor Ignition</span>
+      </div>
+      <div class="perk-chip">
+        <span class="perk-icon">🛡️</span>
+        <span class="perk-label">Friction Intercept</span>
+      </div>
+    </div>
+
+    <div class="welcome-action-zone">
+      <button class="btn-welcome-cta" onclick="handleWelcomeContinue()">
+        Enter Protocol <span>→</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- SCREEN 1/2: SELECT FRICTIONS -->
+  <section class="screen" id="screen-onboarding-2">
+    <div class="friction-subheading">Select what has you stuck right now:</div>
+    <div class="brain-viewport-container" id="brain-viewport-s2"></div>
+
+    <div class="friction-cards-rack">
+      <div class="friction-chip" data-friction="mindless_scrolling" onclick="toggleFrictionSelection(this, 'mindless_scrolling')">
+        <div class="friction-chip-content">
+          <span class="friction-chip-icon">📱</span>
           <div>
-            <span class="eyebrow">interactive simulator</span>
-            <h2 id="demo-title">Run a 10-Second<br><em>Test Reset.</em></h2>
+            <div class="friction-chip-title">Mindless scrolling</div>
+            <div class="friction-chip-tag" style="color:var(--accent-gold);">Dopamine Loop</div>
           </div>
         </div>
-        
-        <!-- STEP 1: START SCREEN -->
-        <div class="demo-launch" id="stepStart">
-          <div class="spin-outer-ring"><button class="big-red-btn" id="bigResetButton" type="button" onclick="startTestFlow()">START</button></div>
-          <p id="resetStatus" aria-live="polite">Press START to simulate an immediate somatic interrupt on this screen.</p>
-        </div>
-
-        <!-- STEP 2: CHOOSE 1 FRICTION LINE -->
-        <div class="task-deck" id="stepChoose" hidden>
-          <div class="task-deck-heading"><span>choose what you are fighting right now</span></div>
-          <div class="choice-list" role="group">
-            <button class="choice" type="button" data-friction="scrolling" style="--choice:#f3c547;--choice-rgb:243,197,71;">
-              <span class="choice-index">01</span><span class="choice-copy"><span class="choice-name">01 / Mindless scrolling</span></span><span class="choice-arrow">→</span>
-            </button>
-            <button class="choice" type="button" data-friction="paralysis" style="--choice:#ff5d5d;--choice-rgb:255,93,93;">
-              <span class="choice-index">02</span><span class="choice-copy"><span class="choice-name">02 / Task paralysis</span></span><span class="choice-arrow">→</span>
-            </button>
-            <button class="choice" type="button" data-friction="lethargy" style="--choice:#f28b4b;--choice-rgb:242,139,75;">
-              <span class="choice-index">03</span><span class="choice-copy"><span class="choice-name">03 / Brain fog &amp; lethargy</span></span><span class="choice-arrow">→</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- STEP 3: 1-SECOND ACTION TEST CARD -->
-        <div class="task-deck" id="stepTask" hidden>
-          <div class="task-card is-active">
-            <div class="task-card-top">
-              <div class="task-meta-tag">
-                <span class="task-index" id="activeTaskIndex">01</span>
-                <span class="task-title-badge" id="activeTaskTitle">Mindless scrolling</span>
-              </div>
-              <div class="task-timer-badge">
-                <span class="timer-dot"></span>
-                <span class="task-time" id="activeTaskTimer" aria-live="polite">00:10</span>
-              </div>
-            </div>
-            <div class="task-body">
-              <span class="task-cue" id="activeTaskCue">SAY ALOUD:</span>
-              <div class="task-action-box" id="activeTaskAction">“The loop is cut. I am back in the room.”</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- NARRATIVE BRIDGE 2 -->
-      <div class="narrative-bridge">
-        <span class="bridge-tag">Why It Works</span>
-        <p class="bridge-text">Tested across <strong>250+ private beta sessions</strong> with engineers, writers, and students to prove the neuroscience actually works.</p>
+        <div class="friction-checkbox-pill">✓</div>
       </div>
 
-      <!-- THE SCIENCE SECTION -->
-      <section class="science-section" aria-labelledby="science-title">
-        <div class="science-heading">
-          <span class="eyebrow">The Physiology</span>
-          <h2 id="science-title">The reset follows<br><em>the nervous system.</em></h2>
-          <p class="science-lede">How the full 120-second clinical protocol unfreezes your motor cortex:</p>
-        </div>
-        <div class="science-grid">
-          <article class="science-step">
-            <span class="science-step-time">STEP 01 · FIRST 30s</span>
-            <h3>Autonomic Reset</h3>
-            <span class="science-step-sub">Calm the heart rate</span>
-            <p>A guided physiological sigh activates the vagus nerve, lower heart rate, and disarms the freeze reflex keeping you on your phone.</p>
-          </article>
-          <article class="science-step">
-            <span class="science-step-time">STEP 02 · NEXT 30s</span>
-            <h3>Motor Activation</h3>
-            <span class="science-step-sub">Break physical freeze</span>
-            <p>Vocalizing a command gives your motor cortex an external auditory anchor, bypassing internal resistance and getting hands moving.</p>
-          </article>
-          <article class="science-step">
-            <span class="science-step-time">STEP 03 · FINAL 60s</span>
-            <h3>Micro-Initiation</h3>
-            <span class="science-step-sub">Take the first real move</span>
-            <p>One sub-threshold physical action—typing a single letter or opening one tab—bypasses threat perception and builds real momentum.</p>
-          </article>
-        </div>
-      </section>
-
-      <!-- NARRATIVE BRIDGE 3 -->
-      <div class="narrative-bridge">
-        <span class="bridge-tag">Prevention</span>
-        <p class="bridge-text">Intercept the productivity freeze before you disappear into social apps again. <strong>This is how you protect your entire afternoon.</strong></p>
-      </div>
-
-      <!-- CUSTOM INTERCEPT SECTION -->
-      <section class="intercept-section" aria-labelledby="intercept-title">
-        <div class="intercept-copy">
-          <span class="eyebrow">proactive defense</span>
-          <h2 id="intercept-title">Set the alert<br><em>before the slump.</em></h2>
-          <p>Doom-scrolling follows a predictable schedule—usually striking between 2:00 PM and 4:30 PM. Arm a circuit breaker for that exact minute so 120reset intervenes before paralysis takes over.</p>
-        </div>
-        <form class="intercept-card" id="interceptForm">
-          <span class="intercept-pill">scheduled circuit breaker</span>
-          <h3>Set Custom Intercept</h3>
-          <label>Time of day<input id="interceptTime" type="time" value="15:30" required></label>
-          <label>Identify typical freeze pattern
-            <select id="interceptPain">
-              <option>Mindless Scrolling</option>
-              <option>Task Paralysis</option>
-              <option>Brain Fog &amp; Lethargy</option>
-            </select>
-          </label>
-          <button class="button button-primary" type="submit">Save &amp; Arm Intercept <span>→</span></button>
-          <small id="interceptStatus">Zero setup. Your alert stays local on this device.</small>
-        </form>
-      </section>
-
-      <!-- FINAL STRIP -->
-      <section class="final-strip">
-        <div class="final-copy">
-          <span class="eyebrow">Zero commitment</span>
-          <h2>Stop negotiating<br><em>with the loop.</em></h2>
-          <div class="hero-actions">
-            <a class="button button-primary app-cta-link" href="app.html">Get free instant access <span>→</span></a>
+      <div class="friction-chip" data-friction="task_paralysis" onclick="toggleFrictionSelection(this, 'task_paralysis')">
+        <div class="friction-chip-content">
+          <span class="friction-chip-icon">🧊</span>
+          <div>
+            <div class="friction-chip-title">Task paralysis</div>
+            <div class="friction-chip-tag" style="color:var(--accent-coral);">Threat Freeze</div>
           </div>
-          <p class="micro-proof">No account · no setup · works directly in your browser</p>
         </div>
-      </section>
-
-    </main>
-
-    <!-- FOOTER -->
-    <footer class="custom-global-footer w-full py-10 bg-black border-t border-zinc-900 text-center">
-      <div class="footer-container max-w-5xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-        <p class="text-xs text-zinc-600 font-normal">&copy; 2026 120Reset. All&nbsp;rights&nbsp;reserved.</p>
-        <div class="footer-links flex gap-8 text-xs text-zinc-600 font-normal">
-          <a href="#" class="hover:text-zinc-400 transition-colors">Privacy Policy</a>
-          <a href="#" class="hover:text-zinc-400 transition-colors">Terms of Service</a>
-        </div>
+        <div class="friction-checkbox-pill">✓</div>
       </div>
-    </footer>
+
+      <div class="friction-chip" data-friction="low_lethargy" onclick="toggleFrictionSelection(this, 'low_lethargy')">
+        <div class="friction-chip-content">
+          <span class="friction-chip-icon">🌫️</span>
+          <div>
+            <div class="friction-chip-title">Brain fog &amp; lethargy</div>
+            <div class="friction-chip-tag" style="color:var(--accent-orange);">Postural Slump</div>
+          </div>
+        </div>
+        <div class="friction-checkbox-pill">✓</div>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="confirmFrictionsAndOpenDashboard()">
+      Continue to Remedy Decks <span>→</span>
+    </button>
+  </section>
+
+  <!-- SCREEN 3: DASHBOARD & REMEDY DECKS -->
+  <section class="screen" id="screen-dashboard">
+    <div class="remedy-header-row">
+      <span class="remedy-title">Active Neural State</span>
+      <button class="btn-change-friction" onclick="switchScreen('screen-onboarding-2', true)">Edit Tensions ↺</button>
+    </div>
+
+    <div class="brain-viewport-container" id="brain-viewport-s3"></div>
+
+    <div class="remedy-header-row" style="margin-top: 8px;">
+      <span class="remedy-title">Select Focus Protocol</span>
+      <span class="remedy-quota-pill" id="remedy-quota-badge">(0/4 Free)</span>
+    </div>
+
+    <div class="deck-list">
+      <div class="deck-item selected" onclick="selectDeck(this, false, 'charisma')">
+        <div class="deck-meta free">CORE PROTOCOL · 120s</div>
+        <div class="deck-name">The Charisma Deck</div>
+        <div class="deck-desc">Command the room. Posture, vocal anchor, unshakeable presence.</div>
+      </div>
+
+      <div class="deck-item" onclick="selectDeck(this, false, 'wealth')">
+        <div class="deck-meta free">CORE PROTOCOL · 120s</div>
+        <div class="deck-name">The Financial Reset Deck</div>
+        <div class="deck-desc">Unlock financial clarity. Disarm impulsive money anxiety.</div>
+      </div>
+
+      <div class="deck-item" onclick="selectDeck(this, true, 'dopamine')">
+        <div class="deck-meta premium">PREMIUM UPGRADE ⚡</div>
+        <div class="deck-name">The Dopamine Swap Deck</div>
+        <div class="deck-desc">Break the freeze instantly. Rapid dopamine redirection.</div>
+      </div>
+
+      <div class="deck-item" onclick="selectDeck(this, true, 'overwhelm')">
+        <div class="deck-meta premium">PREMIUM 4-STEP PROTOCOL 🧠</div>
+        <div class="deck-name">The Anti-Overwhelm Protocol</div>
+        <div class="deck-desc">Shatter task paralysis with 4 progressive micro-actions.</div>
+      </div>
+    </div>
+
+    <div class="bottom-utility-dock">
+      <button class="dock-btn" onclick="openInterceptsDrawer()">
+        <span class="dock-btn-icon">⏰</span>
+        <span class="dock-btn-label">INTERCEPTS</span>
+      </button>
+      <button class="dock-btn" onclick="openReferralModal()">
+        <span class="dock-btn-icon">🎁</span>
+        <span class="dock-btn-label">GET PASS</span>
+      </button>
+      <button class="dock-btn" onclick="openProfileModal()">
+        <span class="dock-btn-icon">👤</span>
+        <span class="dock-btn-label">PROFILE</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- SCREEN 4: TRIGGER PHASE -->
+  <section class="screen" id="screen-trigger">
+    <div style="text-align:center; width:100%;">
+      <span class="badge" id="active-deck-kicker">CIRCUIT BREAKER ARMED</span>
+      <h2 class="title-large" id="active-deck-title" style="margin-top:12px;">Command the room.</h2>
+    </div>
+
+    <div class="spin-outer-ring" style="margin: auto 0;">
+      <button class="big-red-btn" onclick="executeTurnaroundSpin()">START</button>
+    </div>
+
+    <div style="width: 100%; text-align: center;">
+      <p class="body-text" id="trigger-instructions">Take one slow nasal breath. Press START to calibrate your micro-reset.</p>
+      <button class="btn-back-focus" onclick="switchScreen('screen-dashboard', true)">← Return to Decks</button>
+    </div>
+  </section>
+
+  <!-- SCREEN 5: 120-SECOND COUNTDOWN -->
+  <section class="screen" id="screen-countdown">
+    <div class="task-hero-card" style="width: 100%;">
+      <div id="target-task-text" class="task-headline-text">Loading protocol...</div>
+      <div id="target-task-focus-area" class="focus-area-badge">FOCUS AREA: MOTOR IGNITION</div>
+    </div>
+
+    <div class="timer-assist-container">
+      <span class="timer-assist-icon">⏱️</span>
+      <div class="timer-assist-digits" id="timer-display">02:00</div>
+    </div>
+
+    <span class="timer-assist-subtext">Focus only on this single physical motion.<br>Let the timer run out or finish early when complete.</span>
+
+    <div style="width: 100%; display: flex; flex-direction: column; gap: 8px; margin-top: auto;">
+      <button class="btn-primary" onclick="finishEarly()">Done Early &amp; Reclaim Focus ✓</button>
+      <button class="btn-secondary" onclick="cancelTimer()">Cancel Reset</button>
+    </div>
+  </section>
+
+  <!-- SCREEN 6: VICTORY SCREEN -->
+  <section class="screen" id="screen-victory">
+    <div style="text-align: center; width: 100%;">
+      <span class="badge" style="color:var(--accent-safe); border-color:rgba(194,243,221,0.35); background:rgba(194,243,221,0.12);">
+        IMPACT CONFIRMED
+      </span>
+      <h2 class="title-large" id="victory-title-text" style="margin-top: 10px;">Loop Broken.</h2>
+      <p class="body-text" id="victory-points-reclaimed-badge" style="color:var(--accent-gold); font-weight:700; margin-top:4px;">
+        +120s Focus Reclaimed
+      </p>
+    </div>
+
+    <div class="task-hero-card" style="width: 100%; margin: auto 0;">
+      <div id="victory-validation-copy" class="body-text" style="color:var(--text-primary); font-size:14px;">
+        Action clears anxiety. You took the physical move. Keep your momentum.
+      </div>
+      <div id="victory-unwind-notice" style="margin-top:12px; font-size:12px; font-weight:700;"></div>
+    </div>
+
+    <div id="standard-victory-actions" style="width:100%; display:flex; flex-direction:column; gap:8px;">
+      <button class="btn-primary" onclick="runAnotherRound()">Run Another Round <span>↺</span></button>
+      <button class="btn-secondary" onclick="switchScreen('screen-dashboard', true)">Dashboard</button>
+    </div>
+
+    <div id="overwhelm-victory-actions" style="width:100%; display:none; flex-direction:column; gap:8px;">
+      <button class="btn-primary" id="btn-overwhelm-next" onclick="advanceOverwhelmNextMove()">Continue to Next Move →</button>
+      <button class="btn-primary" id="btn-overwhelm-reset" style="display:none;" onclick="claimRewardStack()">Claim 4x Protocol Stack →</button>
+      <button class="btn-secondary" onclick="switchScreen('screen-dashboard', true)">Dashboard</button>
+    </div>
+  </section>
+
+</div>
+
+<!-- PAYWALL MODAL -->
+<div class="paywall-modal" id="paywall-overlay">
+  <div class="paywall-sheet">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <h3 style="font-size:17px; font-weight:800;">Unlock Unlimited Access</h3>
+      <button onclick="closePaywall()" style="background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer;">✕</button>
+    </div>
+
+    <div class="tier-card-stack">
+      <div class="tier-card selected" data-plan="pass" onclick="selectTier(this)">
+        <div class="tier-top-row">
+          <span class="tier-plan-title">⚡ 48-Hour Unlimited Pass</span>
+          <span class="tier-price-highlight price-green">$0.99</span>
+        </div>
+        <div class="tier-sub-caption">48 hours of unrestricted resets for urgent focus deadlines.</div>
+      </div>
+
+      <div class="tier-card" data-plan="monthly" onclick="selectTier(this)">
+        <div class="tier-top-row">
+          <span class="tier-plan-title">Continuous Momentum</span>
+          <span class="tier-price-highlight">$2.99<span style="font-size:11px;">/mo</span></span>
+        </div>
+        <div class="tier-sub-caption">Unlimited daily resets, all premium decks, and auto-intercepts.</div>
+      </div>
+
+      <div class="tier-card" data-plan="lifetime" onclick="selectTier(this)">
+        <div class="tier-top-row">
+          <span class="tier-plan-title">Lifetime Freedom Pass</span>
+          <span class="tier-price-highlight price-red">$14.99</span>
+        </div>
+        <div class="tier-sub-caption">One-time payment. Permanent unrestricted access forever.</div>
+      </div>
+    </div>
+
+    <button class="btn-primary" style="margin-top:16px;" onclick="simulatePurchase()">
+      Unlock Access Now <span>→</span>
+    </button>
   </div>
-`;
+</div>
 
-const stepStart = document.querySelector('#stepStart');
-const stepChoose = document.querySelector('#stepChoose');
-const stepTask = document.querySelector('#stepTask');
-const activeTaskIndex = document.querySelector('#activeTaskIndex');
-const activeTaskTitle = document.querySelector('#activeTaskTitle');
-const activeTaskCue = document.querySelector('#activeTaskCue');
-const activeTaskAction = document.querySelector('#activeTaskAction');
-const activeTaskTimer = document.querySelector('#activeTaskTimer');
-let countdownInterval = null;
+<!-- INTERCEPTS MODAL -->
+<div class="modal-backdrop" id="intercepts-drawer-modal">
+  <div class="modal-sheet">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <h3 style="font-size:16px; font-weight:800;">Scheduled Intercepts</h3>
+      <button onclick="closeModal('intercepts-drawer-modal')" style="background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer;">✕</button>
+    </div>
+    <div id="preset-intercepts-injection-point"></div>
+    <div id="custom-intercepts-injection-point"></div>
+    <button class="btn-secondary" style="margin-top:12px;" onclick="openCustomInterceptModal()">+ Add Custom Intercept</button>
+  </div>
+</div>
 
-function startTestFlow() {
-  stepStart.hidden = true;
-  stepChoose.hidden = false;
-  stepTask.hidden = true;
-}
+<!-- CUSTOM INTERCEPT CREATOR MODAL -->
+<div class="modal-backdrop" id="custom-intercept-modal">
+  <div class="modal-sheet" style="height:auto; max-height:85%;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <h3 style="font-size:16px; font-weight:800;">New Time Intercept</h3>
+      <button onclick="closeCustomInterceptModal()" style="background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer;">✕</button>
+    </div>
+    <label style="font-size:11px; font-family:var(--font-mono); color:var(--text-muted); text-transform:uppercase;">Time of Day</label>
+    <input type="time" id="custom-time-input" value="14:30" style="width:100%; padding:10px; background:#08111f; border:1px solid var(--card-border-strong); color:#FFF; border-radius:10px; margin:6px 0 12px 0;">
+    <button class="btn-primary" onclick="saveCustomIntercept()">Save &amp; Arm Intercept</button>
+  </div>
+</div>
 
-// Binds all CTAs across index.html directly to app.html and syncs state to app.js
-function connectAppCtas(appKey) {
-  const targetUrl = `app.html?friction=${encodeURIComponent(appKey)}`;
-  document.querySelectorAll('.app-cta-link').forEach(btn => {
-    btn.href = targetUrl;
-  });
-  try {
-    localStorage.setItem('nudge_selected_frictions', JSON.stringify([appKey]));
-    localStorage.setItem('nudge_brain_constriction', '0.33');
-  } catch(e) {}
-}
+<!-- REFERRAL MODAL -->
+<div class="modal-backdrop" id="referral-reward-modal">
+  <div class="modal-sheet">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <h3 style="font-size:16px; font-weight:800;">Gift a 48h Pass</h3>
+      <button onclick="closeModal('referral-reward-modal')" style="background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer;">✕</button>
+    </div>
+    <p class="body-text">Invite a friend to 120Reset. When they run their first reset, both of you get an instant <b>48-Hour Unlimited Pass</b>.</p>
+    <div style="background:rgba(8,17,31,0.8); border:1px dashed var(--accent-gold); border-radius:12px; padding:12px; margin:14px 0; text-align:center;">
+      <span style="font-size:11px; font-family:var(--font-mono); color:var(--text-muted);">YOUR INVITE CODE</span>
+      <div id="user-referral-code-display" style="font-size:20px; font-weight:800; color:var(--accent-gold); margin-top:4px;">120R-SYNC</div>
+    </div>
+    <button class="btn-primary" onclick="shareReferralLink()">Copy &amp; Share Invite Link <span>↗</span></button>
+  </div>
+</div>
 
-function runChosenTask(frictionKey) {
-  const data = tasksData[frictionKey];
-  if (!data) return;
+<!-- PROFILE MODAL -->
+<div class="modal-backdrop" id="profile-drawer-modal">
+  <div class="modal-sheet">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <h3 style="font-size:16px; font-weight:800;">Account Profile</h3>
+      <button onclick="closeModal('profile-drawer-modal')" style="background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer;">✕</button>
+    </div>
+    <div id="profile-email-display" style="font-family:var(--font-mono); font-size:12px; color:var(--text-muted); margin-bottom:12px;"></div>
+    <div id="profile-pass-status-card" style="background:rgba(18,34,53,0.6); border:1px solid var(--card-border); border-radius:14px; padding:14px; margin-bottom:14px;"></div>
+    <div style="display:flex; gap:10px; margin-bottom:16px;">
+      <div style="flex:1; background:rgba(8,17,31,0.6); padding:10px; border-radius:10px; text-align:center;">
+        <div style="font-size:10px; color:var(--text-muted);">WINS</div>
+        <div id="profile-stat-wins" style="font-size:18px; font-weight:800; color:var(--accent-gold);">0</div>
+      </div>
+      <div style="flex:1; background:rgba(8,17,31,0.6); padding:10px; border-radius:10px; text-align:center;">
+        <div style="font-size:10px; color:var(--text-muted);">FOCUS RECLAIMED</div>
+        <div id="profile-stat-focus" style="font-size:18px; font-weight:800; color:var(--accent-safe);">0.0m</div>
+      </div>
+    </div>
+    <button class="btn-secondary" onclick="handleUserSignOut()">Sign Out &amp; Clear Session</button>
+  </div>
+</div>
 
-  currentTestedFriction = frictionKey;
-  stepChoose.hidden = true;
-  stepTask.hidden = false;
+<audio id="victory-chime" preload="auto">
+  <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEzM2Cj2+20cDEzYKPc8LpvMTNgo9zwtm8xM2Cj3O+2bzEzYKPd77ZvMTNgo93vtm8xM2Cj3e+2bzEzYKPd77ZvMTNgo93vtm8xM2Cj3e+2bzEzYKPd77ZvMQ==" type="audio/wav">
+</audio>
 
-  if (activeTaskIndex) activeTaskIndex.textContent = data.index;
-  if (activeTaskTitle) activeTaskTitle.textContent = data.title;
-  if (activeTaskCue) activeTaskCue.textContent = data.cue;
-  if (activeTaskAction) activeTaskAction.innerHTML = data.actionHtml;
-
-  // Immediately link all CTAs to app.html with the selected friction
-  connectAppCtas(data.appKey);
-
-  let remaining = 10;
-  if (activeTaskTimer) activeTaskTimer.textContent = '00:10';
-
-  if (countdownInterval) clearInterval(countdownInterval);
-
-  countdownInterval = setInterval(() => {
-    remaining -= 1;
-    const formatted = `00:${String(Math.max(remaining, 0)).padStart(2, '0')}`;
-    if (activeTaskTimer) activeTaskTimer.textContent = formatted;
-
-    if (remaining <= 0) {
-      clearInterval(countdownInterval);
-      countdownInterval = null;
-      if (activeTaskTimer) activeTaskTimer.textContent = '00:00';
-      connectAppCtas(data.appKey);
-    }
-  }, 1000);
-}
-
-document.querySelectorAll('[data-friction]').forEach(btn => {
-  btn.addEventListener('click', () => runChosenTask(btn.dataset.friction));
-});
-
-const interceptForm = document.querySelector('#interceptForm');
-interceptForm?.addEventListener('submit', (event) => {
-  event.preventDefault();
-  const time = document.querySelector('#interceptTime').value;
-  const pain = document.querySelector('#interceptPain').value;
-  
-  localStorage.setItem('120reset_intercept', JSON.stringify({ time, pain, armedAt: Date.now() }));
-  
-  try {
-    let customs = JSON.parse(localStorage.getItem('nudge_custom_intercepts') || '[]');
-    customs.push({
-      id: `anc_${Date.now()}`,
-      time: time,
-      friction: pain,
-      deck: 'The Anti-Overwhelm Deck',
-      enabled: true
-    });
-    localStorage.setItem('nudge_custom_intercepts', JSON.stringify(customs));
-  } catch(e){}
-
-  interceptForm.classList.add('is-armed');
-  document.querySelector('#interceptStatus').textContent = `Armed for ${time} · ${pain}`;
-  interceptForm.querySelector('button').innerHTML = 'Intercept armed <span>✓</span>';
-});
-
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js?sales=1').catch(() => {}));
-}
-</script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
