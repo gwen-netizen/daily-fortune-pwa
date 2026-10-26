@@ -1,6 +1,7 @@
 /**
  * 120Reset Client Engine (public/app.js)
- * Live Supabase User Sync, Gesture Pull-Down & Premium Unlock Engine
+ * Clean Architecture with Standalone NeuraBrain Canvas Module
+ * Auto-Fitting Drawers, High-Contrast Visibility Engine & Enlarged Profile Metrics
  */
 
 let currentUserProfile = null;
@@ -106,7 +107,7 @@ window.addEventListener('popstate', () => {
 });
 
 /* ========================================================
-   TASK COMPLETION CREDIT & VISIBILITY
+   TASK COMPLETION CREDIT & VISIBILITY (SCREENSHOT 1)
 ======================================================== */
 function getTasksCreditToday() {
   const today = getLocalDateString();
@@ -141,18 +142,19 @@ function getVisibilityMetrics() {
   const rawVisibility = Math.min(100, Math.max(1, baseVisibility + earnedVisibility));
   const displayVisibility = Math.floor(rawVisibility);
 
-  let subtitle = "Clear Signal";
-  if (rawVisibility >= 100) subtitle = "Clear Signal";
-  else if (rawVisibility >= 67) subtitle = "Mild Foggy";
-  else if (rawVisibility >= 34) subtitle = "Mid Foggy";
-  else subtitle = "Intense Foggy";
+  let subtitle = "CLEAR SIGNAL";
+  if (rawVisibility >= 100) subtitle = "CLEAR SIGNAL";
+  else if (rawVisibility >= 67) subtitle = "MILD FOGGY";
+  else if (rawVisibility >= 34) subtitle = "MID FOGGY";
+  else subtitle = "INTENSE FOGGY";
 
   return { displayVisibility, subtitle };
 }
 
+// Screenshot 1 Fix: Synchronize badge text on all active viewports
 function updateBrainStatusText() {
   const { displayVisibility, subtitle } = getVisibilityMetrics();
-  const label = `${displayVisibility}% Visibility • ${subtitle}`;
+  const label = `${displayVisibility}% VISIBILITY • ${subtitle}`;
 
   const textS2 = document.getElementById('brain-status-s2');
   const textS3 = document.getElementById('brain-status-s3');
@@ -275,7 +277,7 @@ function initBottomSheetSwipeDown() {
 }
 
 /* ========================================================
-   INITIALIZATION & BOOT
+   INITIALIZATION & SEQUENTIAL BOOT
 ======================================================== */
 document.addEventListener("DOMContentLoaded", async () => {
   localStorage.setItem('120reset_returning_user', 'true');
@@ -315,6 +317,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   startPassTicker();
   updateMetricDashboard();
   updatePremiumDeckBadges();
+  updateBrainStatusText();
 
   switchScreen('screen-welcome', false);
 });
@@ -861,9 +864,16 @@ function updatePassCountdown() {
   }
 }
 
+// Screenshot 3 Fix: Update Profile Stats Card with bold enlarged values
 function updateMetricDashboard() {
   updatePassCountdown();
   updatePremiumDeckBadges();
+  updateBrainStatusText();
+
+  const winsEl = document.getElementById('profile-stat-wins');
+  const focusEl = document.getElementById('profile-stat-focus');
+  if (winsEl) winsEl.innerText = totalWinsCount.toString();
+  if (focusEl) focusEl.innerText = `${totalFocusReclaimed.toFixed(1)}m`;
 }
 
 async function syncLifetimeProgressToCloud() {
@@ -896,6 +906,9 @@ async function syncLifetimeProgressToCloud() {
   }
 }
 
+/* ========================================================
+   MODALS, DRAWERS & ACCOUNT PROFILE
+======================================================== */
 function openPaywallModal() {
   const modal = document.getElementById('paywall-overlay');
   if (modal) modal.classList.add('active');
