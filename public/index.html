@@ -11,8 +11,6 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <title>120reset — Break the loop in 120 seconds</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
-
 :root {
   color-scheme: dark;
   font-family: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -71,12 +69,8 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--active); outlin
   width: min(1120px, calc(100% - 48px));
   margin-inline: auto;
 }
+.sales-page { flex: 1; }
 
-.sales-page {
-  flex: 1;
-}
-
-/* Header & Nav */
 .app-nav {
   display: flex;
   justify-content: space-between;
@@ -114,9 +108,6 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--active); outlin
   text-transform: uppercase;
 }
 
-/* ========================================================
-   HERO SECTION
-======================================================== */
 .hero {
   display: grid;
   grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
@@ -188,7 +179,6 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--active); outlin
   flex-wrap: wrap;
 }
 
-/* Buttons */
 .button {
   display: inline-flex;
   align-items: center;
@@ -232,9 +222,6 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--active); outlin
   font-size: 0.92rem;
 }
 
-/* ========================================================
-   NARRATIVE CONNECTOR & THREAD STYLES
-======================================================== */
 .narrative-bridge {
   display: flex;
   flex-direction: column;
@@ -267,13 +254,8 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--active); outlin
   line-height: 1.55;
   font-weight: 500;
 }
-.bridge-text strong {
-  color: var(--ink);
-}
+.bridge-text strong { color: var(--ink); }
 
-/* ========================================================
-   RESET DEMO CARD
-======================================================== */
 .reset-card {
   padding: 42px clamp(20px, 4vw, 52px) 46px;
   border: 1px solid var(--line);
@@ -459,9 +441,8 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--active); outlin
   padding: 18px 20px;
   border-radius: 12px;
   background: rgba(13, 27, 44, 0.85);
-  border-left: 3.5px solid var(--active);
   border: 1px solid var(--line);
-  border-left-width: 3.5px;
+  border-left: 3.5px solid var(--active);
   color: #ffffff;
   font-size: clamp(1.15rem, 2.2vw, 1.3rem);
   font-weight: 700;
@@ -477,13 +458,17 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--active); outlin
   font-weight: 500;
 }
 
-/* ========================================================
-   THE SCIENCE SECTION
-======================================================== */
-.science-section {
-  padding: 20px 0 75px;
-  border-top: none;
+.task-card-cta-row {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
 }
+
+.science-section { padding: 20px 0 75px; border-top: none; }
 .science-heading h2 {
   margin: 14px 0 10px;
   font-size: clamp(2.1rem, 3.8vw, 3.4rem);
@@ -547,9 +532,6 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--active); outlin
   font-weight: 500;
 }
 
-/* ========================================================
-   TIMER INTERCEPT SECTION
-======================================================== */
 .intercept-section {
   display: grid;
   grid-template-columns: 1fr 0.9fr;
@@ -635,9 +617,6 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--active); outlin
 }
 .intercept-card.is-armed { border-color: var(--active); }
 
-/* ========================================================
-   FINAL STRIP
-======================================================== */
 .final-strip {
   display: flex;
   flex-direction: column;
@@ -654,9 +633,6 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--active); outlin
   font-weight: 800;
 }
 
-/* ========================================================
-   GLOBAL FOOTER STYLING
-======================================================== */
 footer.custom-global-footer {
   width: 100%;
   padding: 40px 0;
@@ -703,9 +679,6 @@ footer.custom-global-footer .footer-links a:hover {
   color: #a1a1aa;
 }
 
-/* ========================================================
-   MOBILE RESPONSIVENESS
-======================================================== */
 @media(max-width: 800px) {
   body { font-size: 15.5px; }
   .app-nav, .sales-page { width: min(100% - 32px, 1120px); }
@@ -780,8 +753,6 @@ app.innerHTML = `
       <span class="nav-tag">somatic circuit breaker</span>
     </header>
     <main class="sales-page">
-      
-      <!-- HERO SECTION -->
       <section class="hero" aria-labelledby="page-title">
         <div class="hero-copy">
           <span class="eyebrow">when your brain won't start</span>
@@ -801,13 +772,11 @@ app.innerHTML = `
         </div>
       </section>
 
-      <!-- NARRATIVE BRIDGE 1 -->
       <div class="narrative-bridge">
-        <span class="bridge-tag">Immediate Sensation</span>
-        <p class="bridge-text">You don't need another productivity lecture. <strong>Physically interrupt the downward spiral</strong> before you lose another hour.</p>
+        <span class="bridge-tag">Phase 01 · Immediate Sensation</span>
+        <p class="bridge-text">You don't need another productivity lecture. <strong>Feel the circuit break in your own body</strong> before you spend another minute stuck.</p>
       </div>
 
-      <!-- TEST RESET DEMO -->
       <section class="reset-card" id="reset-demo" aria-labelledby="demo-title">
         <div class="reset-heading">
           <div>
@@ -816,13 +785,11 @@ app.innerHTML = `
           </div>
         </div>
         
-        <!-- STEP 1: START SCREEN -->
         <div class="demo-launch" id="stepStart">
           <div class="spin-outer-ring"><button class="big-red-btn" id="bigResetButton" type="button" onclick="startTestFlow()">START</button></div>
           <p id="resetStatus" aria-live="polite">Press START to simulate an immediate somatic interrupt on this screen.</p>
         </div>
 
-        <!-- STEP 2: CHOOSE 1 FRICTION LINE -->
         <div class="task-deck" id="stepChoose" hidden>
           <div class="task-deck-heading"><span>choose what you are fighting right now</span></div>
           <div class="choice-list" role="group">
@@ -838,7 +805,6 @@ app.innerHTML = `
           </div>
         </div>
 
-        <!-- STEP 3: 1-SECOND ACTION TEST CARD -->
         <div class="task-deck" id="stepTask" hidden>
           <div class="task-card is-active">
             <div class="task-card-top">
@@ -855,17 +821,22 @@ app.innerHTML = `
               <span class="task-cue" id="activeTaskCue">SAY ALOUD:</span>
               <div class="task-action-box" id="activeTaskAction">“The loop is cut. I am back in the room.”</div>
             </div>
+
+            <div class="task-card-cta-row">
+              <a class="button button-primary app-cta-link" id="cardLaunchCta" href="app.html" style="width: 100%;">
+                Launch Full 120s Reset <span>→</span>
+              </a>
+              <p class="micro-proof" style="margin: 0; font-size: 0.8rem;">Direct launch into protocol · no account required</p>
+            </div>
           </div>
         </div>
       </section>
 
-      <!-- NARRATIVE BRIDGE 2 -->
       <div class="narrative-bridge">
-        <span class="bridge-tag">Why It Works</span>
-        <p class="bridge-text">Tested across <strong>250+ private beta sessions</strong> with engineers, writers, and students to prove the neuroscience actually works.</p>
+        <span class="bridge-tag">Phase 02 · Why It Works</span>
+        <p class="bridge-text">Tested across <strong>250+ private beta sessions</strong> with engineers, writers, and students: <em>willpower cannot override a threat response. Only physiology can.</em></p>
       </div>
 
-      <!-- THE SCIENCE SECTION -->
       <section class="science-section" aria-labelledby="science-title">
         <div class="science-heading">
           <span class="eyebrow">The Physiology</span>
@@ -894,13 +865,11 @@ app.innerHTML = `
         </div>
       </section>
 
-      <!-- NARRATIVE BRIDGE 3 -->
       <div class="narrative-bridge">
-        <span class="bridge-tag">Prevention</span>
-        <p class="bridge-text">Intercept the productivity freeze before you disappear into social apps again. <strong>This is how you protect your entire afternoon.</strong></p>
+        <span class="bridge-tag">Phase 03 · Prevention</span>
+        <p class="bridge-text">Snapping out of a loop is good. <strong>Intercepting the freeze before you disappear into your screen</strong> is how you protect your entire afternoon.</p>
       </div>
 
-      <!-- CUSTOM INTERCEPT SECTION -->
       <section class="intercept-section" aria-labelledby="intercept-title">
         <div class="intercept-copy">
           <span class="eyebrow">proactive defense</span>
@@ -923,7 +892,6 @@ app.innerHTML = `
         </form>
       </section>
 
-      <!-- FINAL STRIP -->
       <section class="final-strip">
         <div class="final-copy">
           <span class="eyebrow">Zero commitment</span>
@@ -934,10 +902,8 @@ app.innerHTML = `
           <p class="micro-proof">No account · no setup · works directly in your browser</p>
         </div>
       </section>
-
     </main>
 
-    <!-- FOOTER -->
     <footer class="custom-global-footer w-full py-10 bg-black border-t border-zinc-900 text-center">
       <div class="footer-container max-w-5xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
         <p class="text-xs text-zinc-600 font-normal">&copy; 2026 120Reset. All&nbsp;rights&nbsp;reserved.</p>
@@ -966,7 +932,6 @@ function startTestFlow() {
   stepTask.hidden = true;
 }
 
-// Binds all CTAs across index.html directly to app.html and syncs state to app.js
 function connectAppCtas(appKey) {
   const targetUrl = `app.html?friction=${encodeURIComponent(appKey)}`;
   document.querySelectorAll('.app-cta-link').forEach(btn => {
@@ -991,7 +956,6 @@ function runChosenTask(frictionKey) {
   if (activeTaskCue) activeTaskCue.textContent = data.cue;
   if (activeTaskAction) activeTaskAction.innerHTML = data.actionHtml;
 
-  // Immediately link all CTAs to app.html with the selected friction
   connectAppCtas(data.appKey);
 
   let remaining = 10;
