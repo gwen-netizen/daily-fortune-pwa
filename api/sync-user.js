@@ -22,20 +22,38 @@ module.exports = async function handler(req, res) {
     return `120R-${suffix}`;
   }
 
-  async function ensureReferralCode(profile) {
-    if (!profile) return profile;
-    if (!profile.referral_code) {
-      const code = generateUniqueRefCode();
-      const { data } = await supabase
-        .from('user_profiles')
-        .update({ referral_code: code })
-        .eq('email', profile.email)
-        .select()
+  // Cross-table query helper: checks user_profiles, then falls back to profiles
+  async function queryUserProfile(email) {
+    let tableName = 'user_profiles';
+    let { data, error } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .ilike('email', email)
+      .limit(1);
+
+    if ((!data || data.length === 0) && (!error || error.code === '42P01' || error.message?.includes('does not exist'))) {
+      const { data: pData } = await supabase
+        .from('profiles')
+        .select('*')
+        .ilike('email', email)
         .limit(1);
-      if (data && data.length > 0) return data[0];
-      profile.referral_code = code;
+      if (pData && pData.length > 0) {
+        data = pData;
+        tableName = 'profiles';
+      }
     }
-    return profile;
+
+    let profile = data && data.length > 0 ? data[0] : null;
+    if (profile) {
+      // Normalize premium status whether defined as premium_user or is_premium
+      const isPrem = profile.premium_user === true || 
+                     profile.premium_user === 'true' || 
+                     profile.is_premium === true || 
+                     profile.is_premium === 'true';
+      profile.premium_user = isPrem;
+    }
+
+    return { profile, tableName };
   }
 
   const { email, action, clientDate } = (req.method === 'POST') ? req.body : req.query;
@@ -47,56 +65,61 @@ module.exports = async function handler(req, res) {
   const cleanEmail = email.trim().toLowerCase();
 
   try {
+    // 1. GET User Profile
     if (req.method === 'GET' || action === 'get_profile') {
-      let { data } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .ilike('email', cleanEmail)
-        .limit(1);
-
-      let profile = data && data.length > 0 ? data[0] : null;
+      let { profile, tableName } = await queryUserProfile(cleanEmail);
 
       if (!profile) {
         const newCode = generateUniqueRefCode();
+        const newRecord = {
+          email: cleanEmail,
+          daily_clicks: 0,
+          last_click_date: clientDate || new Date().toISOString().split('T')[0],
+          premium_user: false,
+          total_wins: 0,
+          focus_reclaimed: 0,
+          referral_code: newCode
+        };
+
         const { data: created } = await supabase
-          .from('user_profiles')
-          .insert([{
-            email: cleanEmail,
-            daily_clicks: 0,
-            last_click_date: clientDate || new Date().toISOString().split('T')[0],
-            premium_user: false,
-            total_wins: 0,
-            focus_reclaimed: 0,
-            referral_code: newCode
-          }])
+          .from(tableName || 'user_profiles')
+          .insert([newRecord])
           .select()
           .limit(1);
 
-        profile = created && created.length > 0 ? created[0] : null;
-      } else {
-        profile = await ensureReferralCode(profile);
+        profile = created && created.length > 0 ? created[0] : newRecord;
       }
 
       return res.status(200).json({ profile });
     }
 
+    // 2. POST User Progress Update
     if (req.method === 'POST') {
       const { total_wins, focus_reclaimed, daily_clicks } = req.body;
+      const { profile: existing, tableName } = await queryUserProfile(cleanEmail);
+
+      const targetTable = tableName || 'user_profiles';
+      const upsertPayload = {
+        email: cleanEmail,
+        total_wins: parseInt(total_wins, 10) || 0,
+        focus_reclaimed: parseFloat(focus_reclaimed) || 0.0,
+        daily_clicks: parseInt(daily_clicks, 10) || 0,
+        last_click_date: clientDate || new Date().toISOString().split('T')[0]
+      };
+
+      if (existing) {
+        upsertPayload.premium_user = existing.premium_user;
+        upsertPayload.pass_expires_at = existing.pass_expires_at;
+      }
 
       const { data, error } = await supabase
-        .from('user_profiles')
-        .upsert({
-          email: cleanEmail,
-          total_wins: parseInt(total_wins, 10) || 0,
-          focus_reclaimed: parseFloat(focus_reclaimed) || 0.0,
-          daily_clicks: parseInt(daily_clicks, 10) || 0,
-          last_click_date: clientDate || new Date().toISOString().split('T')[0]
-        }, { onConflict: 'email' })
+        .from(targetTable)
+        .upsert(upsertPayload, { onConflict: 'email' })
         .select()
         .limit(1);
 
       if (error) throw error;
-      const updatedProfile = data && data.length > 0 ? data[0] : null;
+      const updatedProfile = data && data.length > 0 ? data[0] : upsertPayload;
       return res.status(200).json({ profile: updatedProfile });
     }
 
