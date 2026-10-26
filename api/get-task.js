@@ -1,8 +1,8 @@
 const { createClient } = require('@supabase/supabase-js');
 const taskMatrix = require('../lib/tasks.js');
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY; 
+const supabaseUrl = process.env.SUPABASE_URL || 'https://rwrwppyhatzflivzgwve.supabase.co';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 module.exports = async function handler(req, res) {
@@ -21,7 +21,7 @@ module.exports = async function handler(req, res) {
     }
 
     let lowerCategory = category.toLowerCase();
-    if (lowerCategory === 'financial-reset' || lowerCategory === 'financial_freeze_impulse' || lowerCategory === 'financial_freeze' || lowerCategory === 'financial_reset') {
+    if (['financial-reset', 'financial_freeze_impulse', 'financial_freeze', 'financial_reset'].includes(lowerCategory)) {
       lowerCategory = 'wealth';
     }
 
@@ -40,7 +40,6 @@ module.exports = async function handler(req, res) {
       userProfile = data && data.length > 0 ? data[0] : null;
     }
 
-    // PASS EXPIRATION CHECK: Check temporary pass timestamp first
     if (userProfile && userProfile.pass_expires_at) {
       const expiresAt = new Date(userProfile.pass_expires_at).getTime();
       if (Date.now() >= expiresAt) {
@@ -59,7 +58,7 @@ module.exports = async function handler(req, res) {
     const isPremiumUser = Boolean(userProfile && userProfile.premium_user);
 
     if (isPremiumDeck && !isPremiumUser) {
-      return res.status(402).json({ error: "Premium subscription validation required to view this focus deck." });
+      return res.status(402).json({ error: "Premium subscription validation required for this focus deck." });
     }
 
     const targetPool = taskMatrix[lowerCategory];
@@ -85,7 +84,6 @@ module.exports = async function handler(req, res) {
       selectedTaskData = pool[randomIdx] || stepCandidates[0] || targetPool[0];
       selectedOriginalIndex = selectedTaskData.originalIndex || 0;
     } else {
-      // NON-REPEATING & FOCUS-DIVERSE ROTATION FOR ALL DECKS
       let candidatesWithIdx = targetPool.map((t, idx) => ({ ...t, originalIndex: idx }));
       
       if (friction) {
@@ -93,7 +91,6 @@ module.exports = async function handler(req, res) {
         if (filtered.length > 0) candidatesWithIdx = filtered;
       }
 
-      // Parse seen indices
       const seenSet = new Set();
       if (seen) {
         seen.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n)).forEach(n => seenSet.add(n));
@@ -101,13 +98,11 @@ module.exports = async function handler(req, res) {
 
       let unseen = candidatesWithIdx.filter(t => !seenSet.has(t.originalIndex));
 
-      // If all tasks have been seen, complete the cycle and reset history
       if (unseen.length === 0) {
         unseen = candidatesWithIdx;
         historyReset = true;
       }
 
-      // Interchangeably push tasks between different task focuses
       let diverseCandidates = unseen;
       if (lastFocusArea) {
         const cleanLast = lastFocusArea.replace(/^(focus\s*area\s*[:\-–—]?\s*)+/i, '').trim().toLowerCase();
@@ -139,7 +134,7 @@ module.exports = async function handler(req, res) {
       }
     });
   } catch (error) {
-    console.error("Task Engine Failure:", error);
-    return res.status(500).json({ error: "Internal processing pipeline failure.", details: error.message });
+    console.error("Task Engine Error:", error);
+    return res.status(500).json({ error: "Internal processing failure.", details: error.message });
   }
 };
