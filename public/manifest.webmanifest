@@ -1,0 +1,17 @@
+{
+  "name": "120reset — Break the loop in 120 seconds",
+  "short_name": "120reset",
+  "description": "A 120-second somatic circuit breaker for executive freeze, doom-scrolling, and brain fog.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#08111f",
+  "theme_color": "#08111f",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
