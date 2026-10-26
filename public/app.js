@@ -1,6 +1,7 @@
 /**
  * 120Reset Client Engine (public/app.js)
- * Full Supabase, Stripe & Multi-Deck Sequential Routing
+ * Clean Architecture with Standalone NeuraBrain Canvas Module
+ * Sequential Flow: Welcome (0) -> Frictions (1) -> Dashboard (2) -> Trigger -> Countdown -> Victory
  */
 
 let currentUserProfile = null;
@@ -14,7 +15,8 @@ let overwhelmCurrentStep = 1;
 let totalWinsCount = 0;
 let totalFocusReclaimed = 0.0;
 
-let activeSelectedFrictions = new Set();
+// Multi-select friction states (up to 3)
+window.activeSelectedFrictions = new Set();
 let brainConstrictionRatio = 0.0;
 
 const DECK_SUBHEADINGS = {
@@ -105,297 +107,71 @@ window.addEventListener('popstate', () => {
   }
 });
 
-const NEURA_STATES = [
-  { id: 'mindless_scrolling', name: 'Mindless scrolling', color: '#f3c547', rgb: '243, 197, 71' },
-  { id: 'task_paralysis', name: 'Task paralysis', color: '#ff5d5d', rgb: '255, 93, 93' },
-  { id: 'low_lethargy', name: 'Brain fog & lethargy', color: '#f28b4b', rgb: '242, 139, 75' }
-];
-
-let stageElement = null;
-let brainCanvas = null, brainCtx = null;
-let fiberCanvas = null, fiberCtx = null;
-let fogCanvas = null, fogCtx = null;
-
-let selectedStates = [];
-let activeState = NEURA_STATES[0];
-let transition = 1;
-let targetTransition = 1;
-let previousTime = 0;
-let canvasWidth = 380;
-let canvasHeight = 260;
-
-function injectNeuraBrainStyles() {
-  if (document.getElementById('neura-brain-injected-styles')) return;
-  const style = document.createElement('style');
-  style.id = 'neura-brain-injected-styles';
-  style.textContent = `
-    .brain-stage {
-      --brain-accent: #f3c547;
-      --brain-accent-rgb: 243, 197, 71;
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      pointer-events: none;
-    }
-    .orbit {
-      position: absolute;
-      width: min(68vw, 240px);
-      height: min(68vw, 240px);
-      top: calc(47% - min(34vw, 120px));
-      left: calc(50% - min(34vw, 120px));
-      border: 1px solid rgba(114, 188, 214, 0.25);
-      border-radius: 48% 52% 51% 49%;
-      transform: rotate(28deg) rotateX(62deg);
-      animation: neuraOrbit 17s linear infinite;
-      pointer-events: none;
-    }
-    .orbit::before, .orbit::after {
-      content: '';
-      position: absolute;
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #a5f3ff;
-      box-shadow: 0 0 20px 5px rgba(99,225,255,.75);
-    }
-    .orbit::before { top: 13%; left: 20%; }
-    .orbit::after { right: 5%; bottom: 18%; background: var(--brain-accent); box-shadow: 0 0 20px 5px rgba(var(--brain-accent-rgb), .7); }
-    .orbit-b {
-      position: absolute;
-      width: min(72vw, 255px);
-      height: min(72vw, 255px);
-      top: calc(47% - min(36vw, 127.5px));
-      left: calc(50% - min(36vw, 127.5px));
-      opacity: 0.45;
-      transform: rotate(-32deg) rotateX(64deg) rotateY(11deg);
-      animation: neuraOrbit 23s linear infinite reverse;
-      pointer-events: none;
-    }
-    .orbit-b::before { top: 78%; left: 30%; background: #8de9ff; }
-    .orbit-b::after { right: 23%; bottom: 4%; }
-    .brain-aura {
-      position: absolute;
-      width: min(62vw, 220px);
-      height: min(62vw, 220px);
-      top: calc(47% - min(31vw, 110px));
-      left: calc(50% - min(31vw, 110px));
-      border-radius: 50%;
-      background: radial-gradient(ellipse at 50% 50%, rgba(93, 170, 199, 0.34), transparent 68%);
-      filter: blur(18px);
-      animation: neuraBreathe 4.2s ease-in-out infinite;
-      pointer-events: none;
-    }
-    .brain-art { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; }
-    #brainCanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; filter: drop-shadow(0 20px 25px rgba(0,0,0,.4)); animation: neuraBrainFloat 4.7s ease-in-out infinite; }
-    #fiberCanvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3; pointer-events: none; mix-blend-mode: screen; }
-    #fogCanvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 6; pointer-events: none; mix-blend-mode: normal; }
-    @keyframes neuraOrbit { to { transform: rotate(388deg) rotateX(62deg); } }
-    @keyframes neuraBreathe { 0%,100% { transform: scale(.96); opacity: .64; } 50% { transform: scale(1.04); opacity: 1; } }
-    @keyframes neuraBrainFloat { 0%,100% { transform: translate3d(0,-4px,0) scale(1.02) rotate(-.2deg); } 50% { transform: translate3d(0,-10px,0) scale(1.04) rotate(.22deg); } }
-  `;
-  document.head.appendChild(style);
-}
-
-function initNeuraBrainDOM() {
-  injectNeuraBrainStyles();
-
-  stageElement = document.createElement('div');
-  stageElement.className = 'brain-stage';
-  stageElement.id = 'brainStage';
-  stageElement.innerHTML = `
-    <div class="orbit"></div>
-    <div class="orbit orbit-b"></div>
-    <div class="brain-aura"></div>
-    <div class="brain-art"><canvas id="brainCanvas" role="img" aria-label="Neura Friction Brain"></canvas></div>
-    <canvas id="fiberCanvas" aria-hidden="true"></canvas>
-    <canvas id="fogCanvas" aria-hidden="true"></canvas>
-  `;
-
-  const targetParent = document.getElementById('brain-viewport-s2');
-  if (targetParent) {
-    targetParent.innerHTML = '';
-    targetParent.appendChild(stageElement);
-
-    const statusEl = document.createElement('div');
-    statusEl.className = 'brain-status-indicator';
-    statusEl.id = 'brain-status-s2';
-    statusEl.innerText = 'CLEAR SIGNAL';
-    targetParent.appendChild(statusEl);
+/* ========================================================
+   TASK COMPLETION CREDIT & VISIBILITY CALIBRATION
+======================================================== */
+function getTasksCreditToday() {
+  const today = getLocalDateString();
+  const savedDate = localStorage.getItem('nudge_brain_date');
+  if (savedDate !== today) {
+    localStorage.setItem('nudge_tasks_credit', '0');
+    return 0;
   }
-
-  brainCanvas = stageElement.querySelector('#brainCanvas');
-  brainCtx = brainCanvas.getContext('2d');
-  fiberCanvas = stageElement.querySelector('#fiberCanvas');
-  fiberCtx = fiberCanvas.getContext('2d');
-  fogCanvas = stageElement.querySelector('#fogCanvas');
-  fogCtx = fogCanvas.getContext('2d');
-
-  resizeNeuraCanvas();
-  requestAnimationFrame(drawNeuraScene);
+  const savedCredit = localStorage.getItem('nudge_tasks_credit');
+  return savedCredit ? parseInt(savedCredit, 10) : 0;
 }
 
-function resizeNeuraCanvas() {
-  if (!brainCanvas || !fiberCanvas || !fogCanvas || !stageElement) return;
-  const parent = stageElement.parentElement;
-  const rect = parent ? parent.getBoundingClientRect() : stageElement.getBoundingClientRect();
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  
-  canvasWidth = rect.width || 380;
-  canvasHeight = rect.height || 260;
-
-  brainCanvas.width = Math.round(canvasWidth * dpr);
-  brainCanvas.height = Math.round(canvasHeight * dpr);
-  fiberCanvas.width = Math.round(canvasWidth * dpr);
-  fiberCanvas.height = Math.round(canvasHeight * dpr);
-  fogCanvas.width = Math.round(canvasWidth * dpr);
-  fogCanvas.height = Math.round(canvasHeight * dpr);
-
-  brainCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  fiberCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  fogCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+function incrementTasksCompletedCredit(amount = 1) {
+  const current = getTasksCreditToday();
+  const nextVal = current + amount;
+  localStorage.setItem('nudge_tasks_credit', nextVal.toString());
+  updateBrainStatusText();
+  syncNeuraFrictions();
 }
 
-function roundedLobePath(context, cx, cy, rx, ry, phase, wobble = 0) {
-  const points = 34;
-  const outline = [];
-  for (let i = 0; i <= points; i += 1) {
-    const theta = (i / points) * Math.PI * 2;
-    const wave = 1 + Math.sin(theta * 5 + phase) * .045 + Math.sin(theta * 9 - phase) * .026 + Math.sin(theta * 13 + phase) * .014 + wobble;
-    outline.push({ x: cx + Math.cos(theta) * rx * wave, y: cy + Math.sin(theta) * ry * wave });
-  }
-  context.beginPath();
-  const midpoint = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
-  const firstMid = midpoint(outline[0], outline[1]);
-  context.moveTo(firstMid.x, firstMid.y);
-  for (let i = 1; i < outline.length - 1; i += 1) {
-    const nextMid = midpoint(outline[i], outline[i + 1]);
-    context.quadraticCurveTo(outline[i].x, outline[i].y, nextMid.x, nextMid.y);
-  }
-  context.quadraticCurveTo(outline[outline.length - 1].x, outline[outline.length - 1].y, firstMid.x, firstMid.y);
-  context.closePath();
+function getVisibilityMetrics() {
+  const count = window.activeSelectedFrictions.size;
+
+  let baseVisibility = 100;
+  if (count === 1) baseVisibility = 67;
+  else if (count === 2) baseVisibility = 34;
+  else if (count >= 3) baseVisibility = 1;
+
+  const tasksCredit = getTasksCreditToday();
+  const earnedVisibility = tasksCredit * 16.5;
+
+  const rawVisibility = Math.min(100, Math.max(1, baseVisibility + earnedVisibility));
+  const displayVisibility = Math.floor(rawVisibility);
+
+  let subtitle = "Clear Signal";
+  if (rawVisibility >= 100) subtitle = "Clear Signal";
+  else if (rawVisibility >= 67) subtitle = "Mild Foggy";
+  else if (rawVisibility >= 34) subtitle = "Mid Foggy";
+  else subtitle = "Intense Foggy";
+
+  return { displayVisibility, subtitle };
 }
 
-function drawBrain(time) {
-  const w = canvasWidth;
-  const h = canvasHeight;
-  brainCtx.clearRect(0, 0, w, h);
+function updateBrainStatusText() {
+  const { displayVisibility, subtitle } = getVisibilityMetrics();
+  const label = `${displayVisibility}% Visibility • ${subtitle}`;
 
-  const breath = Math.sin(time * .00135) * 2.2;
-  const cx = w * .5;
-  const cy = h * .47 + breath;
-  
-  const minDim = Math.min(w, h);
-  const rx = minDim * .38;
-  const ry = minDim * .30;
-  const leftCx = cx - rx * .27;
-  const rightCx = cx + rx * .27;
+  const textS2 = document.getElementById('brain-status-s2');
+  const textS3 = document.getElementById('brain-status-s3');
 
-  const count = selectedStates.length;
-  const tissueAlpha = count === 0 ? 1.0 : (count === 1 ? 0.74 : (count === 2 ? 0.48 : 0.22));
+  if (textS2) textS2.innerText = label;
+  if (textS3) textS3.innerText = label;
+}
 
-  const aura = brainCtx.createRadialGradient(cx, cy, ry * .08, cx, cy, ry * 1.45);
-  aura.addColorStop(0, 'rgba(86, 205, 255, .25)');
-  aura.addColorStop(.45, 'rgba(48, 117, 210, .13)');
-  aura.addColorStop(1, 'rgba(4, 15, 27, 0)');
-  brainCtx.fillStyle = aura;
-  brainCtx.beginPath();
-  brainCtx.ellipse(cx, cy, rx * 1.35, ry * 1.25, -.04, 0, Math.PI * 2);
-  brainCtx.fill();
-
-  brainCtx.save();
-  brainCtx.globalAlpha = tissueAlpha;
-
-  roundedLobePath(brainCtx, leftCx, cy, rx * .66, ry, time * .0007, breath / 100);
-  const leftFill = brainCtx.createRadialGradient(leftCx - rx * .18, cy - ry * .4, 0, leftCx, cy, rx * .95);
-  leftFill.addColorStop(0, 'rgba(255, 220, 177, .94)');
-  leftFill.addColorStop(.22, 'rgba(151, 214, 255, .9)');
-  leftFill.addColorStop(.58, 'rgba(64, 106, 210, .82)');
-  leftFill.addColorStop(1, 'rgba(11, 33, 83, .7)');
-  brainCtx.fillStyle = leftFill;
-  brainCtx.fill();
-
-  roundedLobePath(brainCtx, rightCx, cy, rx * .66, ry, time * .0007 + .4, breath / 100);
-  const rightFill = brainCtx.createRadialGradient(rightCx + rx * .12, cy - ry * .38, 0, rightCx, cy, rx * .98);
-  rightFill.addColorStop(0, 'rgba(255, 235, 154, .98)');
-  rightFill.addColorStop(.25, 'rgba(255, 179, 97, .92)');
-  rightFill.addColorStop(.6, 'rgba(129, 78, 193, .8)');
-  rightFill.addColorStop(1, 'rgba(19, 34, 104, .72)');
-  brainCtx.globalAlpha = tissueAlpha * .9;
-  brainCtx.fillStyle = rightFill;
-  brainCtx.fill();
-  brainCtx.globalAlpha = tissueAlpha;
-
-  brainCtx.restore();
-
-  if (selectedStates.length > 0) {
-    brainCtx.save();
-    brainCtx.beginPath();
-    brainCtx.ellipse(leftCx, cy, rx * .66, ry, 0, 0, Math.PI * 2);
-    brainCtx.ellipse(rightCx, cy, rx * .66, ry, 0, 0, Math.PI * 2);
-    brainCtx.ellipse(cx + rx * .29, cy + ry * .65, rx * .34, ry * .25, 0, 0, Math.PI * 2);
-    brainCtx.clip();
-
-    if (count >= 3) {
-      const fullFog = brainCtx.createRadialGradient(cx, cy, 0, cx, cy, rx * 1.25);
-      fullFog.addColorStop(0, 'rgba(8, 20, 42, 0.40)');
-      fullFog.addColorStop(0.65, 'rgba(8, 20, 42, 0.65)');
-      fullFog.addColorStop(1, 'rgba(8, 20, 42, 0.82)');
-      brainCtx.fillStyle = fullFog;
-      brainCtx.fillRect(cx - rx * 1.2, cy - ry * 1.2, rx * 2.4, ry * 2.4);
-    } else if (count === 2) {
-      const leftX = cx - rx * 1.25;
-      const rightX = cx + rx * 0.52;
-      const baseGrad = brainCtx.createLinearGradient(leftX, 0, rightX, 0);
-      baseGrad.addColorStop(0.0, 'rgba(8, 20, 42, 0.55)');
-      baseGrad.addColorStop(0.70, 'rgba(8, 20, 42, 0.55)');
-      baseGrad.addColorStop(1.0, 'rgba(8, 20, 42, 0.0)');
-      brainCtx.fillStyle = baseGrad;
-      brainCtx.fillRect(leftX, cy - ry * 1.2, rightX - leftX, ry * 2.4);
-    } else if (count === 1) {
-      const leftX = cx - rx * 1.25;
-      const rightX = cx - rx * 0.25;
-      const grad = brainCtx.createLinearGradient(cx - rx * 0.9, 0, rightX + rx * 0.10, 0);
-      grad.addColorStop(0.0, 'rgba(8, 20, 42, 0.48)');
-      grad.addColorStop(0.65, 'rgba(8, 20, 42, 0.42)');
-      grad.addColorStop(1.0, 'rgba(8, 20, 42, 0)');
-      brainCtx.fillStyle = grad;
-      brainCtx.fillRect(leftX, cy - ry * 1.2, rightX - leftX, ry * 2.4);
-    }
-    brainCtx.restore();
+function syncNeuraFrictions() {
+  if (window.NeuraBrain && typeof window.NeuraBrain.setFrictions === 'function') {
+    window.NeuraBrain.setFrictions(window.activeSelectedFrictions);
   }
 }
 
-function drawNeuraScene(time) {
-  if (!previousTime) previousTime = time;
-  const delta = Math.min(time - previousTime, 48);
-  previousTime = time;
-  transition += (targetTransition - transition) * Math.min(delta * .008, .12);
-
-  drawBrain(time);
-  fiberCtx.clearRect(0, 0, canvasWidth, canvasHeight);
-  requestAnimationFrame(drawNeuraScene);
-}
-
-function syncNeuraStates() {
-  selectedStates = [];
-  if (activeSelectedFrictions.has('mindless_scrolling')) selectedStates.push(NEURA_STATES[0]);
-  if (activeSelectedFrictions.has('task_paralysis')) selectedStates.push(NEURA_STATES[1]);
-  if (activeSelectedFrictions.has('low_lethargy')) selectedStates.push(NEURA_STATES[2]);
-
-  activeState = selectedStates[0] || NEURA_STATES[0];
-  targetTransition = 0;
-  window.setTimeout(() => { targetTransition = 1; }, 40);
-
-  if (stageElement) {
-    stageElement.style.setProperty('--brain-accent', activeState.color);
-    stageElement.style.setProperty('--brain-accent-rgb', activeState.rgb);
-  }
-}
-
+/* ========================================================
+   INITIALIZATION & SEQUENTIAL BOOT
+======================================================== */
 document.addEventListener("DOMContentLoaded", async () => {
   localStorage.setItem('120reset_returning_user', 'true');
 
@@ -404,21 +180,28 @@ document.addEventListener("DOMContentLoaded", async () => {
   startBackgroundInterceptMonitor();
   await checkStripeRedirectStatus();
   initBrainConstrictionState();
-  initNeuraBrainDOM();
 
+  // Mount standalone NeuraBrain on Screen 1 container
+  const s2Container = document.getElementById('brain-viewport-s2');
+  if (window.NeuraBrain && s2Container) {
+    window.NeuraBrain.mount(s2Container);
+  }
+
+  // Parse incoming friction parameter from index.html CTA
   const urlParams = new URLSearchParams(window.location.search);
   const frictionParam = urlParams.get('friction');
   if (frictionParam && ['mindless_scrolling', 'task_paralysis', 'low_lethargy'].includes(frictionParam)) {
-    activeSelectedFrictions.clear();
-    activeSelectedFrictions.add(frictionParam);
+    window.activeSelectedFrictions.clear();
+    window.activeSelectedFrictions.add(frictionParam);
     brainConstrictionRatio = 0.33;
     localStorage.setItem('nudge_selected_frictions', JSON.stringify([frictionParam]));
     localStorage.setItem('nudge_brain_constriction', '0.33');
-    syncNeuraStates();
+    syncNeuraFrictions();
     syncFrictionChipsUI();
     updateBrainStatusText();
   }
 
+  // Fetch Supabase user profile
   const savedEmail = localStorage.getItem('nudge_user_email') || 'beta_tester@120reset.app';
   localStorage.setItem('nudge_user_email', savedEmail);
 
@@ -444,7 +227,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   startPassTicker();
   updateMetricDashboard();
 
-  // Sequential boot starts strictly on Screen 0
+  // Sequential boot starts strictly on Screen 0 (Welcome)
   switchScreen('screen-welcome', false);
 });
 
@@ -453,10 +236,10 @@ function handleWelcomeContinue() {
 }
 
 function confirmFrictionsAndOpenDashboard() {
-  if (activeSelectedFrictions.size === 0) {
-    activeSelectedFrictions.add('mindless_scrolling');
+  if (window.activeSelectedFrictions.size === 0) {
+    window.activeSelectedFrictions.add('mindless_scrolling');
     brainConstrictionRatio = 0.33;
-    syncNeuraStates();
+    syncNeuraFrictions();
     syncFrictionChipsUI();
     updateBrainStatusText();
   }
@@ -470,9 +253,10 @@ function initBrainConstrictionState() {
   if (savedDate !== today) {
     localStorage.setItem('nudge_brain_date', today);
     localStorage.setItem('nudge_brain_constriction', '0.0');
+    localStorage.setItem('nudge_tasks_credit', '0');
     localStorage.removeItem('nudge_selected_frictions');
     brainConstrictionRatio = 0.0;
-    activeSelectedFrictions.clear();
+    window.activeSelectedFrictions.clear();
   } else {
     const storedRatio = localStorage.getItem('nudge_brain_constriction');
     brainConstrictionRatio = storedRatio !== null ? parseFloat(storedRatio) : 0.0;
@@ -481,34 +265,34 @@ function initBrainConstrictionState() {
     if (storedFrictions) {
       try {
         const arr = JSON.parse(storedFrictions);
-        activeSelectedFrictions = new Set(arr);
+        window.activeSelectedFrictions = new Set(arr);
       } catch (e) {
-        activeSelectedFrictions.clear();
+        window.activeSelectedFrictions.clear();
       }
     }
   }
 
-  syncNeuraStates();
+  syncNeuraFrictions();
   syncFrictionChipsUI();
   updateBrainStatusText();
 }
 
 function toggleFrictionSelection(el, frictionKey) {
-  if (activeSelectedFrictions.has(frictionKey)) {
-    activeSelectedFrictions.delete(frictionKey);
+  if (window.activeSelectedFrictions.has(frictionKey)) {
+    window.activeSelectedFrictions.delete(frictionKey);
   } else {
-    activeSelectedFrictions.add(frictionKey);
+    window.activeSelectedFrictions.add(frictionKey);
   }
 
-  const count = activeSelectedFrictions.size;
+  const count = window.activeSelectedFrictions.size;
   brainConstrictionRatio = count === 0 ? 0.0 : (count === 1 ? 0.33 : (count === 2 ? 0.66 : 1.0));
 
   const today = getLocalDateString();
   localStorage.setItem('nudge_brain_date', today);
   localStorage.setItem('nudge_brain_constriction', brainConstrictionRatio.toFixed(2));
-  localStorage.setItem('nudge_selected_frictions', JSON.stringify(Array.from(activeSelectedFrictions)));
+  localStorage.setItem('nudge_selected_frictions', JSON.stringify(Array.from(window.activeSelectedFrictions)));
 
-  syncNeuraStates();
+  syncNeuraFrictions();
   syncFrictionChipsUI();
   updateBrainStatusText();
 }
@@ -518,26 +302,12 @@ function syncFrictionChipsUI() {
     const key = chip.getAttribute('data-friction');
     chip.classList.remove('selected-red', 'selected-orange', 'selected-yellow');
 
-    if (activeSelectedFrictions.has(key)) {
+    if (window.activeSelectedFrictions.has(key)) {
       if (key === 'mindless_scrolling') chip.classList.add('selected-red');
       else if (key === 'task_paralysis') chip.classList.add('selected-orange');
       else if (key === 'low_lethargy') chip.classList.add('selected-yellow');
     }
   });
-}
-
-function updateBrainStatusText() {
-  const count = activeSelectedFrictions.size;
-  const textS2 = document.getElementById('brain-status-s2');
-  const textS3 = document.getElementById('brain-status-s3');
-
-  let label = "CLEAR SIGNAL";
-  if (count === 1) label = "MILD FOGGY";
-  else if (count === 2) label = "MID FOGGY";
-  else if (count >= 3) label = "INTENSE FOGGY";
-
-  if (textS2) textS2.innerText = label;
-  if (textS3) textS3.innerText = label;
 }
 
 function switchScreen(screenId, shouldPushHistory = true) {
@@ -551,13 +321,11 @@ function switchScreen(screenId, shouldPushHistory = true) {
       pushNavigationState(screenId);
     }
 
+    // Remount NeuraBrain stage between Screen 1 and Screen 2
     if (screenId === 'screen-onboarding-2' || screenId === 'screen-dashboard') {
       const targetContainer = document.getElementById(screenId === 'screen-onboarding-2' ? 'brain-viewport-s2' : 'brain-viewport-s3');
-      if (targetContainer && stageElement) {
-        if (stageElement.parentElement !== targetContainer) {
-          targetContainer.appendChild(stageElement);
-        }
-        resizeNeuraCanvas();
+      if (targetContainer && window.NeuraBrain) {
+        window.NeuraBrain.mount(targetContainer);
       }
     }
 
@@ -603,6 +371,9 @@ function startTriggerPhase() {
   }
 }
 
+/* ========================================================
+   TASK EXECUTION & CLOUD API DISPATCH
+======================================================== */
 async function executeTurnaroundSpin() {
   const hasAccess = isUserPremiumOrPass();
   const dailyClicks = getDailyClicksCount();
@@ -621,14 +392,19 @@ async function executeTurnaroundSpin() {
   if (instruction) instruction.innerText = "Exhale slowly... allowing focus to narrow completely.";
 
   const categoryKey = selectedCategory || 'charisma';
-  const frictionKey = Array.from(activeSelectedFrictions)[0] || 'mindless_scrolling';
+  const frictionKey = Array.from(window.activeSelectedFrictions)[0] || 'mindless_scrolling';
   const userEmail = localStorage.getItem('nudge_user_email') || 'beta_tester@120reset.app';
 
   const seenKey = `nudge_seen_${categoryKey}`;
   const seenIndices = JSON.parse(localStorage.getItem(seenKey) || '[]');
 
   try {
-    let endpoint = `/api/get-task?category=${encodeURIComponent(categoryKey)}&friction=${encodeURIComponent(frictionKey)}&email=${encodeURIComponent(userEmail)}&seen=${encodeURIComponent(seenIndices.join(','))}`;
+    let endpoint = `/api/get-task?category=${encodeURIComponent(categoryKey)}`
+      + `&friction=${encodeURIComponent(frictionKey)}`
+      + `&email=${encodeURIComponent(userEmail)}`
+      + `&seen=${encodeURIComponent(seenIndices.join(','))}`
+      + `&isPremium=${isPremiumSelected && hasAccess ? 'true' : 'false'}`;
+
     if (categoryKey === 'overwhelm') {
       endpoint += `&step=${overwhelmCurrentStep}`;
     }
@@ -640,7 +416,7 @@ async function executeTurnaroundSpin() {
         taskData = await response.json();
       }
     } catch (netErr) {
-      console.warn("Backend API fallback:", netErr);
+      console.warn("Backend API endpoint fallback:", netErr);
     }
 
     if (!taskData || !taskData.task) {
@@ -766,13 +542,16 @@ function triggerVictoryPhase(minutesEarned) {
   const btnOverwhelmReset = document.getElementById('btn-overwhelm-reset');
   const victoryTitle = document.getElementById('victory-title-text');
   const victoryPoints = document.getElementById('victory-points-reclaimed-badge');
+  const noticeEl = document.getElementById('victory-unwind-notice');
 
   if (isOverwhelm && overwhelmCurrentStep >= 4) {
     totalWinsCount += 1;
     totalFocusReclaimed += 8.0;
+    incrementTasksCompletedCredit(2);
   } else if (!isOverwhelm) {
     totalWinsCount += 1;
     totalFocusReclaimed += minutesEarned;
+    incrementTasksCompletedCredit(1);
   }
 
   localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
@@ -790,6 +569,10 @@ function triggerVictoryPhase(minutesEarned) {
       if (btnOverwhelmReset) btnOverwhelmReset.style.display = 'none';
       if (victoryTitle) victoryTitle.innerText = `Move ${overwhelmCurrentStep} of 4 Complete.`;
       if (victoryPoints) victoryPoints.innerText = `+120s Focus Reclaimed (Step ${overwhelmCurrentStep}/4)`;
+      if (noticeEl) {
+        noticeEl.innerHTML = `✨ Step ${overwhelmCurrentStep} cleared! Complete all 4 moves to clear the tension stack.`;
+        noticeEl.style.color = "var(--accent-gold)";
+      }
     } else {
       if (btnOverwhelmNext) btnOverwhelmNext.style.display = 'none';
       if (btnOverwhelmReset) {
@@ -798,12 +581,20 @@ function triggerVictoryPhase(minutesEarned) {
       }
       if (victoryTitle) victoryTitle.innerText = "4x Protocol Complete!";
       if (victoryPoints) victoryPoints.innerText = "+480s Focus Reclaimed (4/4 Complete)";
+      if (noticeEl) {
+        noticeEl.innerHTML = "🌟 <b>100% UNLOCKED!</b> Brain fog dissolved. Signal fully restored.";
+        noticeEl.style.color = "var(--accent-safe)";
+      }
     }
   } else {
     if (overwhelmActions) overwhelmActions.style.display = 'none';
     if (standardActions) standardActions.style.display = 'flex';
     if (victoryTitle) victoryTitle.innerText = "Impact Confirmed.";
     if (victoryPoints) victoryPoints.innerText = "+120s Focus Reclaimed";
+    if (noticeEl) {
+      noticeEl.innerHTML = "✨ Signal clearing! Brain visibility increasing.";
+      noticeEl.style.color = "var(--accent-gold)";
+    }
   }
 
   const chime = document.getElementById('victory-chime');
@@ -843,6 +634,9 @@ function runAnotherRound() {
   executeTurnaroundSpin();
 }
 
+/* ========================================================
+   DAILY RESET LIMITS & 48-HOUR PASS TICKER
+======================================================== */
 function getDailyClicksCount() {
   const today = getLocalDateString();
   const savedDate = localStorage.getItem('nudge_click_date');
@@ -925,6 +719,9 @@ function updateMetricDashboard() {
   updatePassCountdown();
 }
 
+/* ========================================================
+   SUPABASE CLOUD SYNC & RECOVERY
+======================================================== */
 async function syncLifetimeProgressToCloud() {
   const userEmail = localStorage.getItem('nudge_user_email') || 'beta_tester@120reset.app';
   const currentClicks = getDailyClicksCount();
@@ -952,25 +749,33 @@ async function syncLifetimeProgressToCloud() {
   }
 }
 
+/* ========================================================
+   MODALS, DRAWERS & ACCOUNT PROFILE
+======================================================== */
 function openPaywallModal() {
   const modal = document.getElementById('paywall-overlay');
   if (modal) modal.classList.add('active');
 }
+
 function closePaywall() {
   closeModal('paywall-overlay');
 }
+
 function selectTier(el) {
   document.querySelectorAll('.tier-card').forEach(b => b.classList.remove('selected'));
   el.classList.add('selected');
 }
+
 function openInterceptsDrawer() {
   const modal = document.getElementById('intercepts-drawer-modal');
   if (modal) modal.classList.add('active');
 }
+
 function openReferralModal() {
   const modal = document.getElementById('referral-reward-modal');
   if (modal) modal.classList.add('active');
 }
+
 function openProfileModal() {
   const modal = document.getElementById('profile-drawer-modal');
   if (modal) {
@@ -988,7 +793,7 @@ function openProfileModal() {
     const remainingSecs = getPassRemainingSeconds();
 
     if (passCard) {
-      if (hasAccess && !currentUserProfile.pass_expires_at) {
+      if (hasAccess && !currentUserProfile?.pass_expires_at) {
         passCard.innerHTML = `<span style="color:var(--accent-safe); font-weight:800;">✅ FULL UNLIMITED ACCESS</span><br><span style="color:var(--text-muted); font-size:12px;">Permanent unrestricted daily resets.</span>`;
       } else if (remainingSecs > 0) {
         const hours = Math.floor(remainingSecs / 3600);
@@ -1002,10 +807,12 @@ function openProfileModal() {
     modal.classList.add('active');
   }
 }
+
 function closeModal(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) modal.classList.remove('active');
 }
+
 function handleUserSignOut() {
   if (confirm("Reset local beta session?")) {
     localStorage.clear();
@@ -1013,6 +820,9 @@ function handleUserSignOut() {
   }
 }
 
+/* ========================================================
+   STRIPE PAYMENT GATEWAY INTEGRATION
+======================================================== */
 async function simulatePurchase() {
   const selectedTierBox = document.querySelector('.tier-card.selected');
   if (!selectedTierBox) { alert("Please select an option to continue."); return; }
@@ -1053,6 +863,9 @@ async function checkStripeRedirectStatus() {
   }
 }
 
+/* ========================================================
+   INTERCEPTS ENGINE
+======================================================== */
 function getStoredPresetIntercepts() {
   const stored = localStorage.getItem('nudge_preset_intercepts');
   if (!stored) {
