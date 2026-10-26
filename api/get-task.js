@@ -31,23 +31,27 @@ module.exports = async function handler(req, res) {
     const cleanEmail = email ? email.trim().toLowerCase() : '';
 
     if (cleanEmail && cleanEmail !== 'anonymous_tester') {
-      const { data } = await supabase
+      let { data } = await supabase
         .from('user_profiles')
-        .select('premium_user, pass_expires_at')
+        .select('*')
         .ilike('email', cleanEmail)
         .limit(1);
       
+      if (!data || data.length === 0) {
+        const { data: pData } = await supabase
+          .from('profiles')
+          .select('*')
+          .ilike('email', cleanEmail)
+          .limit(1);
+        if (pData && pData.length > 0) data = pData;
+      }
+
       userProfile = data && data.length > 0 ? data[0] : null;
     }
 
     if (userProfile && userProfile.pass_expires_at) {
       const expiresAt = new Date(userProfile.pass_expires_at).getTime();
       if (Date.now() >= expiresAt) {
-        await supabase
-          .from('user_profiles')
-          .update({ premium_user: false, pass_expires_at: null })
-          .ilike('email', cleanEmail);
-
         userProfile.premium_user = false;
         userProfile.pass_expires_at = null;
       } else {
@@ -55,7 +59,14 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    const isPremiumUser = Boolean(userProfile && userProfile.premium_user);
+    const isPremiumUser = Boolean(
+      userProfile && (
+        userProfile.premium_user === true || 
+        userProfile.premium_user === 'true' || 
+        userProfile.is_premium === true || 
+        userProfile.is_premium === 'true'
+      )
+    );
 
     if (isPremiumDeck && !isPremiumUser) {
       return res.status(402).json({ error: "Premium subscription validation required for this focus deck." });
@@ -110,9 +121,7 @@ module.exports = async function handler(req, res) {
           const tArea = (t.focusArea || '').replace(/^(focus\s*area\s*[:\-–—]?\s*)+/i, '').trim().toLowerCase();
           return tArea && tArea !== cleanLast;
         });
-        if (differentFocus.length > 0) {
-          diverseCandidates = differentFocus;
-        }
+        if (differentFocus.length > 0) diverseCandidates = differentFocus;
       }
 
       const pickIndex = Math.floor(Math.random() * diverseCandidates.length);
