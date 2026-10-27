@@ -113,7 +113,7 @@
         inset: 0;
         width: 100%;
         height: 100%;
-        z-index: 3;
+        z-index: 1;
         pointer-events: none;
         mix-blend-mode: screen;
       }
@@ -213,7 +213,7 @@
     const rightCx = cx + rx * 0.27;
 
     const count = selectedStates.length;
-    const tissueAlpha = count === 0 ? 1.0 : (count === 1 ? 0.74 : (count === 2 ? 0.48 : 0.22));
+    const tissueAlpha = 1.0;
 
     const aura = brainCtx.createRadialGradient(cx, cy, ry * 0.08, cx, cy, ry * 1.45);
     aura.addColorStop(0, 'rgba(86, 205, 255, .25)');
@@ -271,8 +271,6 @@
       brainCtx.globalAlpha = (0.3 + (i % 4) * 0.1) * tissueAlpha;
       brainCtx.lineWidth = 1.3 + (i % 5 === 0 ? 2.4 : 0.2);
       brainCtx.lineCap = 'round';
-      brainCtx.shadowBlur = i % 5 === 0 ? 12 : 4;
-      brainCtx.shadowColor = cordColors[i % cordColors.length];
       brainCtx.stroke();
     }
     for (let i = 0; i < 12; i += 1) {
@@ -285,7 +283,6 @@
       brainCtx.strokeStyle = i % 3 === 0 ? '#fff4be' : '#69d9ff';
       brainCtx.globalAlpha = 0.46 * tissueAlpha;
       brainCtx.lineWidth = 1.8;
-      brainCtx.shadowBlur = 10;
       brainCtx.stroke();
     }
     brainCtx.restore();
@@ -300,10 +297,7 @@
     brainCtx.stroke();
     brainCtx.strokeStyle = 'rgba(255, 221, 129, .7)';
     brainCtx.lineWidth = 1.2;
-    brainCtx.shadowBlur = 14;
-    brainCtx.shadowColor = '#ffca6e';
     brainCtx.stroke();
-    brainCtx.shadowBlur = 0;
 
     // Stem and cerebellum
     const stem = brainCtx.createLinearGradient(cx, cy + ry * 0.6, cx, h);
@@ -330,7 +324,7 @@
 
     brainCtx.restore();
 
-    // Tissue fog tint
+    // Tissue fog tint (Grey out segments of the brain based on friction)
     if (selectedStates.length > 0) {
       brainCtx.save();
       brainCtx.beginPath();
@@ -339,31 +333,29 @@
       brainCtx.ellipse(cx + rx * 0.29, cy + ry * 0.65, rx * 0.34, ry * 0.25, 0, 0, Math.PI * 2);
       brainCtx.clip();
 
+      const overlayColor = 'rgba(25, 35, 55, 0.75)'; // Grey-blue tint
+
       if (count >= 3) {
-        const fullFog = brainCtx.createRadialGradient(cx, cy, 0, cx, cy, rx * 1.25);
-        fullFog.addColorStop(0, 'rgba(8, 20, 42, 0.40)');
-        fullFog.addColorStop(0.65, 'rgba(8, 20, 42, 0.65)');
-        fullFog.addColorStop(1, 'rgba(8, 20, 42, 0.82)');
-        brainCtx.fillStyle = fullFog;
-        brainCtx.fillRect(cx - rx * 1.2, cy - ry * 1.2, rx * 2.4, ry * 2.4);
+        brainCtx.fillStyle = 'rgba(25, 35, 55, 0.85)';
+        brainCtx.fillRect(0, 0, w, h);
       } else if (count === 2) {
         const leftX = cx - rx * 1.25;
         const rightX = cx + rx * 0.52;
         const baseGrad = brainCtx.createLinearGradient(leftX, 0, rightX, 0);
-        baseGrad.addColorStop(0.0, 'rgba(8, 20, 42, 0.55)');
-        baseGrad.addColorStop(0.70, 'rgba(8, 20, 42, 0.55)');
-        baseGrad.addColorStop(1.0, 'rgba(8, 20, 42, 0.0)');
+        baseGrad.addColorStop(0.0, overlayColor);
+        baseGrad.addColorStop(0.70, overlayColor);
+        baseGrad.addColorStop(1.0, 'rgba(25, 35, 55, 0.0)');
         brainCtx.fillStyle = baseGrad;
-        brainCtx.fillRect(leftX, cy - ry * 1.2, rightX - leftX, ry * 2.4);
+        brainCtx.fillRect(leftX, 0, rightX - leftX, h);
       } else if (count === 1) {
         const leftX = cx - rx * 1.25;
         const rightX = cx - rx * 0.25;
         const grad = brainCtx.createLinearGradient(cx - rx * 0.9, 0, rightX + rx * 0.10, 0);
-        grad.addColorStop(0.0, 'rgba(8, 20, 42, 0.48)');
-        grad.addColorStop(0.65, 'rgba(8, 20, 42, 0.42)');
-        grad.addColorStop(1.0, 'rgba(8, 20, 42, 0)');
+        grad.addColorStop(0.0, overlayColor);
+        grad.addColorStop(0.70, overlayColor);
+        grad.addColorStop(1.0, 'rgba(25, 35, 55, 0)');
         brainCtx.fillStyle = grad;
-        brainCtx.fillRect(leftX, cy - ry * 1.2, rightX - leftX, ry * 2.4);
+        brainCtx.fillRect(leftX, 0, rightX - leftX, h);
       }
       brainCtx.restore();
     }
@@ -383,7 +375,6 @@
     const constriction = isActive ? 1 - tension * 0.075 + wave * 0.013 : 1 + wave * 0.025;
     const lineWidth = isActive ? 1.25 + transition * 0.9 : 0.75;
     const alpha = isActive ? (0.18 + transition * 0.52) : strand.alpha * 0.5;
-    const color = isActive ? strandState.color : '#9eeaff';
     const rgb = isActive ? strandState.rgb : '158, 234, 255';
 
     fiberCtx.save();
@@ -419,6 +410,7 @@
       const nRadius = 1.4 + transition * 1.2;
       
       fiberCtx.fillStyle = `rgba(${rgb}, ${nAlpha * 0.3})`;
+      fiberCtx.beginPath();
       fiberCtx.arc(nodeX, nodeY, nRadius + 5, 0, Math.PI * 2);
       fiberCtx.fill();
       
@@ -495,17 +487,20 @@
     fogCtx.clip();
 
     const count = selectedStates.length;
+    
+    // Use a murky, desaturated blue-grey for actual "fog" instead of neon colors
+    const fogColorSolid = 'rgba(130, 145, 165, 0.15)';
+    const fogColorStroke = 'rgba(130, 145, 165, 0.2)';
 
     if (count >= 3) {
       const softGlow = fogCtx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radiusX * 1.3);
-      softGlow.addColorStop(0, 'rgba(8, 20, 42, 0.28)');
-      softGlow.addColorStop(0.65, 'rgba(8, 20, 42, 0.45)');
-      softGlow.addColorStop(1, 'rgba(8, 20, 42, 0.62)');
+      softGlow.addColorStop(0, 'rgba(30, 40, 55, 0.45)');
+      softGlow.addColorStop(0.65, 'rgba(30, 40, 55, 0.65)');
+      softGlow.addColorStop(1, 'rgba(30, 40, 55, 0.85)');
       fogCtx.fillStyle = softGlow;
       fogCtx.fillRect(centerX - radiusX * 1.2, centerY - radiusY * 1.2, radiusX * 2.4, radiusY * 2.4);
 
       for (let i = 0; i < 9; i += 1) {
-        const state = selectedStates[i % selectedStates.length];
         fogCtx.beginPath();
         fogCtx.ellipse(
           centerX + Math.sin(time * 0.0006 + i * 1.2) * radiusX * 0.48,
@@ -516,15 +511,11 @@
           0,
           Math.PI * 2
         );
-        fogCtx.fillStyle = `rgba(${state.rgb}, 0.08)`;
-        
+        fogCtx.fillStyle = fogColorSolid;
         fogCtx.fill();
       }
-      
 
     } else if (count === 2) {
-      const state0 = selectedStates[0];
-      const state1 = selectedStates[1];
       const leftX = centerX - radiusX * 1.25;
       const rightX = centerX + radiusX * 0.52;
 
@@ -536,33 +527,27 @@
       fogCtx.closePath();
 
       const baseGrad = fogCtx.createLinearGradient(leftX, 0, rightX, 0);
-      baseGrad.addColorStop(0.0, 'rgba(8, 20, 42, 0.42)');
-      baseGrad.addColorStop(0.70, 'rgba(8, 20, 42, 0.42)');
-      baseGrad.addColorStop(1.0, 'rgba(8, 20, 42, 0.0)');
+      baseGrad.addColorStop(0.0, 'rgba(30, 40, 55, 0.55)');
+      baseGrad.addColorStop(0.70, 'rgba(30, 40, 55, 0.45)');
+      baseGrad.addColorStop(1.0, 'rgba(30, 40, 55, 0.0)');
       fogCtx.fillStyle = baseGrad;
       fogCtx.fill();
 
-      fogCtx.strokeStyle = `rgba(${state1.rgb}, 0.16)`;
+      fogCtx.strokeStyle = fogColorStroke;
       fogCtx.lineWidth = 6;
-      
       fogCtx.stroke();
-      
 
       fogCtx.beginPath();
       fogCtx.ellipse(centerX - radiusX * 0.52, centerY, radiusX * 0.42, radiusY * 0.65, 0, 0, Math.PI * 2);
-      fogCtx.fillStyle = `rgba(${state0.rgb}, 0.14)`;
-      
+      fogCtx.fillStyle = fogColorSolid;
       fogCtx.fill();
 
       fogCtx.beginPath();
       fogCtx.ellipse(centerX + radiusX * 0.15, centerY, radiusX * 0.42, radiusY * 0.65, 0, 0, Math.PI * 2);
-      fogCtx.fillStyle = `rgba(${state1.rgb}, 0.14)`;
-      
+      fogCtx.fillStyle = fogColorSolid;
       fogCtx.fill();
-      
 
     } else if (count === 1) {
-      const state0 = selectedStates[0];
       const leftX = centerX - radiusX * 1.25;
       const rightX = centerX - radiusX * 0.25;
 
@@ -574,24 +559,20 @@
       fogCtx.closePath();
 
       const grad = fogCtx.createLinearGradient(centerX - radiusX * 0.9, 0, rightX + radiusX * 0.10, 0);
-      grad.addColorStop(0.0, 'rgba(8, 20, 42, 0.38)');
-      grad.addColorStop(0.70, 'rgba(8, 20, 42, 0.38)');
-      grad.addColorStop(1.0, 'rgba(8, 20, 42, 0)');
+      grad.addColorStop(0.0, 'rgba(30, 40, 55, 0.48)');
+      grad.addColorStop(0.70, 'rgba(30, 40, 55, 0.38)');
+      grad.addColorStop(1.0, 'rgba(30, 40, 55, 0)');
       fogCtx.fillStyle = grad;
       fogCtx.fill();
 
-      fogCtx.strokeStyle = `rgba(${state0.rgb}, 0.15)`;
+      fogCtx.strokeStyle = fogColorStroke;
       fogCtx.lineWidth = 6;
-      
       fogCtx.stroke();
-      
 
       fogCtx.beginPath();
       fogCtx.ellipse(centerX - radiusX * 0.55, centerY, radiusX * 0.38, radiusY * 0.65, 0, 0, Math.PI * 2);
-      fogCtx.fillStyle = `rgba(${state0.rgb}, 0.12)`;
-      
+      fogCtx.fillStyle = fogColorSolid;
       fogCtx.fill();
-      
     }
     fogCtx.restore();
   }
