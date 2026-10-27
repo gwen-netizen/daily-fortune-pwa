@@ -41,11 +41,12 @@ function parseDbTimestamp(ts) {
 function formatSpacedSentences(text) {
   if (!text) return '';
   const cleaned = text.trim();
+  // Split into sentences and rejoin with a double line break for clean readability
   const sentences = cleaned.split(/(?<=[.!?])\s+(?=[A-Z0-9"'])/);
- if (sentences.length > 1) {
-    return sentences.map(s => `<div class="task-headline-text" style="margin-bottom: 8px;">${s}</div>`).join('');
+  if (sentences.length > 1) {
+    return sentences.join('<br><br>');
   }
-  return `<div class="task-headline-text">${cleaned}</div>`;
+  return cleaned;
 }
 
 function mapDeckNameToCategory(deckName) {
@@ -480,6 +481,11 @@ function switchScreen(screenId, shouldPushHistory = true) {
       const targetContainer = document.getElementById(screenId === 'screen-onboarding-2' ? 'brain-viewport-s2' : 'brain-viewport-s3');
       if (targetContainer && window.NeuraBrain) {
         window.NeuraBrain.mount(targetContainer);
+      }
+    } else {
+      // Pause the 3D rendering when the brain is not visible to prevent lag
+      if (window.NeuraBrain && typeof window.NeuraBrain.unmount === 'function') {
+        window.NeuraBrain.unmount();
       }
     }
 
