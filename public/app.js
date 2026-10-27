@@ -42,10 +42,10 @@ function formatSpacedSentences(text) {
   if (!text) return '';
   const cleaned = text.trim();
   const sentences = cleaned.split(/(?<=[.!?])\s+(?=[A-Z0-9"'])/);
-  if (sentences.length > 1) {
-    return sentences.map(s => `<p class="sentence-paragraph">${s}</p>`).join('');
+ if (sentences.length > 1) {
+    return sentences.map(s => `<div class="task-headline-text" style="margin-bottom: 8px;">${s}</div>`).join('');
   }
-  return `<p class="sentence-paragraph">${cleaned}</p>`;
+  return `<div class="task-headline-text">${cleaned}</div>`;
 }
 
 function mapDeckNameToCategory(deckName) {
