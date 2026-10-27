@@ -295,9 +295,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       } catch(e) {}
     }
     // 2. Fetch from cloud silently in the background
-    fetchUserProfileFromCloud(activeEmail); 
   } else {
-    currentUserProfile = { email: 'beta_tester@120reset.app', premium_user: false, pass_expires_at: null };
+    currentUserProfile = null;
   }
 
   startPassTicker();
