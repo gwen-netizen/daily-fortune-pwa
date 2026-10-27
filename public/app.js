@@ -483,7 +483,7 @@ function switchScreen(screenId, shouldPushHistory = true) {
         window.NeuraBrain.mount(targetContainer);
       }
     } else {
-      // Pause the 3D rendering when the brain is not visible to prevent lag
+      // Pause the 3D rendering when the brain is not visible to completely eliminate lag
       if (window.NeuraBrain && typeof window.NeuraBrain.unmount === 'function') {
         window.NeuraBrain.unmount();
       }
