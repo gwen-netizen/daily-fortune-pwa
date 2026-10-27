@@ -32,30 +32,6 @@ const DEFAULT_PRESET_INTERCEPTS = [
   { id: 'pre_3', time: '23:15', label: 'Bedtime Loop', deck: 'The Anti-Overwhelm Deck', enabled: true }
 ];
 
-const CLIENT_FALLBACK_TASKS = {
-  charisma: [
-    { text: "Pull your shoulders back, plant both feet flat on the floor, and breathe slowly through your nose for 30 seconds.", focusArea: "Physical Posture & Biomechanics", affirmation: "A still body creates an unshakeable presence. Command the room." },
-    { text: "Unclench your jaw, drop your tongue from the roof of your mouth, and sit in absolute stillness.", focusArea: "Quiet Confidence & Vocal Authority", affirmation: "Physical relaxation projects supreme situational command." },
-    { text: "Open your palms flat on your desk. Exhale completely and hold silence.", focusArea: "Absolute Presence", affirmation: "Stillness is power. Stop fidgeting and take control." }
-  ],
-  wealth: [
-    { text: "Open your banking app or wallet, count to three, and close it immediately. Take one slow breath.", focusArea: "Financial Clarity", affirmation: "Numbers on a screen cannot physically harm you. Ground yourself in the present." },
-    { text: "Close your active shopping or browsing tabs right now. Drink a glass of cold water.", focusArea: "Stop Impulsive Spending", affirmation: "You just broke the digital dopamine spending loop. Keep your capital." },
-    { text: "Roll your shoulders backward twice. Say aloud: 'I control my money; it does not control me.'", focusArea: "Rewire Money Habits", affirmation: "Drop the panic. You are in complete executive control." }
-  ],
-  dopamine: [
-    { text: "Slide your phone face-down, exactly one arm's length away. Take one slow deep breath.", focusArea: "Quick Wins", affirmation: "Screen black. Brain free. The trance is broken." },
-    { text: "Stand up, stretch both arms overhead for 10 seconds, then roll your neck.", focusArea: "Energy Surge", affirmation: "Oxygen flooding the brain. The afternoon slump is dead." },
-    { text: "Turn your phone screen to grayscale mode right now, or close all unused background tabs.", focusArea: "Quick Wins", affirmation: "Dopamine slot machine disabled. Focus locked." }
-  ],
-  overwhelm: [
-    { text: "Press both palms flat on your desk. Push down hard and exhale completely.", focusArea: "Physical Reset", affirmation: "Forcing air out kills acute panic. Your heart rate is slowing down.", step: 1 },
-    { text: "Open the single document you are avoiding. Look only at the first sentence.", focusArea: "Dread Triage", affirmation: "It was only terrifying in your head. The first step is easy.", step: 2 },
-    { text: "Full-screen your work window. Hide absolutely every other tab.", focusArea: "Visual Blinders", affirmation: "Visual clutter cleared. One single target.", step: 3 },
-    { text: "Put your hands on the keyboard. Type one single word or make one click right now.", focusArea: "Motor Ignition", affirmation: "Action breaks the freeze. You made the first move. Keep going.", step: 4 }
-  ]
-};
-
 function parseDbTimestamp(ts) {
   if (!ts) return 0;
   if (typeof ts === 'number') return ts;
@@ -344,7 +320,8 @@ async function fetchUserProfileFromCloud(email) {
       }
     }
   } catch (e) {
-    console.warn("Cloud profile fetch fallback:", e);
+    console.error("Critical Supabase/Vercel connection error:", e);
+    throw new Error("Unable to authenticate with live server.");
   }
   return null;
 }
@@ -565,25 +542,14 @@ async function executeTurnaroundSpin() {
         taskData = await response.json();
       }
     } catch (netErr) {
-      console.warn("Backend API endpoint fallback:", netErr);
+      console.error("Backend API connection failed:", netErr);
+      alert("Connection lost. Please check your internet and try again. 120Reset requires an active connection.");
+      return;
     }
 
     if (!taskData || !taskData.task) {
-      const deckFallbacks = CLIENT_FALLBACK_TASKS[categoryKey] || CLIENT_FALLBACK_TASKS.charisma;
-      let matchedTask = (categoryKey === 'overwhelm')
-        ? (deckFallbacks.find(t => t.step === overwhelmCurrentStep) || deckFallbacks[0])
-        : deckFallbacks[Math.floor(Math.random() * deckFallbacks.length)];
-
-      taskData = {
-        taskIndex: 0,
-        historyReset: false,
-        task: {
-          text: matchedTask.text,
-          focusArea: matchedTask.focusArea,
-          affirmation: matchedTask.affirmation,
-          step: matchedTask.step || 1
-        }
-      };
+      alert("Task generation failed. Please try again.");
+      return;
     }
 
     currentActiveTask = taskData.task;
@@ -902,7 +868,7 @@ async function syncLifetimeProgressToCloud() {
       updatePremiumDeckBadges();
     }
   } catch (e) {
-    console.warn("Supabase background sync fallback:", e);
+    console.error("Critical Supabase/Vercel connection error:", e);
   }
 }
 
