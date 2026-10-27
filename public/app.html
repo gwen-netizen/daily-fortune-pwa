@@ -22,7 +22,7 @@
 
   <div class="app-container">
 
-    <!-- SCREEN 0: WELCOME SCREEN -->
+    <!-- SCREEN 0: WELCOME SCREEN (NEURA FRICTION THEME) -->
     <div id="screen-welcome" class="screen welcome-screen-styled active">
       <div class="welcome-header-zone">
         <div class="kicker-wrapper">
@@ -35,7 +35,6 @@
 
       <div class="welcome-centerpiece">
         <div class="pulse-outer-aura">
-          <!-- CENTER CIRCLE IS NOW THE ENTRANCE -->
           <div class="kinetic-core-circle" style="cursor: pointer;" onclick="switchScreen('screen-onboarding-2', true)">
             <span style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 2px;">ENTER</span>
             <span class="core-spark-icon">⚡</span>
@@ -60,12 +59,11 @@
         </div>
       </div>
 
-      <!-- BOTTOM BUTTON REMOVED AS REQUESTED -->
       <div class="welcome-action-zone">
       </div>
     </div>
 
-    <!-- SCREEN 1: ONBOARDING EMAIL + OTP -->
+    <!-- SCREEN 1: ONBOARDING EMAIL + OTP (PRESERVED IN DOM, BYPASSED IN BETA) -->
     <div id="screen-onboarding-1" class="screen">
       <div style="margin: auto 0; width: 100%;">
         <span class="badge" style="margin-bottom: 12px;">CLINICALLY BACKED PROTOCOL</span>
@@ -333,8 +331,8 @@
       </div>
 
       <div id="standard-victory-actions" style="display: flex; width: 100%; flex-direction: column; gap: 8px; margin-top: auto;">
-        <button class="btn-primary" onclick="claimRewardStack()">Claim Stack Win</button>
-        <button class="btn-secondary" onclick="runAnotherRound()">Run Another Round ↺</button>
+        <button class="btn-primary" onclick="runAnotherRound()">Run Another Round ↺</button>
+        <button class="btn-secondary" onclick="switchScreen('screen-dashboard', true)">Claim Stack Win</button>
       </div>
     </div>
 
@@ -385,7 +383,7 @@
       </div>
     </div>
 
-    <!-- MODAL 3: PROFILE DRAWER (ENLARGED TEXT ONLY) -->
+    <!-- MODAL 3: PROFILE DRAWER -->
     <div id="profile-drawer-modal" class="modal-backdrop">
       <div class="modal-sheet">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
