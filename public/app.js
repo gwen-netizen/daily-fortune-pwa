@@ -893,11 +893,6 @@ function updatePassCountdown() {
     refCodeEl.innerText = currentUserProfile.referral_code;
   }
 }
-  const refCodeEl = document.getElementById('user-referral-code-display');
-  if (refCodeEl && currentUserProfile?.referral_code) {
-    refCodeEl.innerText = currentUserProfile.referral_code;
-  }
-}
 
 // Screenshot 3 Fix: Update Profile Stats Card with bold enlarged values
 function updateMetricDashboard() {
