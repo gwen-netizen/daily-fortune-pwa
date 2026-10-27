@@ -674,20 +674,24 @@ nav,
 }
 
 .big-red-btn {
-  width: 140px;
-  height: 140px;
+  width: 170px !important;
+  height: 170px !important;
   border-radius: 50%;
   background: radial-gradient(circle, #f3c547 0%, #d89f22 80%);
   border: 2px solid #ffe18b;
   color: #08111f;
-  font-size: 22px;
+  font-size: 26px !important;
   font-weight: 900;
   letter-spacing: 0.05em;
   cursor: pointer;
-  box-shadow: 0 0 40px rgba(var(--accent-gold-rgb), 0.55);
+  box-shadow: 0 0 40px rgba(243, 197, 71, 0.65);
   transition: transform 0.1s ease;
 }
-.big-red-btn:active { transform: scale(0.95); }
+
+.spin-outer-ring {
+  width: 205px !important;
+  height: 205px !important;
+}
 
 .btn-back-focus {
   background: none;
