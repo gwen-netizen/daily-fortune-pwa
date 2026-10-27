@@ -23,6 +23,38 @@
   <div class="app-container">
 
     <!-- SCREEN 0: WELCOME SCREEN (NEURA FRICTION THEME) -->
+  <!-- SCREEN SYNC: DATABASE VERIFICATION GATEWAY -->
+    <div id="screen-syncing" class="screen" style="justify-content: center; text-align: center;">
+      <div style="margin: auto 0; display: flex; flex-direction: column; align-items: center; width: 100%;">
+        
+        <!-- Animated Sync Spinner -->
+        <div id="sync-spinner-orb" class="pulse-outer-aura" style="margin-bottom: 24px; transform: scale(0.9);">
+          <div class="kinetic-core-circle">
+            <span style="font-size: 26px;">⚡</span>
+            <span style="font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--accent-gold); letter-spacing: 0.1em; margin-top: 4px;">SYNC</span>
+          </div>
+        </div>
+
+        <h2 id="sync-status-headline" class="title-large" style="font-size: 21px; margin-bottom: 8px;">
+          Verifying with Supabase...
+        </h2>
+        
+        <p id="sync-status-subtext" class="body-text" style="max-width: 280px; margin: 0 auto 16px auto;">
+          Tallying account metrics and subscription tokens.
+        </p>
+
+        <!-- Error / Retry Container (Hidden by default, shown only on network failure) -->
+        <div id="sync-error-card" style="display: none; width: 100%; max-width: 320px; background: rgba(255, 93, 93, 0.12); border: 1px solid rgba(255, 93, 93, 0.35); border-radius: 16px; padding: 16px; margin-top: 10px;">
+          <div style="font-size: 13px; color: var(--accent-coral); font-weight: 700; margin-bottom: 12px;" id="sync-error-message">
+            Unable to connect to database.
+          </div>
+          <button class="btn-primary" style="background-color: var(--accent-coral); border-color: rgba(255,93,93,0.5); padding: 10px 16px; font-size: 13px;" onclick="retrySupabaseSync()">
+            Retry Connection ↺
+          </button>
+        </div>
+
+      </div>
+    </div>
     <div id="screen-welcome" class="screen welcome-screen-styled active">
       <div class="welcome-header-zone">
         <div class="kicker-wrapper">
@@ -36,7 +68,7 @@
      <div class="welcome-centerpiece" style="transform: scale(1.25); margin: 20px 0;">
         <!-- Restored pulse-outer-aura to bring back the glowing space behind the button -->
         <div class="pulse-outer-aura">
-          <div class="kinetic-core-circle" style="cursor: pointer;" onclick="switchScreen('screen-onboarding-2', true)">
+          <div class="kinetic-core-circle" style="cursor: pointer;" onclick="initiateSecureAppEntry()">
             <span style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 2px;">ENTER</span>
             <span class="core-spark-icon">⚡</span>
             <div class="core-number">120<span class="core-unit">s</span></div>
