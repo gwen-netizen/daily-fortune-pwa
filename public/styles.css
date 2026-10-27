@@ -517,15 +517,22 @@ body::before {
 .deck-desc { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
 
 .bottom-utility-dock {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
   width: 100%;
+  max-width: 440px; /* matches .app-container width */
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding-top: 8px;
-  margin-top: 6px;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  background: rgba(8, 17, 31, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid var(--card-border);
+  z-index: 100;
 }
-
 .dock-btn {
   background: none;
   border: none;
@@ -760,3 +767,8 @@ body::before {
 }
 input:checked + .slider { background-color: var(--accent-gold); }
 input:checked + .slider:before { transform: translateX(18px); }
+
+#screen-onboarding-2,
+#screen-dashboard {
+  padding-bottom: 85px;
+}
