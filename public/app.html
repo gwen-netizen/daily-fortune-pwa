@@ -302,7 +302,7 @@
 
       <div style="width: 100%; margin-top: auto; display: flex; flex-direction: column; gap: 8px;">
         <button class="btn-primary" onclick="finishEarly()">Done Early &amp; Reclaim Focus ✓</button>
-        <button class="btn-bypass" onclick="cancelTimer()">Abort</button>
+        <button class="btn-abort" onclick="cancelTimer()">Abort</button>
       </div>
     </div>
 
@@ -315,7 +315,7 @@
         
         <div style="background: rgba(13, 27, 44, 0.7); border: 1px solid var(--card-border-strong); padding: 18px; border-radius: 18px; text-align: left;">
           <div style="font-family: var(--font-mono); font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 6px;">NEUROLOGICAL REWIRE</div>
-          <div id="victory-validation-copy" style="font-size: 21px; font-weight: 800; color: #FFF; line-height: 1.4;">
+          <div id="victory-validation-copy" style="font-size: 24px; font-weight: 800; color: #FFF; line-height: 1.35;">
             Action clears anxiety. You took the physical move. Keep your momentum.
           </div>
         </div>
@@ -331,8 +331,8 @@
       </div>
 
       <div id="standard-victory-actions" style="display: flex; width: 100%; flex-direction: column; gap: 8px; margin-top: auto;">
-        <button class="btn-primary" onclick="runAnotherRound()">Run Another Round ↺</button>
-        <button class="btn-secondary" onclick="switchScreen('screen-dashboard', true)">Claim Stack Win</button>
+        <button class="btn-primary" onclick="switchScreen('screen-dashboard', true)">Claim Stack Win</button>
+        <button class="btn-secondary" onclick="runAnotherRound()">Run Another Round ↺</button>
       </div>
     </div>
 
