@@ -820,7 +820,7 @@ function updatePassCountdown() {
     } else {
       const used = getDailyClicksCount();
       quotaBadge.className = "remedy-quota-pill";
-      quotaBadge.innerHTML = `(${used}/4 Free)`;
+      quotaBadge.innerHTML = `<div style="text-align: center; line-height: 1.2;">(${used}/4<br>Free)</div>`;
     }
   }
 
