@@ -1,4 +1,4 @@
-const CACHE_NAME = '120reset-v18-speed';
+const CACHE_NAME = '120reset-v19-speed';
 
 const PRECACHE_ASSETS = [
   '/',
