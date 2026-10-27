@@ -517,7 +517,7 @@ body::before {
 }
 .dock-btn:hover, .dock-btn:active { color: var(--text-primary); background: rgba(255, 255, 255, 0.05); }
 .dock-btn-icon { font-size: 17px; line-height: 1; }
-.dock-btn-label { font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: 0.04em; }
+.dock-btn-label { font-family: var(--font-sans); font-size: 11px; font-weight: 700; letter-spacing: 0.02em; color: var(--text-muted); }
 
 /* ========================================================
    MODALS / DRAWERS (AUTO CONTENT-HUGGING FIX)
