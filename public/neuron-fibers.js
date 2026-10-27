@@ -1,19 +1,16 @@
-/**
- * 120Reset — Neura Friction Living Tissue & Fiber Brain Engine
- * Standalone Canvas Module (public/neuron-fibers.js)
- */
-
-(function (global) {
+(function(global) {
+  // Check if WebGL could be an alternative (optional check, currently sticking to Canvas2D)
+  
   const NEURA_STATES = [
-    { id: 'mindless_scrolling', name: 'Mindless scrolling', color: '#f3c547', rgb: '243, 197, 71' },
-    { id: 'task_paralysis', name: 'Task paralysis', color: '#ff5d5d', rgb: '255, 93, 93' },
-    { id: 'low_lethargy', name: 'Brain fog & lethargy', color: '#f28b4b', rgb: '242, 139, 75' }
+    { id: 'mindless_scrolling', color: '#ff4f7a', rgb: '255, 79, 122' },
+    { id: 'task_paralysis', color: '#4facff', rgb: '79, 172, 255' },
+    { id: 'low_lethargy', color: '#ffd54f', rgb: '255, 213, 79' }
   ];
 
-  let stageElement = null;
-  let brainCanvas = null, brainCtx = null;
-  let fiberCanvas = null, fiberCtx = null;
-  let fogCanvas = null, fogCtx = null;
+  let brainCanvas, brainCtx;
+  let fiberCanvas, fiberCtx;
+  let fogCanvas, fogCtx;
+  let stageElement;
 
   let selectedStates = [];
   let activeState = NEURA_STATES[0];
@@ -164,43 +161,23 @@
 
   function resize() {
     if (!brainCanvas || !fiberCanvas || !fogCanvas || !stageElement) return;
-    const parent = stageElement.parentElement;
-    const rect = parent ? parent.getBoundingClientRect() : stageElement.getBoundingClientRect();
+    
+    const rect = stageElement.getBoundingClientRect();
+    canvasWidth = rect.width;
+    canvasHeight = rect.height;
+
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-    canvasWidth = rect.width || 380;
-    canvasHeight = rect.height || 260;
-
-    brainCanvas.width = Math.round(canvasWidth * dpr);
-    brainCanvas.height = Math.round(canvasHeight * dpr);
-    fiberCanvas.width = Math.round(canvasWidth * dpr);
-    fiberCanvas.height = Math.round(canvasHeight * dpr);
-    fogCanvas.width = Math.round(canvasWidth * dpr);
-    fogCanvas.height = Math.round(canvasHeight * dpr);
+    [brainCanvas, fiberCanvas, fogCanvas].forEach(c => {
+      c.width = canvasWidth * dpr;
+      c.height = canvasHeight * dpr;
+    });
 
     brainCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
     fiberCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
     fogCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  }
 
-  function roundedLobePath(context, cx, cy, rx, ry, phase, wobble = 0) {
-    const points = 34;
-    const outline = [];
-    for (let i = 0; i <= points; i += 1) {
-      const theta = (i / points) * Math.PI * 2;
-      const wave = 1 + Math.sin(theta * 5 + phase) * 0.045 + Math.sin(theta * 9 - phase) * 0.026 + Math.sin(theta * 13 + phase) * 0.014 + wobble;
-      outline.push({ x: cx + Math.cos(theta) * rx * wave, y: cy + Math.sin(theta) * ry * wave });
-    }
-    context.beginPath();
-    const midpoint = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
-    const firstMid = midpoint(outline[0], outline[1]);
-    context.moveTo(firstMid.x, firstMid.y);
-    for (let i = 1; i < outline.length - 1; i += 1) {
-      const nextMid = midpoint(outline[i], outline[i + 1]);
-      context.quadraticCurveTo(outline[i].x, outline[i].y, nextMid.x, nextMid.y);
-    }
-    context.quadraticCurveTo(outline[outline.length - 1].x, outline[outline.length - 1].y, firstMid.x, firstMid.y);
-    context.closePath();
+    drawScene(performance.now());
   }
 
   function drawBrain(time) {
@@ -218,36 +195,24 @@
     const leftCx = cx - rx * 0.27;
     const rightCx = cx + rx * 0.27;
 
-    const count = selectedStates.length;
-    const tissueAlpha = count === 0 ? 1.0 : (count === 1 ? 0.74 : (count === 2 ? 0.48 : 0.22));
+    const tissueAlpha = 0.88;
 
-    const aura = brainCtx.createRadialGradient(cx, cy, ry * 0.08, cx, cy, ry * 1.45);
-    aura.addColorStop(0, 'rgba(86, 205, 255, .25)');
-    aura.addColorStop(0.45, 'rgba(48, 117, 210, .13)');
-    aura.addColorStop(1, 'rgba(4, 15, 27, 0)');
-    brainCtx.fillStyle = aura;
+    // Left hemisphere base
     brainCtx.beginPath();
-    brainCtx.ellipse(cx, cy, rx * 1.35, ry * 1.25, -0.04, 0, Math.PI * 2);
-    brainCtx.fill();
-
-    brainCtx.save();
-    brainCtx.globalAlpha = tissueAlpha;
-
-    // Left hemisphere
-    roundedLobePath(brainCtx, leftCx, cy, rx * 0.66, ry, time * 0.0007, breath / 100);
-    const leftFill = brainCtx.createRadialGradient(leftCx - rx * 0.18, cy - ry * 0.4, 0, leftCx, cy, rx * 0.95);
-    leftFill.addColorStop(0, 'rgba(255, 220, 177, .94)');
-    leftFill.addColorStop(0.22, 'rgba(151, 214, 255, .9)');
-    leftFill.addColorStop(0.58, 'rgba(64, 106, 210, .82)');
-    leftFill.addColorStop(1, 'rgba(11, 33, 83, .7)');
+    brainCtx.ellipse(leftCx, cy, rx * 0.66, ry, 0, 0, Math.PI * 2);
+    const leftFill = brainCtx.createLinearGradient(leftCx - rx * 0.66, cy - ry, leftCx + rx * 0.66, cy + ry);
+    leftFill.addColorStop(0, 'rgba(46, 122, 204, .95)');
+    leftFill.addColorStop(0.5, 'rgba(129, 78, 193, .8)');
+    leftFill.addColorStop(1, 'rgba(19, 34, 104, .75)');
     brainCtx.fillStyle = leftFill;
+    brainCtx.globalAlpha = tissueAlpha;
     brainCtx.fill();
 
-    // Right hemisphere
-    roundedLobePath(brainCtx, rightCx, cy, rx * 0.66, ry, time * 0.0007 + 0.4, breath / 100);
-    const rightFill = brainCtx.createRadialGradient(rightCx + rx * 0.12, cy - ry * 0.38, 0, rightCx, cy, rx * 0.98);
-    rightFill.addColorStop(0, 'rgba(255, 235, 154, .98)');
-    rightFill.addColorStop(0.25, 'rgba(255, 179, 97, .92)');
+    // Right hemisphere base
+    brainCtx.beginPath();
+    brainCtx.ellipse(rightCx, cy, rx * 0.66, ry, 0, 0, Math.PI * 2);
+    const rightFill = brainCtx.createLinearGradient(rightCx - rx * 0.66, cy - ry, rightCx + rx * 0.66, cy + ry);
+    rightFill.addColorStop(0, 'rgba(60, 140, 220, .9)');
     rightFill.addColorStop(0.6, 'rgba(129, 78, 193, .8)');
     rightFill.addColorStop(1, 'rgba(19, 34, 104, .72)');
     brainCtx.globalAlpha = tissueAlpha * 0.9;
@@ -273,12 +238,21 @@
       brainCtx.moveTo(startX, startY);
       brainCtx.bezierCurveTo(startX - bend, startY - ry * 0.22, endX + bend, startY + ry * 0.18, endX, startY + ry * 0.38);
       brainCtx.bezierCurveTo(endX - bend * 0.4, startY + ry * 0.64, endX + bend * 0.35, startY + ry * 0.88, cx + side * rx * 0.06, startY + ry * 1.1);
-      brainCtx.strokeStyle = cordColors[i % cordColors.length];
-      brainCtx.globalAlpha = (0.3 + (i % 4) * 0.1) * tissueAlpha;
-      brainCtx.lineWidth = 1.3 + (i % 5 === 0 ? 2.4 : 0.2);
+      
+      const cordColor = cordColors[i % cordColors.length];
+      const baseAlpha = (0.3 + (i % 4) * 0.1) * tissueAlpha;
+      const baseW = 1.3 + (i % 5 === 0 ? 2.4 : 0.2);
       brainCtx.lineCap = 'round';
-      brainCtx.shadowBlur = i % 5 === 0 ? 12 : 4;
-      brainCtx.shadowColor = cordColors[i % cordColors.length];
+      
+      // Hardware-accelerated glow
+      brainCtx.strokeStyle = cordColor;
+      brainCtx.globalAlpha = baseAlpha * 0.3;
+      brainCtx.lineWidth = baseW + (i % 5 === 0 ? 8 : 4);
+      brainCtx.stroke();
+      
+      // Core line
+      brainCtx.globalAlpha = baseAlpha;
+      brainCtx.lineWidth = baseW;
       brainCtx.stroke();
     }
     for (let i = 0; i < 12; i += 1) {
@@ -288,10 +262,17 @@
       brainCtx.moveTo(x, cy - ry * 0.9);
       brainCtx.bezierCurveTo(x + side * rx * 0.18, cy - ry * 0.45, x - side * rx * 0.16, cy - ry * 0.05, x + side * rx * 0.12, cy + ry * 0.42);
       brainCtx.bezierCurveTo(x - side * rx * 0.08, cy + ry * 0.62, x + side * rx * 0.1, cy + ry * 0.76, x, cy + ry * 0.95);
-      brainCtx.strokeStyle = i % 3 === 0 ? '#fff4be' : '#69d9ff';
-      brainCtx.globalAlpha = 0.46 * tissueAlpha;
+      
+      const veinColor = i % 3 === 0 ? '#fff4be' : '#69d9ff';
+      const vAlpha = 0.46 * tissueAlpha;
+      brainCtx.strokeStyle = veinColor;
+      
+      brainCtx.globalAlpha = vAlpha * 0.25;
+      brainCtx.lineWidth = 7;
+      brainCtx.stroke();
+      
+      brainCtx.globalAlpha = vAlpha;
       brainCtx.lineWidth = 1.8;
-      brainCtx.shadowBlur = 10;
       brainCtx.stroke();
     }
     brainCtx.restore();
@@ -304,75 +285,71 @@
     brainCtx.strokeStyle = 'rgba(14, 28, 74, .62)';
     brainCtx.lineWidth = 5;
     brainCtx.stroke();
+    
+    brainCtx.strokeStyle = 'rgba(255, 202, 110, 0.25)';
+    brainCtx.lineWidth = 8;
+    brainCtx.stroke();
     brainCtx.strokeStyle = 'rgba(255, 221, 129, .7)';
     brainCtx.lineWidth = 1.2;
-    brainCtx.shadowBlur = 14;
-    brainCtx.shadowColor = '#ffca6e';
     brainCtx.stroke();
-    brainCtx.shadowBlur = 0;
 
     // Stem and cerebellum
     const stem = brainCtx.createLinearGradient(cx, cy + ry * 0.6, cx, h);
-    stem.addColorStop(0, '#ffd08a');
-    stem.addColorStop(0.35, '#db8fb2');
-    stem.addColorStop(0.75, '#6758bd');
-    stem.addColorStop(1, '#162f83');
-    brainCtx.fillStyle = stem;
+    stem.addColorStop(0, 'rgba(46, 122, 204, .85)');
+    stem.addColorStop(1, 'rgba(14, 28, 74, 0)');
     brainCtx.beginPath();
-    brainCtx.moveTo(cx - rx * 0.1, cy + ry * 0.58);
-    brainCtx.bezierCurveTo(cx - rx * 0.15, cy + ry * 0.88, cx - rx * 0.05, cy + ry * 1.1, cx - rx * 0.025, h * 0.98);
-    brainCtx.lineTo(cx + rx * 0.045, h * 0.98);
-    brainCtx.bezierCurveTo(cx + rx * 0.1, cy + ry * 0.95, cx + rx * 0.18, cy + ry * 0.74, cx + rx * 0.12, cy + ry * 0.58);
-    brainCtx.closePath();
+    brainCtx.moveTo(cx - rx * 0.22, cy + ry * 0.6);
+    brainCtx.quadraticCurveTo(cx - rx * 0.2, cy + ry * 1.3, cx - rx * 0.05, h * 0.9);
+    brainCtx.lineTo(cx + rx * 0.05, h * 0.9);
+    brainCtx.quadraticCurveTo(cx + rx * 0.2, cy + ry * 1.3, cx + rx * 0.22, cy + ry * 0.6);
+    brainCtx.fillStyle = stem;
     brainCtx.fill();
 
-    roundedLobePath(brainCtx, cx + rx * 0.29, cy + ry * 0.65, rx * 0.27, ry * 0.2, time * 0.0008);
-    const cerebellum = brainCtx.createRadialGradient(cx + rx * 0.2, cy + ry * 0.56, 0, cx + rx * 0.29, cy + ry * 0.65, rx * 0.3);
-    cerebellum.addColorStop(0, '#ffe2a4');
-    cerebellum.addColorStop(0.45, '#f39a95');
-    cerebellum.addColorStop(1, '#8057bd');
-    brainCtx.fillStyle = cerebellum;
+    brainCtx.beginPath();
+    brainCtx.ellipse(cx - rx * 0.35, cy + ry * 0.75, rx * 0.22, ry * 0.18, -0.2, 0, Math.PI * 2);
+    brainCtx.ellipse(cx + rx * 0.35, cy + ry * 0.75, rx * 0.22, ry * 0.18, 0.2, 0, Math.PI * 2);
+    brainCtx.fillStyle = 'rgba(129, 78, 193, .65)';
     brainCtx.fill();
-
+    
+    // Cerebellum striations
+    brainCtx.save();
+    brainCtx.clip();
+    for(let j=0; j<8; j++) {
+      brainCtx.beginPath();
+      brainCtx.moveTo(0, cy + ry * 0.65 + j*6);
+      brainCtx.quadraticCurveTo(cx, cy + ry * 0.85 + j*6, w, cy + ry * 0.65 + j*6);
+      brainCtx.strokeStyle = 'rgba(255,255,255,0.12)';
+      brainCtx.lineWidth = 1.5;
+      brainCtx.stroke();
+    }
     brainCtx.restore();
 
-    // Tissue fog tint
-    if (selectedStates.length > 0) {
-      brainCtx.save();
-      brainCtx.beginPath();
-      brainCtx.ellipse(leftCx, cy, rx * 0.66, ry, 0, 0, Math.PI * 2);
-      brainCtx.ellipse(rightCx, cy, rx * 0.66, ry, 0, 0, Math.PI * 2);
-      brainCtx.ellipse(cx + rx * 0.29, cy + ry * 0.65, rx * 0.34, ry * 0.25, 0, 0, Math.PI * 2);
-      brainCtx.clip();
+    // Occipital lobe shading (depth)
+    const occGrad = brainCtx.createRadialGradient(cx, cy + ry * 0.3, 0, cx, cy, ry);
+    occGrad.addColorStop(0.5, 'rgba(0,0,0,0)');
+    occGrad.addColorStop(1, 'rgba(12, 22, 60, 0.6)');
+    brainCtx.beginPath();
+    brainCtx.ellipse(leftCx, cy, rx * 0.66, ry, 0, 0, Math.PI * 2);
+    brainCtx.ellipse(rightCx, cy, rx * 0.66, ry, 0, 0, Math.PI * 2);
+    brainCtx.fillStyle = occGrad;
+    brainCtx.fill();
 
-      if (count >= 3) {
-        const fullFog = brainCtx.createRadialGradient(cx, cy, 0, cx, cy, rx * 1.25);
-        fullFog.addColorStop(0, 'rgba(8, 20, 42, 0.40)');
-        fullFog.addColorStop(0.65, 'rgba(8, 20, 42, 0.65)');
-        fullFog.addColorStop(1, 'rgba(8, 20, 42, 0.82)');
-        brainCtx.fillStyle = fullFog;
-        brainCtx.fillRect(cx - rx * 1.2, cy - ry * 1.2, rx * 2.4, ry * 2.4);
-      } else if (count === 2) {
-        const leftX = cx - rx * 1.25;
-        const rightX = cx + rx * 0.52;
-        const baseGrad = brainCtx.createLinearGradient(leftX, 0, rightX, 0);
-        baseGrad.addColorStop(0.0, 'rgba(8, 20, 42, 0.55)');
-        baseGrad.addColorStop(0.70, 'rgba(8, 20, 42, 0.55)');
-        baseGrad.addColorStop(1.0, 'rgba(8, 20, 42, 0.0)');
-        brainCtx.fillStyle = baseGrad;
-        brainCtx.fillRect(leftX, cy - ry * 1.2, rightX - leftX, ry * 2.4);
-      } else if (count === 1) {
-        const leftX = cx - rx * 1.25;
-        const rightX = cx - rx * 0.25;
-        const grad = brainCtx.createLinearGradient(cx - rx * 0.9, 0, rightX + rx * 0.10, 0);
-        grad.addColorStop(0.0, 'rgba(8, 20, 42, 0.48)');
-        grad.addColorStop(0.65, 'rgba(8, 20, 42, 0.42)');
-        grad.addColorStop(1.0, 'rgba(8, 20, 42, 0)');
-        brainCtx.fillStyle = grad;
-        brainCtx.fillRect(leftX, cy - ry * 1.2, rightX - leftX, ry * 2.4);
-      }
-      brainCtx.restore();
-    }
+    // Data-burst highlights
+    const burst = (time * 0.002) % (Math.PI * 2);
+    const burstX = cx + Math.sin(burst) * rx * 0.4;
+    const burstY = cy - Math.cos(burst * 1.3) * ry * 0.5;
+    brainCtx.beginPath();
+    brainCtx.arc(burstX, burstY, 3, 0, Math.PI * 2);
+    brainCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    brainCtx.fill();
+    
+    brainCtx.beginPath();
+    brainCtx.arc(burstX, burstY, 15, 0, Math.PI * 2);
+    const glow = brainCtx.createRadialGradient(burstX, burstY, 0, burstX, burstY, 15);
+    glow.addColorStop(0, 'rgba(165, 243, 255, 0.8)');
+    glow.addColorStop(1, 'rgba(165, 243, 255, 0)');
+    brainCtx.fillStyle = glow;
+    brainCtx.fill();
   }
 
   function drawStrand(strand, time) {
@@ -406,21 +383,31 @@
       if (i === 0) fiberCtx.moveTo(x, y); else fiberCtx.lineTo(x, y);
     }
     fiberCtx.closePath();
+    
+    const blurSpread = isActive ? 9 : 4;
+    fiberCtx.strokeStyle = `rgba(${rgb}, ${alpha * 0.25})`;
+    fiberCtx.lineWidth = lineWidth + blurSpread;
+    fiberCtx.stroke();
+    
     fiberCtx.strokeStyle = `rgba(${rgb}, ${alpha})`;
     fiberCtx.lineWidth = lineWidth;
-    fiberCtx.shadowBlur = isActive ? 14 : 5;
-    fiberCtx.shadowColor = color;
     fiberCtx.stroke();
 
     if (isActive && (strand.lane * 41) % 2 < 1) {
       const nodeTheta = (time * strand.speed * 2 + strand.phase) % (Math.PI * 2);
       const nodeX = Math.cos(nodeTheta) * radiusX;
       const nodeY = Math.sin(nodeTheta) * radiusY;
+      
+      const nAlpha = 0.65 + transition * 0.3;
+      const nRadius = 1.4 + transition * 1.2;
+      
+      fiberCtx.fillStyle = `rgba(${rgb}, ${nAlpha * 0.3})`;
+      fiberCtx.arc(nodeX, nodeY, nRadius + 5, 0, Math.PI * 2);
+      fiberCtx.fill();
+      
       fiberCtx.beginPath();
-      fiberCtx.arc(nodeX, nodeY, 1.4 + transition * 1.2, 0, Math.PI * 2);
-      fiberCtx.fillStyle = `rgba(255, 250, 215, ${0.65 + transition * 0.3})`;
-      fiberCtx.shadowBlur = 15;
-      fiberCtx.shadowColor = color;
+      fiberCtx.arc(nodeX, nodeY, nRadius, 0, Math.PI * 2);
+      fiberCtx.fillStyle = `rgba(255, 250, 215, ${nAlpha})`;
       fiberCtx.fill();
     }
     fiberCtx.restore();
@@ -451,32 +438,24 @@
         const y = centerY - radiusY * 0.78 + lane * radiusY * 1.58;
         const squeeze = 1 - Math.sin(time * 0.001 + i + stateIndex) * 0.035 - coverage * 0.035;
         const span = radiusX * (0.62 + Math.sin(i * 1.7) * 0.035) * squeeze;
-        const wave = Math.sin(time * 0.0012 + i * 0.7 + stateIndex) * radiusY * 0.055;
+        
         fiberCtx.beginPath();
         fiberCtx.moveTo(centerX - span, y);
-        fiberCtx.bezierCurveTo(centerX - span * 0.42, y + wave, centerX - span * 0.05, y - wave, centerX + span * 0.08, y + wave * 0.3);
-        fiberCtx.bezierCurveTo(centerX + span * 0.3, y + wave, centerX + span * 0.63, y - wave, centerX + span, y + wave * 0.15);
-        fiberCtx.strokeStyle = `rgba(${state.rgb}, ${0.24 + coverage * 0.2})`;
-        fiberCtx.lineWidth = 1.05 + coverage * 1.7;
-        fiberCtx.lineCap = 'round';
-        fiberCtx.shadowBlur = 10 + coverage * 7;
-        fiberCtx.shadowColor = state.color;
+        fiberCtx.quadraticCurveTo(centerX, y + radiusY * 0.15 * squeeze, centerX + span, y);
+        
+        const bAlpha = 0.18 * transition * (1 - Math.abs(lane - 0.5) * 1.5);
+        if (bAlpha <= 0) continue;
+
+        fiberCtx.strokeStyle = `rgba(${state.rgb}, ${bAlpha * 0.3})`;
+        fiberCtx.lineWidth = 14;
+        fiberCtx.stroke();
+        
+        fiberCtx.strokeStyle = `rgba(${state.rgb}, ${bAlpha})`;
+        fiberCtx.lineWidth = 1.2 + transition;
         fiberCtx.stroke();
       }
     });
     fiberCtx.restore();
-
-    selectedStates.forEach((state, index) => {
-      fiberCtx.save();
-      fiberCtx.beginPath();
-      fiberCtx.ellipse(centerX, centerY, radiusX * (1.02 - index * 0.025), radiusY * (1.05 - index * 0.025), -0.03, 0, Math.PI * 2);
-      fiberCtx.strokeStyle = `rgba(${state.rgb}, ${0.27 + coverage * 0.12})`;
-      fiberCtx.lineWidth = 1.2 + coverage * 1.1;
-      fiberCtx.shadowBlur = 14;
-      fiberCtx.shadowColor = state.color;
-      fiberCtx.stroke();
-      fiberCtx.restore();
-    });
   }
 
   function drawFogLayer(time) {
@@ -521,10 +500,10 @@
           Math.PI * 2
         );
         fogCtx.fillStyle = `rgba(${state.rgb}, 0.08)`;
-        fogCtx.filter = 'blur(10px)';
+        
         fogCtx.fill();
       }
-      fogCtx.filter = 'none';
+      
 
     } else if (count === 2) {
       const state0 = selectedStates[0];
@@ -548,22 +527,22 @@
 
       fogCtx.strokeStyle = `rgba(${state1.rgb}, 0.16)`;
       fogCtx.lineWidth = 6;
-      fogCtx.filter = 'blur(8px)';
+      
       fogCtx.stroke();
-      fogCtx.filter = 'none';
+      
 
       fogCtx.beginPath();
       fogCtx.ellipse(centerX - radiusX * 0.52, centerY, radiusX * 0.42, radiusY * 0.65, 0, 0, Math.PI * 2);
       fogCtx.fillStyle = `rgba(${state0.rgb}, 0.14)`;
-      fogCtx.filter = 'blur(12px)';
+      
       fogCtx.fill();
 
       fogCtx.beginPath();
       fogCtx.ellipse(centerX + radiusX * 0.15, centerY, radiusX * 0.42, radiusY * 0.65, 0, 0, Math.PI * 2);
       fogCtx.fillStyle = `rgba(${state1.rgb}, 0.14)`;
-      fogCtx.filter = 'blur(12px)';
+      
       fogCtx.fill();
-      fogCtx.filter = 'none';
+      
 
     } else if (count === 1) {
       const state0 = selectedStates[0];
@@ -586,18 +565,17 @@
 
       fogCtx.strokeStyle = `rgba(${state0.rgb}, 0.15)`;
       fogCtx.lineWidth = 6;
-      fogCtx.filter = 'blur(8px)';
+      
       fogCtx.stroke();
-      fogCtx.filter = 'none';
+      
 
       fogCtx.beginPath();
       fogCtx.ellipse(centerX - radiusX * 0.55, centerY, radiusX * 0.38, radiusY * 0.65, 0, 0, Math.PI * 2);
       fogCtx.fillStyle = `rgba(${state0.rgb}, 0.12)`;
-      fogCtx.filter = 'blur(10px)';
+      
       fogCtx.fill();
-      fogCtx.filter = 'none';
+      
     }
-
     fogCtx.restore();
   }
 
@@ -617,10 +595,16 @@
     fiberCtx.translate(canvasWidth / 2, canvasHeight / 2);
     fiberCtx.beginPath();
     fiberCtx.ellipse(0, 0, canvasWidth * 0.42, canvasHeight * 0.40, -0.06, 0, Math.PI * 2);
-    fiberCtx.strokeStyle = `rgba(${activeState.rgb}, ${0.12 + transition * 0.23})`;
-    fiberCtx.lineWidth = 1.1 + transition * 0.8;
-    fiberCtx.shadowBlur = 17;
-    fiberCtx.shadowColor = activeState.color;
+    
+    const ringAlpha = 0.12 + transition * 0.23;
+    const ringW = 1.1 + transition * 0.8;
+    
+    fiberCtx.strokeStyle = `rgba(${activeState.rgb}, ${ringAlpha * 0.35})`;
+    fiberCtx.lineWidth = ringW + 10;
+    fiberCtx.stroke();
+    
+    fiberCtx.strokeStyle = `rgba(${activeState.rgb}, ${ringAlpha})`;
+    fiberCtx.lineWidth = ringW;
     fiberCtx.stroke();
     fiberCtx.restore();
 
@@ -708,12 +692,3 @@
   };
   global.resizeNeuraCanvas = resize;
 })(window);
-
-// Export globally for app.js or direct scripts
-  global.NeuraBrain = {
-    mount,
-    unmount, // <--- ADD THIS LINE
-    resize,
-    setFrictions,
-    getStates: () => NEURA_STATES
-  };
