@@ -1,4 +1,4 @@
-const CACHE_NAME = '120reset-v6-live';
+const CACHE_NAME = '120reset-v16-live';
 
 self.addEventListener('install', (event) => {
   // Install immediately without caching assets
