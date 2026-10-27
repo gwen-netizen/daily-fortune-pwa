@@ -690,6 +690,7 @@
   // Export globally for app.js or direct scripts
   global.NeuraBrain = {
     mount,
+    unmount,
     resize,
     setFrictions,
     getStates: () => NEURA_STATES
