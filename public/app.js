@@ -308,33 +308,106 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 async function fetchUserProfileFromCloud(email) {
-  if (!email || !email.includes('@')) return null;
+  if (!email || !email.includes('@')) {
+    throw new Error("No registered email identity found.");
+  }
+
   const cleanEmail = email.trim().toLowerCase();
   localStorage.setItem('nudge_user_email', cleanEmail);
+  const localDate = getLocalDateString();
+  const endpoint = `/api/sync-user?email=${encodeURIComponent(cleanEmail)}&action=get_profile&clientDate=${encodeURIComponent(localDate)}`;
+
+  // 10-second timeout to prevent infinite hanging if offline
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
 
   try {
-    const localDate = getLocalDateString();
-    const endpoint = `/api/sync-user?email=${encodeURIComponent(cleanEmail)}&action=get_profile&clientDate=${encodeURIComponent(localDate)}`;
-    const response = await fetch(endpoint);
-    
-    if (response.ok) {
-      const data = await response.json();
-    if (data && data.profile) {
-        currentUserProfile = data.profile;
-        totalWinsCount = parseInt(data.profile.total_wins, 10) || totalWinsCount;
-        totalFocusReclaimed = parseFloat(data.profile.focus_reclaimed) || totalFocusReclaimed;
-        // Save to cache for the next instant boot
-        localStorage.setItem('nudge_cached_profile', JSON.stringify(data.profile));
-        updateMetricDashboard();
-        updatePremiumDeckBadges();
-        return data.profile;
-      }
-    }
-  } catch (e) {
-    console.warn("Supabase background sync fallback. Using local cache:", e);
-    return null;
+    const response = await fetch(endpoint, { signal: controller.signal });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) throw new Error(`Server returned status ${response.status}`);
+
+    const data = await response.json();
+    if (!data || !data.profile) throw new Error("Database record tally incomplete.");
+
+    // Tally real Supabase records
+    currentUserProfile = data.profile;
+    totalWinsCount = parseInt(data.profile.total_wins, 10) || 0;
+    totalFocusReclaimed = parseFloat(data.profile.focus_reclaimed) || 0.0;
+
+    localStorage.setItem('nudge_cached_profile', JSON.stringify(data.profile));
+    localStorage.setItem('nudge_total_wins', totalWinsCount.toString());
+    localStorage.setItem('nudge_focus_reclaimed', totalFocusReclaimed.toString());
+
+    updateMetricDashboard();
+    updatePremiumDeckBadges();
+    return data.profile;
+  } catch (err) {
+    clearTimeout(timeoutId);
+    throw err;
   }
-  return null;
+}
+
+// User Action: Tapping ENTER
+async function initiateSecureAppEntry() {
+  const email = resolveCurrentAccountEmail();
+  
+  if (!email) {
+    switchScreen('screen-onboarding-1', true);
+    return;
+  }
+
+  // 1. Enter the loading gateway to wait for Supabase
+  switchScreen('screen-syncing', false);
+  setSyncLoadingState(true);
+
+  // Pause 3D Brain while syncing to ensure UI doesn't lag
+  if (window.NeuraBrain && typeof window.NeuraBrain.unmount === 'function') {
+    window.NeuraBrain.unmount();
+  }
+
+  try {
+    // 2. Await verified tally from Supabase
+    await fetchUserProfileFromCloud(email);
+    setSyncLoadingState(false);
+    switchScreen('screen-onboarding-2', true);
+  } catch (error) {
+    // 3. Prevent crash, expose retry UI
+    console.error("Supabase tally failed:", error);
+    showSyncErrorState(error.name === 'AbortError' ? "Connection timed out." : error.message);
+  }
+}
+
+function retrySupabaseSync() {
+  initiateSecureAppEntry();
+}
+
+function setSyncLoadingState(isLoading) {
+  const spinner = document.getElementById('sync-spinner-orb');
+  const headline = document.getElementById('sync-status-headline');
+  const subtext = document.getElementById('sync-status-subtext');
+  const errorCard = document.getElementById('sync-error-card');
+
+  if (isLoading) {
+    if (spinner) spinner.style.display = 'flex';
+    if (headline) headline.innerText = "Verifying with Supabase...";
+    if (subtext) subtext.innerText = "Tallying account metrics and subscription tokens.";
+    if (errorCard) errorCard.style.display = 'none';
+  }
+}
+
+function showSyncErrorState(msg) {
+  const spinner = document.getElementById('sync-spinner-orb');
+  const headline = document.getElementById('sync-status-headline');
+  const subtext = document.getElementById('sync-status-subtext');
+  const errorCard = document.getElementById('sync-error-card');
+  const errorMsg = document.getElementById('sync-error-message');
+
+  if (spinner) spinner.style.display = 'none';
+  if (headline) headline.innerText = "Connection Failed";
+  if (subtext) subtext.innerText = "Could not sync your records with the cloud.";
+  if (errorMsg) errorMsg.innerText = msg || "Supabase verification error.";
+  if (errorCard) errorCard.style.display = 'block';
 }
 
 async function syncUserAccountEmail() {
