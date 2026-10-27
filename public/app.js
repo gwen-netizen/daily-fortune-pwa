@@ -112,13 +112,20 @@ function getVisibilityMetrics() {
   else if (count === 2) baseVisibility = 34;
   else if (count >= 3) baseVisibility = 1;
 
+  // Add back focus based on tasks completed today
+  const tasksCredit = getTasksCreditToday();
+  const earnedVisibility = tasksCredit * 16.5;
+
+  const rawVisibility = Math.min(100, Math.max(1, baseVisibility + earnedVisibility));
+  const displayVisibility = Math.floor(rawVisibility);
+
   let subtitle = "CLEAR SIGNAL";
-  if (baseVisibility >= 100) subtitle = "CLEAR SIGNAL";
-  else if (baseVisibility >= 67) subtitle = "MILD FOGGY";
-  else if (baseVisibility >= 34) subtitle = "MID FOGGY";
+  if (rawVisibility >= 100) subtitle = "CLEAR SIGNAL";
+  else if (rawVisibility >= 67) subtitle = "MILD FOGGY";
+  else if (rawVisibility >= 34) subtitle = "MID FOGGY";
   else subtitle = "INTENSE FOGGY";
 
-  return { displayVisibility: baseVisibility, subtitle };
+  return { displayVisibility, subtitle };
 }
 
 // Screenshot 1 Fix: Synchronize badge text on all active viewports
@@ -444,7 +451,7 @@ function handleWelcomeContinue() {
 
 function confirmFrictionsAndOpenDashboard() {
   if (window.activeSelectedFrictions.size === 0) {
-    return; // Stops progression if no friction is selected
+    return; // Stop progression if no friction is selected
   }
   switchScreen('screen-dashboard', true);
 }
