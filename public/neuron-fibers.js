@@ -627,6 +627,12 @@
     animFrameId = requestAnimationFrame(drawScene);
   }
 
+  function unmount() {
+    if (animFrameId) {
+      cancelAnimationFrame(animFrameId);
+      animFrameId = null;
+    }
+  }
   function mount(containerElement) {
     injectStyles();
 
@@ -701,3 +707,12 @@
   };
   global.resizeNeuraCanvas = resize;
 })(window);
+
+// Export globally for app.js or direct scripts
+  global.NeuraBrain = {
+    mount,
+    unmount, // <--- ADD THIS LINE
+    resize,
+    setFrictions,
+    getStates: () => NEURA_STATES
+  };
