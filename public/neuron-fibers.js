@@ -335,9 +335,13 @@
 
       const overlayColor = 'rgba(25, 35, 55, 0.75)'; // Grey-blue tint
 
-      if (count >= 3) {
-        brainCtx.fillStyle = 'rgba(25, 35, 55, 0.85)';
-        brainCtx.fillRect(0, 0, w, h);
+     if (count >= 3) {
+        const fullFog = brainCtx.createRadialGradient(cx, cy, 0, cx, cy, rx * 1.25);
+        fullFog.addColorStop(0, 'rgba(25, 35, 55, 0.45)');
+        fullFog.addColorStop(0.7, 'rgba(25, 35, 55, 0.60)');
+        fullFog.addColorStop(1, 'rgba(25, 35, 55, 0.75)');
+        brainCtx.fillStyle = fullFog;
+        brainCtx.fillRect(cx - rx * 1.2, cy - ry * 1.2, rx * 2.4, ry * 2.4);
       } else if (count === 2) {
         const leftX = cx - rx * 1.25;
         const rightX = cx + rx * 0.52;
@@ -494,9 +498,9 @@
 
     if (count >= 3) {
       const softGlow = fogCtx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radiusX * 1.3);
-      softGlow.addColorStop(0, 'rgba(30, 40, 55, 0.45)');
-      softGlow.addColorStop(0.65, 'rgba(30, 40, 55, 0.65)');
-      softGlow.addColorStop(1, 'rgba(30, 40, 55, 0.85)');
+      softGlow.addColorStop(0, 'rgba(30, 40, 55, 0.35)');
+      softGlow.addColorStop(0.65, 'rgba(30, 40, 55, 0.55)');
+      softGlow.addColorStop(1, 'rgba(30, 40, 55, 0.75)');
       fogCtx.fillStyle = softGlow;
       fogCtx.fillRect(centerX - radiusX * 1.2, centerY - radiusY * 1.2, radiusX * 2.4, radiusY * 2.4);
 
