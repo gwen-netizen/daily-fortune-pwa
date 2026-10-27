@@ -109,32 +109,42 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--active); outlin
 }
 
 .hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
-  gap: 6vw;
+  position: relative;
+  display: flex;
   align-items: center;
-  padding: 56px clamp(24px, 5vw, 60px) 64px;
+  padding: 80px clamp(24px, 5vw, 60px) 90px;
   border: 1px solid var(--line);
   border-radius: 24px;
-  background: #07111e;
   box-shadow: 0 30px 90px rgba(0, 0, 0, 0.35);
   margin-bottom: 20px;
-}
-.hero-copy { max-width: 540px; }
-.hero-visual {
-  width: 100%;
-  aspect-ratio: 4 / 5;
-  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45), 0 0 0 1px var(--line-strong);
-  background: #07111e;
+  min-height: 500px;
+}
+.hero-visual {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+.hero-visual::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /* Dark fade on the left so the text is fully readable, fading to clear on the right */
+  background: linear-gradient(90deg, rgba(7, 17, 30, 0.95) 0%, rgba(7, 17, 30, 0.75) 45%, rgba(7, 17, 30, 0.2) 100%);
 }
 .hero-video-clip {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center top;
+  object-position: center center;
   display: block;
+}
+.hero-copy { 
+  max-width: 580px; 
+  position: relative;
+  z-index: 1;
 }
 .eyebrow {
   display: inline-flex;
@@ -683,18 +693,24 @@ footer.custom-global-footer .footer-links a:hover {
   body { font-size: 15.5px; }
   .app-nav, .sales-page { width: min(100% - 32px, 1120px); }
   .hero { 
-    display: flex;
-    flex-direction: column-reverse;
-    gap: 32px;
-    padding: 38px 20px 44px; 
+    padding: 60px 24px 65px; 
     border-radius: 20px;
     margin-bottom: 28px;
+    min-height: 480px;
+    justify-content: flex-end;
+    flex-direction: column;
   }
   .hero-visual {
     width: 100%;
-    max-width: 380px;
-    aspect-ratio: 4 / 5;
-    margin: 0 auto;
+    max-width: none;
+    aspect-ratio: auto;
+  }
+  .hero-visual::after {
+    /* On mobile, gradient fades from bottom up to keep text readable */
+    background: linear-gradient(0deg, rgba(7, 17, 30, 0.95) 0%, rgba(7, 17, 30, 0.65) 60%, rgba(7, 17, 30, 0.1) 100%);
+  }
+  .hero-copy {
+    margin-top: 100px;
   }
   .hero-copy h1 { font-size: clamp(2.6rem, 11vw, 3.8rem); }
   .reset-card { padding: 28px 18px 34px; }
