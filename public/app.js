@@ -452,6 +452,20 @@ function syncFrictionChipsUI() {
 }
 
 function switchScreen(screenId, shouldPushHistory = true) {
+  // Midnight Reset Engine: Checks silently on every screen change
+  const today = getLocalDateString();
+  if (localStorage.getItem('nudge_click_date') !== today || localStorage.getItem('nudge_brain_date') !== today) {
+    localStorage.setItem('nudge_click_date', today);
+    localStorage.setItem('nudge_click_count', '0');
+    localStorage.setItem('nudge_brain_date', today);
+    localStorage.setItem('nudge_brain_constriction', '0.0');
+    localStorage.removeItem('nudge_selected_frictions');
+    brainConstrictionRatio = 0.0;
+    window.activeSelectedFrictions.clear();
+    if (typeof syncNeuraFrictions === 'function') syncNeuraFrictions();
+    if (typeof syncFrictionChipsUI === 'function') syncFrictionChipsUI();
+  }
+
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const target = document.getElementById(screenId);
   if (target) {
@@ -836,6 +850,49 @@ function updatePassCountdown() {
     }
   }
 
+  // Live Updating Pass & Subscription Cards (Screen 2 & 3)
+  const cardS2 = document.getElementById('pass-notification-card-s2');
+  const cardS3 = document.getElementById('pass-notification-card-s3');
+  const remainingSecs = getPassRemainingSeconds();
+  
+  let cardHtml = '';
+  if (hasAccess && !currentUserProfile?.pass_expires_at) {
+    cardHtml = `
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <span style="color:var(--accent-safe); font-weight:800;">✅ ACTIVE PLAN: UNLIMITED</span><br>
+          <span style="color:var(--text-muted); font-size:11.5px;">Permanent unrestricted access.</span>
+        </div>
+        <button onclick="openCustomerPortal()" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#FFF; font-size:11px; font-weight:700; padding:6px 12px; border-radius:8px; cursor:pointer; transition:all 0.15s ease;">Manage</button>
+      </div>`;
+  } else if (remainingSecs > 0) {
+    const hours = Math.floor(remainingSecs / 3600);
+    const mins = Math.floor((remainingSecs % 3600) / 60);
+    const secs = remainingSecs % 60;
+    cardHtml = `
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <span style="color:var(--accent-gold); font-weight:800;">⚡ ACTIVE PLAN: 2-DAY PASS</span><br>
+          <span style="color:var(--text-muted); font-size:11.5px;">⏱️ <b>${hours}h ${mins}m ${secs}s</b> remaining</span>
+        </div>
+        <button onclick="openCustomerPortal()" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#FFF; font-size:11px; font-weight:700; padding:6px 12px; border-radius:8px; cursor:pointer; transition:all 0.15s ease;">Manage</button>
+      </div>`;
+  }
+
+  if (cardS2) {
+    cardS2.innerHTML = cardHtml;
+    cardS2.style.display = cardHtml ? 'block' : 'none';
+  }
+  if (cardS3) {
+    cardS3.innerHTML = cardHtml;
+    cardS3.style.display = cardHtml ? 'block' : 'none';
+  }
+
+  const refCodeEl = document.getElementById('user-referral-code-display');
+  if (refCodeEl && currentUserProfile?.referral_code) {
+    refCodeEl.innerText = currentUserProfile.referral_code;
+  }
+}
   const refCodeEl = document.getElementById('user-referral-code-display');
   if (refCodeEl && currentUserProfile?.referral_code) {
     refCodeEl.innerText = currentUserProfile.referral_code;
@@ -1143,5 +1200,33 @@ async function shareReferralLink() {
     } catch (err) {
       prompt("Copy invite link:", shareUrl);
     }
+  }
+}
+
+/* ========================================================
+   STRIPE CUSTOMER PORTAL (MANAGE SUBSCRIPTIONS)
+======================================================== */
+async function openCustomerPortal() {
+  const email = resolveCurrentAccountEmail();
+  if (!email || email.includes('beta_tester')) {
+    alert("Please log in to a registered account to manage subscriptions.");
+    return;
+  }
+  
+  try {
+    const res = await fetch('/api/create-portal-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, returnUrl: window.location.href })
+    });
+    
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url; // Redirects to Stripe Portal
+    } else {
+      alert(data.error || "We couldn't locate an active Stripe subscription for this email.");
+    }
+  } catch (e) {
+    alert("Connection error while accessing the billing portal. Please check your internet and try again.");
   }
 }
