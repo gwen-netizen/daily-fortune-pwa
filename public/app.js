@@ -41,12 +41,11 @@ function parseDbTimestamp(ts) {
 function formatSpacedSentences(text) {
   if (!text) return '';
   const cleaned = text.trim();
-  // Split into sentences and rejoin with a double line break for clean readability
   const sentences = cleaned.split(/(?<=[.!?])\s+(?=[A-Z0-9"'])/);
   if (sentences.length > 1) {
-    return sentences.join('<br><br>');
+    return sentences.map(s => `<div class="task-headline-text" style="margin-bottom: 22px; line-height: 1.45;">${s}</div>`).join('');
   }
-  return cleaned;
+  return `<div class="task-headline-text" style="line-height: 1.45;">${cleaned}</div>`;
 }
 
 function mapDeckNameToCategory(deckName) {
