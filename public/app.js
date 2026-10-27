@@ -902,13 +902,13 @@ function openReferralModal() {
 function openProfileModal() {
   const modal = document.getElementById('profile-drawer-modal');
   if (modal) {
-    const emailInput = document.getElementById('profile-email-input');
+    const emailDisplay = document.getElementById('profile-email-display');
     const winsEl = document.getElementById('profile-stat-wins');
     const focusEl = document.getElementById('profile-stat-focus');
     const passCard = document.getElementById('profile-pass-status-card');
 
     const email = resolveCurrentAccountEmail();
-    if (emailInput) emailInput.value = email;
+    if (emailDisplay) emailDisplay.innerText = email;
     if (winsEl) winsEl.innerText = totalWinsCount.toString();
     if (focusEl) focusEl.innerText = `${totalFocusReclaimed.toFixed(1)}m`;
 
