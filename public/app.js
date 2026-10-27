@@ -285,7 +285,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const activeEmail = resolveCurrentAccountEmail();
   if (activeEmail) {
-    await fetchUserProfileFromCloud(activeEmail);
+    // 1. Instantly load cached profile to prevent UI hang
+    const cachedProfile = localStorage.getItem('nudge_cached_profile');
+    if (cachedProfile) {
+      try {
+        currentUserProfile = JSON.parse(cachedProfile);
+        totalWinsCount = parseInt(currentUserProfile.total_wins, 10) || totalWinsCount;
+        totalFocusReclaimed = parseFloat(currentUserProfile.focus_reclaimed) || totalFocusReclaimed;
+      } catch(e) {}
+    }
+    // 2. Fetch from cloud silently in the background
+    fetchUserProfileFromCloud(activeEmail); 
   } else {
     currentUserProfile = { email: 'beta_tester@120reset.app', premium_user: false, pass_expires_at: null };
   }
@@ -310,18 +320,20 @@ async function fetchUserProfileFromCloud(email) {
     
     if (response.ok) {
       const data = await response.json();
-      if (data && data.profile) {
+    if (data && data.profile) {
         currentUserProfile = data.profile;
         totalWinsCount = parseInt(data.profile.total_wins, 10) || totalWinsCount;
         totalFocusReclaimed = parseFloat(data.profile.focus_reclaimed) || totalFocusReclaimed;
+        // Save to cache for the next instant boot
+        localStorage.setItem('nudge_cached_profile', JSON.stringify(data.profile));
         updateMetricDashboard();
         updatePremiumDeckBadges();
         return data.profile;
       }
     }
   } catch (e) {
-    console.error("Critical Supabase/Vercel connection error:", e);
-    throw new Error("Unable to authenticate with live server.");
+    console.warn("Supabase background sync fallback. Using local cache:", e);
+    return null;
   }
   return null;
 }
@@ -861,14 +873,16 @@ async function syncLifetimeProgressToCloud() {
         clientDate: today
       })
     });
-    const data = await response.json();
+   const data = await response.json();
     if (data && data.profile) {
       currentUserProfile = data.profile;
+      // Keep cache updated after every win
+      localStorage.setItem('nudge_cached_profile', JSON.stringify(data.profile));
       updatePassCountdown();
       updatePremiumDeckBadges();
     }
   } catch (e) {
-    console.error("Critical Supabase/Vercel connection error:", e);
+    console.warn("Supabase background sync fallback:", e);
   }
 }
 
