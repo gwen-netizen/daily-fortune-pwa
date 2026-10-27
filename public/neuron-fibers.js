@@ -213,7 +213,7 @@
     const rightCx = cx + rx * 0.27;
 
     const count = selectedStates.length;
-    const tissueAlpha = 1.0;
+    const tissueAlpha = count === 0 ? 1.0 : (count === 1 ? 0.74 : (count === 2 ? 0.48 : 0.22));
 
     const aura = brainCtx.createRadialGradient(cx, cy, ry * 0.08, cx, cy, ry * 1.45);
     aura.addColorStop(0, 'rgba(86, 205, 255, .25)');
@@ -333,9 +333,7 @@
       brainCtx.ellipse(cx + rx * 0.29, cy + ry * 0.65, rx * 0.34, ry * 0.25, 0, 0, Math.PI * 2);
       brainCtx.clip();
 
-      const overlayColor = 'rgba(25, 35, 55, 0.75)'; // Grey-blue tint
-
-     if (count >= 3) {
+      if (count >= 3) {
         const fullFog = brainCtx.createRadialGradient(cx, cy, 0, cx, cy, rx * 1.25);
         fullFog.addColorStop(0, 'rgba(25, 35, 55, 0.45)');
         fullFog.addColorStop(0.7, 'rgba(25, 35, 55, 0.60)');
@@ -346,8 +344,8 @@
         const leftX = cx - rx * 1.25;
         const rightX = cx + rx * 0.52;
         const baseGrad = brainCtx.createLinearGradient(leftX, 0, rightX, 0);
-        baseGrad.addColorStop(0.0, overlayColor);
-        baseGrad.addColorStop(0.70, overlayColor);
+        baseGrad.addColorStop(0.0, 'rgba(25, 35, 55, 0.75)');
+        baseGrad.addColorStop(0.70, 'rgba(25, 35, 55, 0.75)');
         baseGrad.addColorStop(1.0, 'rgba(25, 35, 55, 0.0)');
         brainCtx.fillStyle = baseGrad;
         brainCtx.fillRect(leftX, 0, rightX - leftX, h);
@@ -355,8 +353,8 @@
         const leftX = cx - rx * 1.25;
         const rightX = cx - rx * 0.25;
         const grad = brainCtx.createLinearGradient(cx - rx * 0.9, 0, rightX + rx * 0.10, 0);
-        grad.addColorStop(0.0, overlayColor);
-        grad.addColorStop(0.70, overlayColor);
+        grad.addColorStop(0.0, 'rgba(25, 35, 55, 0.75)');
+        grad.addColorStop(0.70, 'rgba(25, 35, 55, 0.75)');
         grad.addColorStop(1.0, 'rgba(25, 35, 55, 0)');
         brainCtx.fillStyle = grad;
         brainCtx.fillRect(leftX, 0, rightX - leftX, h);
