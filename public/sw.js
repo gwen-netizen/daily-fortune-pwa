@@ -1,25 +1,16 @@
-const CACHE_NAME = '120reset-v15';
-const PRECACHE_ASSETS = [
-  '/',
-  '/index.html',
-  '/app.html',
-  '/styles.css',
-  '/app.js',
-  '/manifest.webmanifest'
-];
+const CACHE_NAME = '120reset-v6-network-only';
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_ASSETS))
-  );
+  // Install immediately without caching assets
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
+  // Aggressively delete ALL existing caches on the user's device
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        keys.map((key) => caches.delete(key))
       )
     )
   );
@@ -27,8 +18,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // Strictly Network-Only strategy. No local cache fallback.
   if (event.request.method !== 'GET') return;
-  event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request).catch(() => caches.match('/')))
-  );
+  event.respondWith(fetch(event.request));
 });
