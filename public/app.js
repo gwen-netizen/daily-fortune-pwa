@@ -384,7 +384,7 @@ function setSyncLoadingState(isLoading) {
 
   if (isLoading) {
     if (spinner) spinner.style.display = 'flex';
-    if (headline) headline.innerText = "Verifying with Supabase...";
+    if (headline) headline.innerText = "Setting Up...";
     if (subtext) subtext.innerText = "Tallying account metrics and subscription tokens.";
     if (errorCard) errorCard.style.display = 'none';
   }
@@ -400,7 +400,7 @@ function showSyncErrorState(msg) {
   if (spinner) spinner.style.display = 'none';
   if (headline) headline.innerText = "Connection Failed";
   if (subtext) subtext.innerText = "Could not sync your records with the cloud.";
-  if (errorMsg) errorMsg.innerText = msg || "Supabase verification error.";
+  if (errorMsg) errorMsg.innerText = msg || "Verification error.";
   if (errorCard) errorCard.style.display = 'block';
 }
 
@@ -418,7 +418,7 @@ async function syncUserAccountEmail() {
   if (msgEl) {
     msgEl.style.display = 'block';
     msgEl.style.color = 'var(--accent-gold)';
-    msgEl.innerText = 'Connecting to Supabase...';
+    msgEl.innerText = 'Connecting...';
   }
 
   const profile = await fetchUserProfileFromCloud(targetEmail);
