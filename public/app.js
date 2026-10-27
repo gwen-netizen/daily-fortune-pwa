@@ -112,37 +112,28 @@ function getVisibilityMetrics() {
   else if (count === 2) baseVisibility = 34;
   else if (count >= 3) baseVisibility = 1;
 
-  // Add back focus based on tasks completed today
+  // Add 16.5% per task completed
   const tasksCredit = getTasksCreditToday();
   const earnedVisibility = tasksCredit * 16.5;
 
-  const rawVisibility = Math.min(100, Math.max(1, baseVisibility + earnedVisibility));
-  const displayVisibility = Math.floor(rawVisibility);
+  const rawVisibility = Math.floor(Math.min(100, Math.max(1, baseVisibility + earnedVisibility)));
 
   let subtitle = "CLEAR SIGNAL";
   if (rawVisibility >= 100) subtitle = "CLEAR SIGNAL";
+  else if (rawVisibility >= 83) subtitle = "MILD FOGGY";
   else if (rawVisibility >= 67) subtitle = "MILD FOGGY";
+  else if (rawVisibility >= 50) subtitle = "MID FOGGY";
   else if (rawVisibility >= 34) subtitle = "MID FOGGY";
   else subtitle = "INTENSE FOGGY";
 
-  return { displayVisibility, subtitle };
-}
-
-// Screenshot 1 Fix: Synchronize badge text on all active viewports
-function updateBrainStatusText() {
-  const { displayVisibility, subtitle } = getVisibilityMetrics();
-  const label = `${displayVisibility}% VISIBILITY • ${subtitle}`;
-
-  const textS2 = document.getElementById('brain-status-s2');
-  const textS3 = document.getElementById('brain-status-s3');
-
-  if (textS2) textS2.innerText = label;
-  if (textS3) textS3.innerText = label;
+  return { displayVisibility: rawVisibility, subtitle };
 }
 
 function syncNeuraFrictions() {
   if (window.NeuraBrain && typeof window.NeuraBrain.setFrictions === 'function') {
-    window.NeuraBrain.setFrictions(window.activeSelectedFrictions);
+    // Pass the active dynamic visibility % into the WebGL/Canvas rendering file!
+    const { displayVisibility } = getVisibilityMetrics();
+    window.NeuraBrain.setFrictions(window.activeSelectedFrictions, displayVisibility);
   }
 }
 
@@ -1209,6 +1200,10 @@ function deleteCustomIntercept(index) {
 }
 
 function openCustomInterceptModal() {
+  if (!isUserPremiumOrPass()) {
+    showPaywall();
+    return;
+  }
   const modal = document.getElementById('custom-intercept-modal');
   if (modal) modal.classList.add('active');
 }
@@ -1269,6 +1264,72 @@ async function shareReferralLink() {
       prompt("Copy invite link:", shareUrl);
     }
   }
+}
+
+async function handleAuthAction() {
+  const emailInput = document.getElementById('user-auth-email');
+  const otpGroup = document.getElementById('auth-otp-group');
+  const otpInput = document.getElementById('user-auth-otp');
+  const btn = document.getElementById('btn-auth-action');
+
+  const email = emailInput.value.trim().toLowerCase();
+  if (!email || !email.includes('@')) {
+    alert("Please enter a valid email.");
+    return;
+  }
+
+  // 1. Send OTP Step
+  if (otpGroup.style.display === 'none') {
+    btn.innerText = "Sending code...";
+    try {
+      // Calls your Supabase edge function/webhook to email the OTP
+      const response = await fetch(`/api/sync-user?email=${encodeURIComponent(email)}&action=send_otp`);
+      if (!response.ok) throw new Error("Server error");
+      otpGroup.style.display = 'block';
+      emailInput.disabled = true;
+      btn.innerText = "Verify & Enter";
+    } catch (e) {
+      alert("Network error. Please try again.");
+      btn.innerText = "Continue to App &rarr;";
+    }
+    return;
+  }
+
+  // 2. Verify OTP Step
+  const otp = otpInput.value.trim();
+  if (otp.length < 6) {
+    alert("Please enter the 6-digit code.");
+    return;
+  }
+
+  btn.innerText = "Verifying...";
+  try {
+    const localDate = getLocalDateString();
+    // Validates OTP via Supabase, grabs premium status, and loads profile
+    const response = await fetch(`/api/sync-user?email=${encodeURIComponent(email)}&action=verify_otp&otp=${encodeURIComponent(otp)}&clientDate=${encodeURIComponent(localDate)}`);
+    if (!response.ok) throw new Error("Invalid Code");
+    
+    const data = await response.json();
+    if (data && data.profile) {
+      currentUserProfile = data.profile;
+      localStorage.setItem('nudge_user_email', email);
+      localStorage.setItem('nudge_cached_profile', JSON.stringify(data.profile));
+      updateMetricDashboard();
+      updatePremiumDeckBadges();
+      // Proceed to the app
+      switchScreen('screen-onboarding-2', true);
+    }
+  } catch (e) {
+    alert("Invalid access code. Please try again.");
+    btn.innerText = "Verify & Enter";
+  }
+}
+
+function resendOtpCode() {
+  document.getElementById('auth-otp-group').style.display = 'none';
+  document.getElementById('user-auth-email').disabled = false;
+  document.getElementById('user-auth-otp').value = '';
+  document.getElementById('btn-auth-action').innerText = "Continue to App &rarr;";
 }
 
 /* ========================================================
