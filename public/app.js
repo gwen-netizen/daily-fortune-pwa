@@ -112,19 +112,13 @@ function getVisibilityMetrics() {
   else if (count === 2) baseVisibility = 34;
   else if (count >= 3) baseVisibility = 1;
 
-  const tasksCredit = getTasksCreditToday();
-  const earnedVisibility = tasksCredit * 16.5;
-
-  const rawVisibility = Math.min(100, Math.max(1, baseVisibility + earnedVisibility));
-  const displayVisibility = Math.floor(rawVisibility);
-
   let subtitle = "CLEAR SIGNAL";
-  if (rawVisibility >= 100) subtitle = "CLEAR SIGNAL";
-  else if (rawVisibility >= 67) subtitle = "MILD FOGGY";
-  else if (rawVisibility >= 34) subtitle = "MID FOGGY";
+  if (baseVisibility >= 100) subtitle = "CLEAR SIGNAL";
+  else if (baseVisibility >= 67) subtitle = "MILD FOGGY";
+  else if (baseVisibility >= 34) subtitle = "MID FOGGY";
   else subtitle = "INTENSE FOGGY";
 
-  return { displayVisibility, subtitle };
+  return { displayVisibility: baseVisibility, subtitle };
 }
 
 // Screenshot 1 Fix: Synchronize badge text on all active viewports
@@ -450,15 +444,10 @@ function handleWelcomeContinue() {
 
 function confirmFrictionsAndOpenDashboard() {
   if (window.activeSelectedFrictions.size === 0) {
-    window.activeSelectedFrictions.add('mindless_scrolling');
-    brainConstrictionRatio = 0.33;
-    syncNeuraFrictions();
-    syncFrictionChipsUI();
-    updateBrainStatusText();
+    return; // Stops progression if no friction is selected
   }
   switchScreen('screen-dashboard', true);
 }
-
 function initBrainConstrictionState() {
   const today = getLocalDateString();
   const savedDate = localStorage.getItem('nudge_brain_date');
