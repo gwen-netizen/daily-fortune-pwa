@@ -212,8 +212,7 @@
     const leftCx = cx - rx * 0.27;
     const rightCx = cx + rx * 0.27;
 
-    const count = selectedStates.length;
-    const tissueAlpha = count === 0 ? 1.0 : (count === 1 ? 0.74 : (count === 2 ? 0.48 : 0.22));
+    const tissueAlpha = 1.0;
 
     const aura = brainCtx.createRadialGradient(cx, cy, ry * 0.08, cx, cy, ry * 1.45);
     aura.addColorStop(0, 'rgba(86, 205, 255, .25)');
@@ -267,10 +266,19 @@
       brainCtx.moveTo(startX, startY);
       brainCtx.bezierCurveTo(startX - bend, startY - ry * 0.22, endX + bend, startY + ry * 0.18, endX, startY + ry * 0.38);
       brainCtx.bezierCurveTo(endX - bend * 0.4, startY + ry * 0.64, endX + bend * 0.35, startY + ry * 0.88, cx + side * rx * 0.06, startY + ry * 1.1);
-      brainCtx.strokeStyle = cordColors[i % cordColors.length];
-      brainCtx.globalAlpha = (0.3 + (i % 4) * 0.1) * tissueAlpha;
-      brainCtx.lineWidth = 1.3 + (i % 5 === 0 ? 2.4 : 0.2);
+      
+      const cordColor = cordColors[i % cordColors.length];
+      const baseAlpha = (0.3 + (i % 4) * 0.1) * tissueAlpha;
+      const baseW = 1.3 + (i % 5 === 0 ? 2.4 : 0.2);
       brainCtx.lineCap = 'round';
+      
+      brainCtx.strokeStyle = cordColor;
+      brainCtx.globalAlpha = baseAlpha * 0.3;
+      brainCtx.lineWidth = baseW + (i % 5 === 0 ? 8 : 4);
+      brainCtx.stroke();
+      
+      brainCtx.globalAlpha = baseAlpha;
+      brainCtx.lineWidth = baseW;
       brainCtx.stroke();
     }
     for (let i = 0; i < 12; i += 1) {
@@ -280,8 +288,16 @@
       brainCtx.moveTo(x, cy - ry * 0.9);
       brainCtx.bezierCurveTo(x + side * rx * 0.18, cy - ry * 0.45, x - side * rx * 0.16, cy - ry * 0.05, x + side * rx * 0.12, cy + ry * 0.42);
       brainCtx.bezierCurveTo(x - side * rx * 0.08, cy + ry * 0.62, x + side * rx * 0.1, cy + ry * 0.76, x, cy + ry * 0.95);
-      brainCtx.strokeStyle = i % 3 === 0 ? '#fff4be' : '#69d9ff';
-      brainCtx.globalAlpha = 0.46 * tissueAlpha;
+      
+      const veinColor = i % 3 === 0 ? '#fff4be' : '#69d9ff';
+      const vAlpha = 0.46 * tissueAlpha;
+      brainCtx.strokeStyle = veinColor;
+      
+      brainCtx.globalAlpha = vAlpha * 0.25;
+      brainCtx.lineWidth = 7;
+      brainCtx.stroke();
+      
+      brainCtx.globalAlpha = vAlpha;
       brainCtx.lineWidth = 1.8;
       brainCtx.stroke();
     }
@@ -294,6 +310,10 @@
     brainCtx.bezierCurveTo(cx + rx * 0.12, cy + ry * 0.48, cx - rx * 0.08, cy + ry * 0.72, cx - rx * 0.02, cy + ry * 0.92);
     brainCtx.strokeStyle = 'rgba(14, 28, 74, .62)';
     brainCtx.lineWidth = 5;
+    brainCtx.stroke();
+    
+    brainCtx.strokeStyle = 'rgba(255, 202, 110, 0.25)';
+    brainCtx.lineWidth = 8;
     brainCtx.stroke();
     brainCtx.strokeStyle = 'rgba(255, 221, 129, .7)';
     brainCtx.lineWidth = 1.2;
@@ -323,44 +343,6 @@
     brainCtx.fill();
 
     brainCtx.restore();
-
-    // Tissue fog tint (Grey out segments of the brain based on friction)
-    if (selectedStates.length > 0) {
-      brainCtx.save();
-      brainCtx.beginPath();
-      brainCtx.ellipse(leftCx, cy, rx * 0.66, ry, 0, 0, Math.PI * 2);
-      brainCtx.ellipse(rightCx, cy, rx * 0.66, ry, 0, 0, Math.PI * 2);
-      brainCtx.ellipse(cx + rx * 0.29, cy + ry * 0.65, rx * 0.34, ry * 0.25, 0, 0, Math.PI * 2);
-      brainCtx.clip();
-
-      if (count >= 3) {
-        const fullFog = brainCtx.createRadialGradient(cx, cy, 0, cx, cy, rx * 1.25);
-        fullFog.addColorStop(0, 'rgba(25, 35, 55, 0.45)');
-        fullFog.addColorStop(0.7, 'rgba(25, 35, 55, 0.60)');
-        fullFog.addColorStop(1, 'rgba(25, 35, 55, 0.75)');
-        brainCtx.fillStyle = fullFog;
-        brainCtx.fillRect(cx - rx * 1.2, cy - ry * 1.2, rx * 2.4, ry * 2.4);
-      } else if (count === 2) {
-        const leftX = cx - rx * 1.25;
-        const rightX = cx + rx * 0.52;
-        const baseGrad = brainCtx.createLinearGradient(leftX, 0, rightX, 0);
-        baseGrad.addColorStop(0.0, 'rgba(25, 35, 55, 0.75)');
-        baseGrad.addColorStop(0.70, 'rgba(25, 35, 55, 0.75)');
-        baseGrad.addColorStop(1.0, 'rgba(25, 35, 55, 0.0)');
-        brainCtx.fillStyle = baseGrad;
-        brainCtx.fillRect(leftX, 0, rightX - leftX, h);
-      } else if (count === 1) {
-        const leftX = cx - rx * 1.25;
-        const rightX = cx - rx * 0.25;
-        const grad = brainCtx.createLinearGradient(cx - rx * 0.9, 0, rightX + rx * 0.10, 0);
-        grad.addColorStop(0.0, 'rgba(25, 35, 55, 0.75)');
-        grad.addColorStop(0.70, 'rgba(25, 35, 55, 0.75)');
-        grad.addColorStop(1.0, 'rgba(25, 35, 55, 0)');
-        brainCtx.fillStyle = grad;
-        brainCtx.fillRect(leftX, 0, rightX - leftX, h);
-      }
-      brainCtx.restore();
-    }
   }
 
   function drawStrand(strand, time) {
@@ -471,7 +453,7 @@
 
   function drawFogLayer(time) {
     fogCtx.clearRect(0, 0, canvasWidth, canvasHeight);
-    if (selectedStates.length === 0) return;
+    if (selectedStates.length === 0 || currentVisibility >= 100) return;
 
     const w = canvasWidth;
     const h = canvasHeight;
@@ -489,16 +471,15 @@
     fogCtx.clip();
 
     const count = selectedStates.length;
-    
-    // Use a murky, desaturated blue-grey for actual "fog" instead of neon colors
-    const fogColorSolid = 'rgba(130, 145, 165, 0.15)';
-    const fogColorStroke = 'rgba(130, 145, 165, 0.2)';
+    const fogDensity = (100 - currentVisibility) / 100;
+    const fogColorSolid = `rgba(130, 145, 165, ${0.15 * fogDensity})`;
+    const fogColorStroke = `rgba(130, 145, 165, ${0.20 * fogDensity})`;
 
     if (count >= 3) {
       const softGlow = fogCtx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radiusX * 1.3);
-      softGlow.addColorStop(0, 'rgba(30, 40, 55, 0.35)');
-      softGlow.addColorStop(0.65, 'rgba(30, 40, 55, 0.55)');
-      softGlow.addColorStop(1, 'rgba(30, 40, 55, 0.75)');
+      softGlow.addColorStop(0, `rgba(30, 40, 55, ${0.45 * fogDensity})`);
+      softGlow.addColorStop(0.7, `rgba(30, 40, 55, ${0.60 * fogDensity})`);
+      softGlow.addColorStop(1, `rgba(30, 40, 55, ${0.75 * fogDensity})`);
       fogCtx.fillStyle = softGlow;
       fogCtx.fillRect(centerX - radiusX * 1.2, centerY - radiusY * 1.2, radiusX * 2.4, radiusY * 2.4);
 
@@ -509,14 +490,11 @@
           centerY + Math.cos(time * 0.0008 + i * 1.4) * radiusY * 0.55,
           radiusX * (0.18 + (i % 3) * 0.04),
           radiusY * (0.10 + (i % 2) * 0.04),
-          i * 0.4,
-          0,
-          Math.PI * 2
+          i * 0.4, 0, Math.PI * 2
         );
         fogCtx.fillStyle = fogColorSolid;
         fogCtx.fill();
       }
-
     } else if (count === 2) {
       const leftX = centerX - radiusX * 1.25;
       const rightX = centerX + radiusX * 0.52;
@@ -529,8 +507,8 @@
       fogCtx.closePath();
 
       const baseGrad = fogCtx.createLinearGradient(leftX, 0, rightX, 0);
-      baseGrad.addColorStop(0.0, 'rgba(30, 40, 55, 0.55)');
-      baseGrad.addColorStop(0.70, 'rgba(30, 40, 55, 0.45)');
+      baseGrad.addColorStop(0.0, `rgba(30, 40, 55, ${0.55 * fogDensity})`);
+      baseGrad.addColorStop(0.70, `rgba(30, 40, 55, ${0.45 * fogDensity})`);
       baseGrad.addColorStop(1.0, 'rgba(30, 40, 55, 0.0)');
       fogCtx.fillStyle = baseGrad;
       fogCtx.fill();
@@ -548,7 +526,6 @@
       fogCtx.ellipse(centerX + radiusX * 0.15, centerY, radiusX * 0.42, radiusY * 0.65, 0, 0, Math.PI * 2);
       fogCtx.fillStyle = fogColorSolid;
       fogCtx.fill();
-
     } else if (count === 1) {
       const leftX = centerX - radiusX * 1.25;
       const rightX = centerX - radiusX * 0.25;
@@ -561,8 +538,8 @@
       fogCtx.closePath();
 
       const grad = fogCtx.createLinearGradient(centerX - radiusX * 0.9, 0, rightX + radiusX * 0.10, 0);
-      grad.addColorStop(0.0, 'rgba(30, 40, 55, 0.48)');
-      grad.addColorStop(0.70, 'rgba(30, 40, 55, 0.38)');
+      grad.addColorStop(0.0, `rgba(30, 40, 55, ${0.48 * fogDensity})`);
+      grad.addColorStop(0.70, `rgba(30, 40, 55, ${0.38 * fogDensity})`);
       grad.addColorStop(1.0, 'rgba(30, 40, 55, 0)');
       fogCtx.fillStyle = grad;
       fogCtx.fill();
@@ -617,6 +594,7 @@
       animFrameId = null;
     }
   }
+
   function mount(containerElement) {
     injectStyles();
 
@@ -654,9 +632,13 @@
     }
   }
 
-  function setFrictions(frictionKeySetOrArray) {
+  let currentVisibility = 100;
+
+  function setFrictions(frictionKeySetOrArray, visibilityPct = 100) {
     const keys = Array.from(frictionKeySetOrArray || []);
     selectedStates = [];
+    currentVisibility = visibilityPct;
+    
     if (keys.includes('mindless_scrolling')) selectedStates.push(NEURA_STATES[0]);
     if (keys.includes('task_paralysis')) selectedStates.push(NEURA_STATES[1]);
     if (keys.includes('low_lethargy')) selectedStates.push(NEURA_STATES[2]);
@@ -671,7 +653,6 @@
     }
   }
 
-  // Export globally for app.js or direct scripts
   global.NeuraBrain = {
     mount,
     unmount,
@@ -680,15 +661,16 @@
     getStates: () => NEURA_STATES
   };
 
-  // Backwards-compatible globals for existing app.js calls
   global.initNeuraBrainDOM = function() {
     const s2 = document.getElementById('brain-viewport-s2');
     if (s2) mount(s2);
   };
+
   global.syncNeuraStates = function() {
     if (global.activeSelectedFrictions) {
       setFrictions(global.activeSelectedFrictions);
     }
   };
+
   global.resizeNeuraCanvas = resize;
 })(window);
