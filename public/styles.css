@@ -516,40 +516,6 @@ body::before {
 .deck-name { font-size: 14px; font-weight: 800; color: var(--text-primary); line-height: 1.25; }
 .deck-desc { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
 
-.bottom-utility-dock {
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 440px; /* matches .app-container width */
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
-  background: rgba(8, 17, 31, 0.95);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-top: 1px solid var(--card-border);
-  z-index: 100;
-}
-.dock-btn {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 10px;
-  transition: all 0.15s ease;
-}
-.dock-btn:hover, .dock-btn:active { color: var(--text-primary); background: rgba(255, 255, 255, 0.05); }
-.dock-btn-icon { font-size: 17px; line-height: 1; }
-.dock-btn-label { font-family: var(--font-sans); font-size: 11px; font-weight: 700; letter-spacing: 0.02em; color: var(--text-muted); }
-
 /* ========================================================
    MODALS / DRAWERS (AUTO CONTENT-HUGGING FIX)
 ======================================================== */
@@ -635,63 +601,6 @@ body::before {
 .tier-price-highlight.price-red { color: var(--accent-coral); }
 .tier-sub-caption { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
 
-/* Force screens to scroll independently of the bottom nav */
-.screen.active {
-  height: 100vh;
-  overflow-y: auto;
-  padding-bottom: 110px !important; /* Prevents last item from hiding behind the nav */
-}
-
-/* Freeze the bottom icon bar */
-.bottom-nav,
-nav,
-[class*="nav"] {
-  position: fixed !important;
-  bottom: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  z-index: 9999 !important;
-  background-color: var(--bg-dark, #0b1021); /* Ensures items sliding behind it are hidden */
-  padding-bottom: env(safe-area-inset-bottom); /* Fix for iPhone home bars */
-}
-/* ========================================================
-   SCREEN 4: TRIGGER PHASE
-======================================================== */
-.spin-outer-ring {
-  width: 170px;
-  height: 170px;
-  border-radius: 50%;
-  border: 2px dashed rgba(var(--accent-gold-rgb), 0.45);
-  box-shadow: 0 0 35px rgba(var(--accent-gold-rgb), 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: ringRotate 20s linear infinite;
-}
-@keyframes ringRotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.big-red-btn {
-  width: 170px !important;
-  height: 170px !important;
-  border-radius: 50%;
-  background: radial-gradient(circle, #f3c547 0%, #d89f22 80%);
-  border: 2px solid #ffe18b;
-  color: #08111f;
-  font-size: 26px !important;
-  font-weight: 900;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  box-shadow: 0 0 40px rgba(243, 197, 71, 0.65);
-  transition: transform 0.1s ease;
-}
-
-.spin-outer-ring {
-  width: 205px !important;
-  height: 205px !important;
-}
 
 .btn-back-focus {
   background: none;
@@ -791,7 +700,80 @@ nav,
 input:checked + .slider { background-color: var(--accent-gold); }
 input:checked + .slider:before { transform: translateX(18px); }
 
+/* ========================================================
+   SCREEN 4: TRIGGER PHASE (ENLARGED BUTTON)
+======================================================== */
+.spin-outer-ring {
+  width: 205px !important;
+  height: 205px !important;
+  border-radius: 50%;
+  border: 2px dashed rgba(var(--accent-gold-rgb), 0.45);
+  box-shadow: 0 0 35px rgba(var(--accent-gold-rgb), 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: ringRotate 20s linear infinite;
+}
+
+@keyframes ringRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.big-red-btn {
+  width: 170px !important;
+  height: 170px !important;
+  border-radius: 50%;
+  background: radial-gradient(circle, #f3c547 0%, #d89f22 80%);
+  border: 2px solid #ffe18b;
+  color: #08111f;
+  font-size: 26px !important;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  box-shadow: 0 0 40px rgba(var(--accent-gold-rgb), 0.65);
+  transition: transform 0.1s ease;
+}
+
+.big-red-btn:active { 
+  transform: scale(0.95); 
+}
+
+/* ========================================================
+   BOTTOM NAVIGATION LOCK FIX
+======================================================== */
+.app-container {
+  overflow: hidden; 
+}
+
+/* Force screens to scroll independently of the bottom nav */
+.screen.active {
+  height: 100vh !important;
+  overflow-y: auto !important;
+  padding-bottom: 110px !important; 
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Override any conflicting legacy padding rules */
 #screen-onboarding-2,
-#screen-dashboard {
-  padding-bottom: 85px;
+#screen-dashboard,
+#screen-victory {
+  padding-bottom: 110px !important;
+}
+
+/* Freeze the bottom icon bar to the bottom of the container */
+.bottom-utility-dock,
+.bottom-nav,
+nav,
+[class*="nav"] {
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  transform: none !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  z-index: 9999 !important;
+  background-color: var(--bg-color, #08111f) !important;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)) !important;
 }
