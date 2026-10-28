@@ -804,7 +804,7 @@ const tasksData = {
     title: 'Task paralysis',
     appKey: 'task_paralysis',
     cue: 'FOLLOW SEQUENCE:',
-    actionHtml: '<div class="task-step-list"><div class="task-step-item"><span class="task-step-num">1.</span> <span>Exhale fully &amp; hold</span></div><div class="task-step-item"><span class="task-step-num">2.</span> <span>Click your target tab</span></div><div class="task-step-item"><span class="task-step-num">3.</span> <span>Inhale</span></div></div>'
+    actionHtml: '<div class="task-step-list"><div class="task-step-item"><span class="task-step-num">1.</span> <span>Exhale fully &amp; hold</span></div><div class="task-step-item"><span class="task-step-num">2.</span> <span>Pull back your work</span></div><div class="task-step-item"><span class="task-step-num">3.</span> <span>Inhale back</span></div></div>'
   },
   lethargy: {
     index: '03',
@@ -855,10 +855,12 @@ app.innerHTML = `
           <span class="eyebrow">See the problem. Solve it in 120 seconds.</span>
           <h2>An Interactive visual to see<br><em>Your Current State of Mind</em></h2>
         </div>
-        <div class="showcase-brain-viewport" id="showcase-brain-viewport" style="padding: 0; background: transparent;">
+        
+        <!-- Rogue closing div removed here so the outline wraps the whole card -->
+        <div class="showcase-brain-viewport" id="showcase-brain-viewport" style="background: #000000; padding: 0;">
           <!-- LIVE SANDBOXED MILD FOGGY BRAIN -->
-          <iframe style="width: 100%; height: 100%; border: none; pointer-events: none; background: radial-gradient(circle at 50% 50%, #162f4e 0%, #0d1b2c 60%, #08111f 100%); display: block;" srcdoc="&lt;!doctype html&gt;&lt;html&gt;&lt;head&gt;&lt;style&gt;body{margin:0;background:transparent;overflow:hidden;}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div id='v1' style='width:100vw;height:100vh;position:relative;'&gt;&lt;/div&gt;&lt;script src='/neuron-fibers.js'&gt;&lt;/script&gt;&lt;script&gt;document.addEventListener('DOMContentLoaded',()=&gt;{if(window.NeuraBrain){window.NeuraBrain.mount(document.getElementById('v1'));window.NeuraBrain.setFrictions(['mindless_scrolling'], 67);}});&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;"></iframe>
-          <div class="brain-status-indicator" style="background: rgba(243, 197, 71, 0.15); border-color: var(--active); color: var(--active);">MILD FOGGY</div>
+          <iframe style="width: 100%; height: 100%; border: none; pointer-events: none; background: #000000; display: block;" srcdoc="&lt;!doctype html&gt;&lt;html&gt;&lt;head&gt;&lt;style&gt;body{margin:0;background:transparent;overflow:hidden;}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div id='v1' style='width:100vw;height:100vh;position:relative;'&gt;&lt;/div&gt;&lt;script src='/neuron-fibers.js'&gt;&lt;/script&gt;&lt;script&gt;document.addEventListener('DOMContentLoaded',()=&gt;{if(window.NeuraBrain){window.NeuraBrain.mount(document.getElementById('v1'));window.NeuraBrain.setFrictions(['mindless_scrolling'], 67);}});&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;"></iframe>
+          <div class="brain-status-indicator" style="background: #000000; border-color: var(--active); color: var(--active);">MILD FOGGY</div>
         </div>
       </section>
 
