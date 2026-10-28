@@ -120,13 +120,23 @@ function getVisibilityMetrics() {
 
   let subtitle = "CLEAR SIGNAL";
   if (rawVisibility >= 100) subtitle = "CLEAR SIGNAL";
-  else if (rawVisibility >= 83) subtitle = "MILD FOGGY";
   else if (rawVisibility >= 67) subtitle = "MILD FOGGY";
-  else if (rawVisibility >= 50) subtitle = "MID FOGGY";
   else if (rawVisibility >= 34) subtitle = "MID FOGGY";
   else subtitle = "INTENSE FOGGY";
 
   return { displayVisibility: rawVisibility, subtitle };
+}
+
+// RESTORED: This function was accidentally deleted during the last patch
+function updateBrainStatusText() {
+  const { displayVisibility, subtitle } = getVisibilityMetrics();
+  const label = `${displayVisibility}% VISIBILITY • ${subtitle}`;
+
+  const textS2 = document.getElementById('brain-status-s2');
+  const textS3 = document.getElementById('brain-status-s3');
+
+  if (textS2) textS2.innerText = label;
+  if (textS3) textS3.innerText = label;
 }
 
 function syncNeuraFrictions() {
