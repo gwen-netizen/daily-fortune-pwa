@@ -529,7 +529,14 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--active); outlin
   align-items: center;
 }
 
-.science-section { padding: 20px 0 75px; border-top: none; }
+.science-section {
+  padding: 42px clamp(20px, 4vw, 52px) 46px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: rgba(9, 24, 39, 0.75);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.3);
+  margin-bottom: 20px;
+}
 .science-heading h2 {
   margin: 14px 0 10px;
   font-size: clamp(2.1rem, 3.8vw, 3.4rem);
@@ -598,8 +605,12 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--active); outlin
   grid-template-columns: 1fr 0.9fr;
   gap: 6vw;
   align-items: center;
-  padding: 20px 0 75px;
-  border-top: none;
+  padding: 42px clamp(20px, 4vw, 52px) 46px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: rgba(9, 24, 39, 0.75);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.3);
+  margin-bottom: 20px;
 }
 .intercept-copy h2 {
   margin: 14px 0 18px;
