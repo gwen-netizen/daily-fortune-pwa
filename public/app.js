@@ -994,7 +994,35 @@ async function syncLifetimeProgressToCloud() {
 /* ========================================================
    MODALS, DRAWERS & ACCOUNT PROFILE
 ======================================================== */
+function isLifetimeSubscriber() {
+  if (!currentUserProfile) return false;
+  const isPrem = currentUserProfile.premium_user === true || currentUserProfile.premium_user === 'true' || currentUserProfile.is_premium === true || currentUserProfile.is_premium === 'true';
+  const hasPassExpiry = !!currentUserProfile.pass_expires_at;
+  const planType = currentUserProfile.plan_type || currentUserProfile.plan;
+  if (planType === 'lifetime') return true;
+  if (isPrem && !hasPassExpiry && planType !== 'monthly') return true;
+  return false;
+}
+
+function updatePaywallPillBadge() {
+  const pill = document.getElementById('paywall-pill-badge');
+  if (!pill) return;
+  const isLifetime = isLifetimeSubscriber();
+  if (isLifetime) {
+    pill.innerText = "LIFETIME ACCESS UNLOCKED";
+    pill.style.background = "rgba(194, 243, 221, 0.15)";
+    pill.style.color = "var(--accent-safe)";
+    pill.style.borderColor = "rgba(194, 243, 221, 0.35)";
+  } else {
+    pill.innerText = "GET LIFETIME ACCESS";
+    pill.style.background = "rgba(255, 93, 93, 0.15)";
+    pill.style.color = "var(--accent-coral)";
+    pill.style.borderColor = "rgba(255, 93, 93, 0.35)";
+  }
+}
+
 function openPaywallModal() {
+  updatePaywallPillBadge();
   const modal = document.getElementById('paywall-overlay');
   if (modal) modal.classList.add('active');
 }
