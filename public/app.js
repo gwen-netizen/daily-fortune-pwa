@@ -86,12 +86,6 @@ window.addEventListener('popstate', () => {
    TASK COMPLETION CREDIT & VISIBILITY (SCREENSHOT 1)
 ======================================================== */
 function getTasksCreditToday() {
-  const today = getLocalDateString();
-  const savedDate = localStorage.getItem('nudge_brain_date');
-  if (savedDate !== today) {
-    localStorage.setItem('nudge_tasks_credit', '0');
-    return 0;
-  }
   const savedCredit = localStorage.getItem('nudge_tasks_credit');
   return savedCredit ? parseInt(savedCredit, 10) : 0;
 }
