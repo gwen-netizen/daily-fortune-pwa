@@ -752,6 +752,7 @@ input:checked + .slider:before { transform: translateX(18px); }
   overflow-y: auto !important;
   padding-bottom: 110px !important; 
   -webkit-overflow-scrolling: touch;
+  transform: none !important;
 }
 
 /* Override any conflicting legacy padding rules */
@@ -761,7 +762,7 @@ input:checked + .slider:before { transform: translateX(18px); }
   padding-bottom: 110px !important;
 }
 
-/* Freeze the bottom icon bar to the viewport without breaking format */
+/* Freeze the bottom icon bar permanently to the screen viewport */
 .bottom-utility-dock {
   position: fixed !important;
   bottom: 0 !important;
