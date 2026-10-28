@@ -755,7 +755,7 @@ footer.custom-global-footer .footer-links a:hover {
   body { font-size: 15.5px; }
   .app-nav, .sales-page { width: min(100% - 32px, 1120px); }
   
- .hero { 
+.hero { 
     position: relative;
     padding: 32px 18px 40px; 
     border-radius: 20px;
@@ -776,7 +776,7 @@ footer.custom-global-footer .footer-links a:hover {
   .hero-video-clip {
     width: 100%;
     height: 100%;
-    object-fit: contain;
+    object-fit: cover;
     object-position: top center;
     display: block;
   }
@@ -787,12 +787,12 @@ footer.custom-global-footer .footer-links a:hover {
     inset: 0;
     z-index: 1;
     pointer-events: none;
-    background: linear-gradient(180deg, rgba(7, 17, 30, 0.1) 0%, rgba(7, 17, 30, 0.75) 42%, rgba(7, 17, 30, 0.98) 100%);
+    background: linear-gradient(180deg, rgba(7, 17, 30, 0.15) 0%, rgba(7, 17, 30, 0.75) 45%, rgba(7, 17, 30, 0.98) 100%);
   }
   .hero-copy {
     position: relative;
     z-index: 2;
-    margin-top: 155px;
+    margin-top: 140px;
     max-width: 100%;
   }
   .hero-copy h1 { font-size: clamp(2.6rem, 11vw, 3.8rem); }
@@ -869,11 +869,12 @@ app.innerHTML = `
       <span class="nav-tag">somatic circuit breaker</span>
     </header>
     <main class="sales-page">
-      <section class="hero" aria-labelledby="page-title">
+     <section class="hero" aria-labelledby="page-title">
         <div class="hero-copy">
           <span class="eyebrow">WHEN YOUR BRAIN WON'T START</span>
           <h1 id="page-title">1 <em>Tap</em><br>2 <em>Min</em><br>0 <em>Download</em></h1>
           <p class="hero-lede">The only visual web app that stops time wastage from mindless scrolling, task paralysis, and brain clog.<br><em style="color: var(--active); font-style: italic; font-weight: 700;">For driven minds.</em></p>
+          <div class="hero-actions">
             <a class="button button-primary app-cta-link" href="app.html">Get free instant access <span>→</span></a>
             <a class="button button-secondary" href="#reset-demo">Try 10-Second Test ↓</a>
           </div>
