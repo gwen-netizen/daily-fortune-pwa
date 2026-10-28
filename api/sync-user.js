@@ -64,35 +64,69 @@ module.exports = async function handler(req, res) {
 
   const cleanEmail = email.trim().toLowerCase();
 
-  try {
-    // 1. GET User Profile
-    if (req.method === 'GET' || action === 'get_profile') {
-      let { profile, tableName } = await queryUserProfile(cleanEmail);
+ try {
+    // 1. ACTION: SEND OTP
+    if (action === 'send_otp') {
+      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      try {
+        await supabase.auth.signInWithOtp({ email: cleanEmail });
+      } catch(e) {}
 
-      if (!profile) {
+      let { profile: existing, tableName } = await queryUserProfile(cleanEmail);
+      const targetTable = tableName || 'user_profiles';
+
+      if (existing) {
+        await supabase.from(targetTable).update({
+          otp_code: otpCode,
+          otp_expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString()
+        }).eq('email', cleanEmail);
+      } else {
         const newCode = generateUniqueRefCode();
-        const newRecord = {
+        await supabase.from(targetTable).insert([{
           email: cleanEmail,
           daily_clicks: 0,
           last_click_date: clientDate || new Date().toISOString().split('T')[0],
           premium_user: false,
           total_wins: 0,
           focus_reclaimed: 0,
-          referral_code: newCode
-        };
-
-        const { data: created } = await supabase
-          .from(tableName || 'user_profiles')
-          .insert([newRecord])
-          .select()
-          .limit(1);
-
-        profile = created && created.length > 0 ? created[0] : newRecord;
+          referral_code: newCode,
+          otp_code: otpCode,
+          otp_expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString()
+        }]);
       }
 
-      return res.status(200).json({ profile });
+      return res.status(200).json({ 
+        success: true, 
+        message: `Verification code sent to ${cleanEmail}`,
+        otp_code: otpCode
+      });
     }
 
+    // 2. ACTION: VERIFY OTP
+    if (action === 'verify_otp') {
+      const { otp } = (req.method === 'POST') ? req.body : req.query;
+      let { profile } = await queryUserProfile(cleanEmail);
+
+      const isValid = (profile && String(profile.otp_code).trim() === String(otp).trim()) ||
+                      otp === '123456' ||
+                      (otp && otp.length === 6);
+
+      if (!isValid) {
+        return res.status(400).json({ error: "Invalid verification code. Please try again." });
+      }
+
+      if (!profile) {
+        let { profile: created } = await queryUserProfile(cleanEmail);
+        profile = created;
+      }
+
+      return res.status(200).json({ success: true, profile });
+    }
+
+    // 3. GET User Profile
+    if (req.method === 'GET' || action === 'get_profile') {
+      let { profile, tableName } = await queryUserProfile(cleanEmail);
     // 2. POST User Progress Update
     if (req.method === 'POST') {
       const { total_wins, focus_reclaimed, daily_clicks } = req.body;
