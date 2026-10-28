@@ -526,7 +526,7 @@ function syncFrictionChipsUI() {
 function switchScreen(screenId, shouldPushHistory = true) {
   // Midnight Reset Engine: Checks silently on every screen change
   const today = getLocalDateString();
-  if (localStorage.getItem('nudge_click_date') !== today || localStorage.getItem('nudge_brain_date') !== today) {
+  if (localStorage.getItem('nudge_brain_date') && localStorage.getItem('nudge_brain_date') !== today) {
     localStorage.setItem('nudge_click_date', today);
     localStorage.setItem('nudge_click_count', '0');
     localStorage.setItem('nudge_brain_date', today);
@@ -536,8 +536,10 @@ function switchScreen(screenId, shouldPushHistory = true) {
     window.activeSelectedFrictions.clear();
     if (typeof syncNeuraFrictions === 'function') syncNeuraFrictions();
     if (typeof syncFrictionChipsUI === 'function') syncFrictionChipsUI();
+  } else {
+    localStorage.setItem('nudge_click_date', today);
+    localStorage.setItem('nudge_brain_date', today);
   }
-
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const target = document.getElementById(screenId);
   if (target) {
