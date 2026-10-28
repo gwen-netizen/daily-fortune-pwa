@@ -911,24 +911,18 @@ function updatePassCountdown() {
   let cardHtml = '';
   if (hasAccess && !currentUserProfile?.pass_expires_at) {
     cardHtml = `
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <span style="color:var(--accent-safe); font-weight:800;">✅ ACTIVE PLAN: UNLIMITED</span><br>
-          <span style="color:var(--text-muted); font-size:11.5px;">Permanent unrestricted access.</span>
-        </div>
-        <button onclick="openCustomerPortal()" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#FFF; font-size:11px; font-weight:700; padding:6px 12px; border-radius:8px; cursor:pointer; transition:all 0.15s ease;">Manage</button>
+      <div style="display:flex; flex-direction:column; gap:2px;">
+        <span style="color:var(--accent-safe); font-weight:800;">✅ ACTIVE PLAN: UNLIMITED</span>
+        <span style="color:var(--text-muted); font-size:11.5px;">Permanent unrestricted access.</span>
       </div>`;
   } else if (remainingSecs > 0) {
     const hours = Math.floor(remainingSecs / 3600);
     const mins = Math.floor((remainingSecs % 3600) / 60);
     const secs = remainingSecs % 60;
     cardHtml = `
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <span style="color:var(--accent-gold); font-weight:800;">⚡ ACTIVE PLAN: 2-DAY PASS</span><br>
-          <span style="color:var(--text-muted); font-size:11.5px;">⏱️ <b>${hours}h ${mins}m ${secs}s</b> remaining</span>
-        </div>
-        <button onclick="openCustomerPortal()" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#FFF; font-size:11px; font-weight:700; padding:6px 12px; border-radius:8px; cursor:pointer; transition:all 0.15s ease;">Manage</button>
+      <div style="display:flex; flex-direction:column; gap:2px;">
+        <span style="color:var(--accent-gold); font-weight:800;">⚡ ACTIVE PLAN: 2-DAY PASS</span>
+        <span style="color:var(--text-muted); font-size:11.5px;">⏱️ <b>${hours}h ${mins}m ${secs}s</b> remaining</span>
       </div>`;
   }
 
