@@ -763,21 +763,23 @@ input:checked + .slider:before { transform: translateX(18px); }
 
 /* Freeze the bottom icon bar to the viewport without breaking format */
 .bottom-utility-dock {
-  position: sticky !important;
-  bottom: -14px !important;
-  align-self: center !important;
-  width: calc(100% + 32px) !important;
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 100% !important;
   max-width: 440px !important;
   display: flex !important;
   justify-content: space-around !important;
   align-items: center !important;
-  padding: 10px 16px calc(15px + env(safe-area-inset-bottom, 0px)) !important;
+  padding: 10px 16px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
   background: rgba(8, 17, 31, 0.98) !important;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid var(--card-border) !important;
-  z-index: 100 !important;
-  margin-top: auto !important;
+  z-index: 1000 !important;
+  margin: 0 !important;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.6) !important;
 }
 .dock-btn {
   background: none;
