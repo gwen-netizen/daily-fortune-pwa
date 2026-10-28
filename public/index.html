@@ -692,11 +692,20 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--active); outlin
 .final-strip {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  text-align: center;
   padding: 70px 0 75px;
   border-top: 1px solid var(--line);
 }
-.final-copy { max-width: 580px; }
+.final-copy { 
+  max-width: 580px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.final-copy .hero-actions {
+  justify-content: center;
+}
 .final-copy h2 {
   margin: 18px 0 26px;
   font-size: clamp(2.4rem, 4.6vw, 3.8rem);
