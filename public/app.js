@@ -464,28 +464,16 @@ function confirmFrictionsAndOpenDashboard() {
   switchScreen('screen-dashboard', true);
 }
 function initBrainConstrictionState() {
-  const today = getLocalDateString();
-  const savedDate = localStorage.getItem('nudge_brain_date');
+  const storedRatio = localStorage.getItem('nudge_brain_constriction');
+  brainConstrictionRatio = storedRatio !== null ? parseFloat(storedRatio) : 0.0;
 
-  if (savedDate !== today) {
-    localStorage.setItem('nudge_brain_date', today);
-    localStorage.setItem('nudge_brain_constriction', '0.0');
-    localStorage.setItem('nudge_tasks_credit', '0');
-    localStorage.removeItem('nudge_selected_frictions');
-    brainConstrictionRatio = 0.0;
-    window.activeSelectedFrictions.clear();
-  } else {
-    const storedRatio = localStorage.getItem('nudge_brain_constriction');
-    brainConstrictionRatio = storedRatio !== null ? parseFloat(storedRatio) : 0.0;
-
-    const storedFrictions = localStorage.getItem('nudge_selected_frictions');
-    if (storedFrictions) {
-      try {
-        const arr = JSON.parse(storedFrictions);
-        window.activeSelectedFrictions = new Set(arr);
-      } catch (e) {
-        window.activeSelectedFrictions.clear();
-      }
+  const storedFrictions = localStorage.getItem('nudge_selected_frictions');
+  if (storedFrictions) {
+    try {
+      const arr = JSON.parse(storedFrictions);
+      window.activeSelectedFrictions = new Set(arr);
+    } catch (e) {
+      window.activeSelectedFrictions.clear();
     }
   }
 
@@ -495,8 +483,6 @@ function initBrainConstrictionState() {
 }
 
 function toggleFrictionSelection(el, frictionKey) {
-  localStorage.setItem('nudge_tasks_credit', '0');
-
   if (window.activeSelectedFrictions.has(frictionKey)) {
     window.activeSelectedFrictions.delete(frictionKey);
   } else {
@@ -506,8 +492,6 @@ function toggleFrictionSelection(el, frictionKey) {
   const count = window.activeSelectedFrictions.size;
   brainConstrictionRatio = count === 0 ? 0.0 : (count === 1 ? 0.33 : (count === 2 ? 0.66 : 1.0));
 
-  const today = getLocalDateString();
-  localStorage.setItem('nudge_brain_date', today);
   localStorage.setItem('nudge_brain_constriction', brainConstrictionRatio.toFixed(2));
   localStorage.setItem('nudge_selected_frictions', JSON.stringify(Array.from(window.activeSelectedFrictions)));
 
@@ -530,22 +514,6 @@ function syncFrictionChipsUI() {
 }
 
 function switchScreen(screenId, shouldPushHistory = true) {
-  // Midnight Reset Engine: Checks silently on every screen change
-  const today = getLocalDateString();
-  if (localStorage.getItem('nudge_brain_date') && localStorage.getItem('nudge_brain_date') !== today) {
-    localStorage.setItem('nudge_click_date', today);
-    localStorage.setItem('nudge_click_count', '0');
-    localStorage.setItem('nudge_brain_date', today);
-    localStorage.setItem('nudge_brain_constriction', '0.0');
-    localStorage.removeItem('nudge_selected_frictions');
-    brainConstrictionRatio = 0.0;
-    window.activeSelectedFrictions.clear();
-    if (typeof syncNeuraFrictions === 'function') syncNeuraFrictions();
-    if (typeof syncFrictionChipsUI === 'function') syncFrictionChipsUI();
-  } else {
-    localStorage.setItem('nudge_click_date', today);
-    localStorage.setItem('nudge_brain_date', today);
-  }
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const target = document.getElementById(screenId);
   if (target) {
