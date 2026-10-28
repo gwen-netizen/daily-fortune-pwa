@@ -1196,6 +1196,11 @@ function renderCustomIntercepts() {
 }
 
 function toggleCustomInterceptState(index) {
+  if (!isUserPremiumOrPass()) {
+    openPaywallModal();
+    renderCustomIntercepts();
+    return;
+  }
   let customs = JSON.parse(localStorage.getItem('nudge_custom_intercepts') || '[]');
   if (customs[index]) {
     customs[index].enabled = !customs[index].enabled;
@@ -1212,7 +1217,7 @@ function deleteCustomIntercept(index) {
 
 function openCustomInterceptModal() {
   if (!isUserPremiumOrPass()) {
-    showPaywall();
+    openPaywallModal();
     return;
   }
   const modal = document.getElementById('custom-intercept-modal');
@@ -1224,6 +1229,11 @@ function closeCustomInterceptModal() {
 }
 
 function saveCustomIntercept() {
+  if (!isUserPremiumOrPass()) {
+    closeCustomInterceptModal();
+    openPaywallModal();
+    return;
+  }
   const timeInput = document.getElementById('custom-time-input').value;
   if (!timeInput) return;
 
@@ -1234,7 +1244,6 @@ function saveCustomIntercept() {
   closeCustomInterceptModal();
   renderCustomIntercepts();
 }
-
 function startBackgroundInterceptMonitor() {
   setInterval(() => {
     try {
