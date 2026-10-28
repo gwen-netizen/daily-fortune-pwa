@@ -488,6 +488,9 @@ function initBrainConstrictionState() {
 }
 
 function toggleFrictionSelection(el, frictionKey) {
+  // Ensure previous day's completions are reset BEFORE saving today's benchmark
+  getTasksCreditToday();
+
   if (window.activeSelectedFrictions.has(frictionKey)) {
     window.activeSelectedFrictions.delete(frictionKey);
   } else {
