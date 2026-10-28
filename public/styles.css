@@ -753,8 +753,11 @@ input:checked + .slider:before { transform: translateX(18px); }
   padding-bottom: 110px !important; 
   -webkit-overflow-scrolling: touch;
   transform: none !important;
+  filter: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+  will-change: auto !important;
+  contain: none !important;
 }
 
 /* Override any conflicting legacy padding rules */
