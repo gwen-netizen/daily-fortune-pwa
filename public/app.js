@@ -1272,7 +1272,7 @@ async function handleAuthAction() {
     updateMetricDashboard();
     updatePremiumDeckBadges();
     
-    // Instantly log in and proceed to the app
+    // Log in instantly and advance to the app
     switchScreen('screen-onboarding-2', true);
   } catch (e) {
     console.error("Login Error:", e);
@@ -1284,12 +1284,8 @@ async function handleAuthAction() {
 }
 
 function resendOtpCode() {
-  document.getElementById('auth-otp-group').style.display = 'none';
-  document.getElementById('user-auth-email').disabled = false;
-  document.getElementById('user-auth-otp').value = '';
-  document.getElementById('btn-auth-action').innerText = "Continue to App &rarr;";
+  // Bypassed for direct email identity login
 }
-
 /* ========================================================
    STRIPE CUSTOMER PORTAL (MANAGE SUBSCRIPTIONS)
 ======================================================== */
