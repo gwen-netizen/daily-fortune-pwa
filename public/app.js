@@ -1257,8 +1257,6 @@ async function shareReferralLink() {
 
 async function handleAuthAction() {
   const emailInput = document.getElementById('user-auth-email');
-  const otpGroup = document.getElementById('auth-otp-group');
-  const otpInput = document.getElementById('user-auth-otp');
   const btn = document.getElementById('btn-auth-action');
 
   const email = emailInput.value.trim().toLowerCase();
@@ -1267,50 +1265,21 @@ async function handleAuthAction() {
     return;
   }
 
-  // 1. Send OTP Step
-  if (otpGroup.style.display === 'none') {
-    btn.innerText = "Sending code...";
-    try {
-      // Calls your Supabase edge function/webhook to email the OTP
-      const response = await fetch(`/api/sync-user?email=${encodeURIComponent(email)}&action=send_otp`);
-      if (!response.ok) throw new Error("Server error");
-      otpGroup.style.display = 'block';
-      emailInput.disabled = true;
-      btn.innerText = "Verify & Enter";
-    } catch (e) {
-      alert("Network error. Please try again.");
-      btn.innerText = "Continue to App &rarr;";
-    }
-    return;
-  }
-
-  // 2. Verify OTP Step
-  const otp = otpInput.value.trim();
-  if (otp.length < 6) {
-    alert("Please enter the 6-digit code.");
-    return;
-  }
-
-  btn.innerText = "Verifying...";
+  btn.innerText = "Connecting...";
   try {
-    const localDate = getLocalDateString();
-    // Validates OTP via Supabase, grabs premium status, and loads profile
-    const response = await fetch(`/api/sync-user?email=${encodeURIComponent(email)}&action=verify_otp&otp=${encodeURIComponent(otp)}&clientDate=${encodeURIComponent(localDate)}`);
-    if (!response.ok) throw new Error("Invalid Code");
+    localStorage.setItem('nudge_user_email', email);
+    await fetchUserProfileFromCloud(email);
+    updateMetricDashboard();
+    updatePremiumDeckBadges();
     
-    const data = await response.json();
-    if (data && data.profile) {
-      currentUserProfile = data.profile;
-      localStorage.setItem('nudge_user_email', email);
-      localStorage.setItem('nudge_cached_profile', JSON.stringify(data.profile));
-      updateMetricDashboard();
-      updatePremiumDeckBadges();
-      // Proceed to the app
-      switchScreen('screen-onboarding-2', true);
-    }
+    // Instantly log in and proceed to the app
+    switchScreen('screen-onboarding-2', true);
   } catch (e) {
-    alert("Invalid access code. Please try again.");
-    btn.innerText = "Verify & Enter";
+    console.error("Login Error:", e);
+    localStorage.setItem('nudge_user_email', email);
+    switchScreen('screen-onboarding-2', true);
+  } finally {
+    if (btn) btn.innerText = "Continue to App →";
   }
 }
 
