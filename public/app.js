@@ -909,7 +909,7 @@ function updatePassCountdown() {
   const remainingSecs = getPassRemainingSeconds();
   
   let cardHtml = '';
-  if (hasAccess && !currentUserProfile?.pass_expires_at) {
+if (hasAccess && !currentUserProfile?.pass_expires_at) {
     cardHtml = `
       <div style="display:flex; flex-direction:column; gap:2px;">
         <span style="color:var(--accent-safe); font-weight:800;">✅ ACTIVE PLAN: UNLIMITED</span>
