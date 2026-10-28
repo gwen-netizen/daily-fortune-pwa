@@ -105,26 +105,39 @@ function incrementTasksCompletedCredit(amount = 1) {
 }
 
 function getVisibilityMetrics() {
-  const count = window.activeSelectedFrictions.size;
+  const count = window.activeSelectedFrictions ? window.activeSelectedFrictions.size : 0;
 
   let baseVisibility = 100;
   if (count === 1) baseVisibility = 67;
   else if (count === 2) baseVisibility = 34;
   else if (count >= 3) baseVisibility = 1;
 
-  // Add 16.5% per task completed
   const tasksCredit = getTasksCreditToday();
   const earnedVisibility = tasksCredit * 16.5;
 
-  const rawVisibility = Math.floor(Math.min(100, Math.max(1, baseVisibility + earnedVisibility)));
+  const rawVisibility = Math.min(100, Math.max(1, baseVisibility + earnedVisibility));
+  const displayVisibility = Math.floor(rawVisibility);
 
-  let subtitle = "CLEAR SIGNAL";
-  if (rawVisibility >= 100) subtitle = "CLEAR SIGNAL";
-  else if (rawVisibility >= 67) subtitle = "MILD FOGGY";
-  else if (rawVisibility >= 34) subtitle = "MID FOGGY";
-  else subtitle = "INTENSE FOGGY";
+  let subtitle = "Clear Signal";
+  if (rawVisibility >= 100) {
+    subtitle = "Clear Signal";
+  } else if (rawVisibility >= 67) {
+    subtitle = "Mild Foggy";
+  } else if (rawVisibility >= 34) {
+    subtitle = "Mid Foggy";
+  } else {
+    subtitle = "Intense Foggy";
+  }
 
-  return { displayVisibility: rawVisibility, subtitle };
+  const effectiveFogCount = Math.max(0, count - Math.floor(tasksCredit / 2));
+
+  return {
+    rawVisibility,
+    displayVisibility,
+    subtitle,
+    effectiveFogCount,
+    fogCoverageRatio: (100 - rawVisibility) / 100
+  };
 }
 
 // RESTORED: This function was accidentally deleted during the last patch
@@ -488,8 +501,7 @@ function initBrainConstrictionState() {
 }
 
 function toggleFrictionSelection(el, frictionKey) {
-  // Ensure previous day's completions are reset BEFORE saving today's benchmark
-  getTasksCreditToday();
+  localStorage.setItem('nudge_tasks_credit', '0');
 
   if (window.activeSelectedFrictions.has(frictionKey)) {
     window.activeSelectedFrictions.delete(frictionKey);
