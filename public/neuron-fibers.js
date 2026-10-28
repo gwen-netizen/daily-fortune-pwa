@@ -470,87 +470,36 @@
     fogCtx.ellipse(centerX + radiusX * 0.29, centerY + radiusY * 0.65, radiusX * 0.34, radiusY * 0.25, 0, 0, Math.PI * 2);
     fogCtx.clip();
 
-    const count = selectedStates.length;
-    const fogDensity = (100 - currentVisibility) / 100;
-    const fogColorSolid = `rgba(130, 145, 165, ${0.15 * fogDensity})`;
-    const fogColorStroke = `rgba(130, 145, 165, ${0.20 * fogDensity})`;
+const count = selectedStates.length;
+    const fogDensity = Math.max(0.35, (100 - currentVisibility) / 100);
 
-    if (count >= 3) {
-      const softGlow = fogCtx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radiusX * 1.3);
-      softGlow.addColorStop(0, `rgba(30, 40, 55, ${0.45 * fogDensity})`);
-      softGlow.addColorStop(0.7, `rgba(30, 40, 55, ${0.60 * fogDensity})`);
-      softGlow.addColorStop(1, `rgba(30, 40, 55, ${0.75 * fogDensity})`);
-      fogCtx.fillStyle = softGlow;
-      fogCtx.fillRect(centerX - radiusX * 1.2, centerY - radiusY * 1.2, radiusX * 2.4, radiusY * 2.4);
+    // Global ambient fog cloud centered over the brain hemispheres
+    const ambientGlow = fogCtx.createRadialGradient(centerX, centerY, radiusX * 0.1, centerX, centerY, radiusX * 1.35);
+    ambientGlow.addColorStop(0, `rgba(18, 30, 48, ${0.68 * fogDensity})`);
+    ambientGlow.addColorStop(0.55, `rgba(14, 24, 40, ${0.52 * fogDensity})`);
+    ambientGlow.addColorStop(1, 'rgba(10, 18, 32, 0)');
+    fogCtx.fillStyle = ambientGlow;
+    fogCtx.fillRect(centerX - radiusX * 1.3, centerY - radiusY * 1.3, radiusX * 2.6, radiusY * 2.6);
 
-      for (let i = 0; i < 9; i += 1) {
-        fogCtx.beginPath();
-        fogCtx.ellipse(
-          centerX + Math.sin(time * 0.0006 + i * 1.2) * radiusX * 0.48,
-          centerY + Math.cos(time * 0.0008 + i * 1.4) * radiusY * 0.55,
-          radiusX * (0.18 + (i % 3) * 0.04),
-          radiusY * (0.10 + (i % 2) * 0.04),
-          i * 0.4, 0, Math.PI * 2
-        );
-        fogCtx.fillStyle = fogColorSolid;
-        fogCtx.fill();
-      }
-    } else if (count === 2) {
-      const leftX = centerX - radiusX * 1.25;
-      const rightX = centerX + radiusX * 0.52;
+    // Animated smoky fog puffs matching each selected friction line
+    const puffCount = count * 5;
+    for (let i = 0; i < puffCount; i += 1) {
+      const state = selectedStates[i % count];
+      const offsetX = Math.sin(time * 0.0008 + i * 1.37) * radiusX * 0.52;
+      const offsetY = Math.cos(time * 0.0011 + i * 1.71) * radiusY * 0.48;
+      const puffRadius = radiusX * (0.28 + (i % 3) * 0.08);
+
+      const puffGlow = fogCtx.createRadialGradient(
+        centerX + offsetX, centerY + offsetY, 0,
+        centerX + offsetX, centerY + offsetY, puffRadius
+      );
+      puffGlow.addColorStop(0, `rgba(${state.rgb}, ${0.45 * fogDensity})`);
+      puffGlow.addColorStop(0.5, `rgba(20, 32, 50, ${0.35 * fogDensity})`);
+      puffGlow.addColorStop(1, 'rgba(10, 18, 30, 0)');
 
       fogCtx.beginPath();
-      fogCtx.moveTo(leftX, centerY - radiusY * 1.2);
-      fogCtx.lineTo(rightX, centerY - radiusY * 1.2);
-      fogCtx.bezierCurveTo(rightX + radiusX * 0.12, centerY - radiusY * 0.4, rightX - radiusX * 0.08, centerY + radiusY * 0.4, rightX - radiusX * 0.04, centerY + radiusY * 1.2);
-      fogCtx.lineTo(leftX, centerY + radiusY * 1.2);
-      fogCtx.closePath();
-
-      const baseGrad = fogCtx.createLinearGradient(leftX, 0, rightX, 0);
-      baseGrad.addColorStop(0.0, `rgba(30, 40, 55, ${0.55 * fogDensity})`);
-      baseGrad.addColorStop(0.70, `rgba(30, 40, 55, ${0.45 * fogDensity})`);
-      baseGrad.addColorStop(1.0, 'rgba(30, 40, 55, 0.0)');
-      fogCtx.fillStyle = baseGrad;
-      fogCtx.fill();
-
-      fogCtx.strokeStyle = fogColorStroke;
-      fogCtx.lineWidth = 6;
-      fogCtx.stroke();
-
-      fogCtx.beginPath();
-      fogCtx.ellipse(centerX - radiusX * 0.52, centerY, radiusX * 0.42, radiusY * 0.65, 0, 0, Math.PI * 2);
-      fogCtx.fillStyle = fogColorSolid;
-      fogCtx.fill();
-
-      fogCtx.beginPath();
-      fogCtx.ellipse(centerX + radiusX * 0.15, centerY, radiusX * 0.42, radiusY * 0.65, 0, 0, Math.PI * 2);
-      fogCtx.fillStyle = fogColorSolid;
-      fogCtx.fill();
-    } else if (count === 1) {
-      const leftX = centerX - radiusX * 1.25;
-      const rightX = centerX - radiusX * 0.25;
-
-      fogCtx.beginPath();
-      fogCtx.moveTo(leftX, centerY - radiusY * 1.2);
-      fogCtx.lineTo(rightX, centerY - radiusY * 1.2);
-      fogCtx.bezierCurveTo(rightX + radiusX * 0.10, centerY - radiusY * 0.4, rightX - radiusX * 0.08, centerY + radiusY * 0.4, rightX, centerY + radiusY * 1.2);
-      fogCtx.lineTo(leftX, centerY + radiusY * 1.2);
-      fogCtx.closePath();
-
-      const grad = fogCtx.createLinearGradient(centerX - radiusX * 0.9, 0, rightX + radiusX * 0.10, 0);
-      grad.addColorStop(0.0, `rgba(30, 40, 55, ${0.48 * fogDensity})`);
-      grad.addColorStop(0.70, `rgba(30, 40, 55, ${0.38 * fogDensity})`);
-      grad.addColorStop(1.0, 'rgba(30, 40, 55, 0)');
-      fogCtx.fillStyle = grad;
-      fogCtx.fill();
-
-      fogCtx.strokeStyle = fogColorStroke;
-      fogCtx.lineWidth = 6;
-      fogCtx.stroke();
-
-      fogCtx.beginPath();
-      fogCtx.ellipse(centerX - radiusX * 0.55, centerY, radiusX * 0.38, radiusY * 0.65, 0, 0, Math.PI * 2);
-      fogCtx.fillStyle = fogColorSolid;
+      fogCtx.arc(centerX + offsetX, centerY + offsetY, puffRadius, 0, Math.PI * 2);
+      fogCtx.fillStyle = puffGlow;
       fogCtx.fill();
     }
     fogCtx.restore();
