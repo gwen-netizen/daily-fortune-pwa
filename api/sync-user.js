@@ -127,7 +127,32 @@ module.exports = async function handler(req, res) {
     // 3. GET User Profile
     if (req.method === 'GET' || action === 'get_profile') {
       let { profile, tableName } = await queryUserProfile(cleanEmail);
-    // 2. POST User Progress Update
+
+      if (!profile) {
+        const newCode = generateUniqueRefCode();
+        const newRecord = {
+          email: cleanEmail,
+          daily_clicks: 0,
+          last_click_date: clientDate || new Date().toISOString().split('T')[0],
+          premium_user: false,
+          total_wins: 0,
+          focus_reclaimed: 0,
+          referral_code: newCode
+        };
+
+        const { data: created } = await supabase
+          .from(tableName || 'user_profiles')
+          .insert([newRecord])
+          .select()
+          .limit(1);
+
+        profile = created && created.length > 0 ? created[0] : newRecord;
+      }
+
+      return res.status(200).json({ profile });
+    }
+
+    // 4. POST User Progress Update
     if (req.method === 'POST') {
       const { total_wins, focus_reclaimed, daily_clicks } = req.body;
       const { profile: existing, tableName } = await queryUserProfile(cleanEmail);
