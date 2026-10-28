@@ -453,11 +453,11 @@
       </div>
     </div>
 
-    <!-- MODAL 4: PAYWALL / SUBSCRIPTION SHEET -->
+   <!-- MODAL 4: PAYWALL / SUBSCRIPTION SHEET -->
     <div id="paywall-overlay" class="paywall-modal">
       <div class="paywall-sheet">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <span class="badge" style="background: rgba(255, 93, 93, 0.15); color: var(--accent-coral); border-color: rgba(255, 93, 93, 0.35);">GET UNLIMITED ACCESS</span>
+          <span id="paywall-pill-badge" class="badge" style="background: rgba(255, 93, 93, 0.15); color: var(--accent-coral); border-color: rgba(255, 93, 93, 0.35);">GET LIFETIME ACCESS</span>
           <button style="background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text-muted);" onclick="closePaywall()">&times;</button>
         </div>
         <h2 class="title-large" style="font-size: 21px; margin-bottom: 4px;">Break Free From the Loops</h2>
@@ -491,7 +491,7 @@
 
         <div style="width: 100%; margin-top: 16px;">
           <button class="btn-primary" onclick="simulatePurchase()">Unlock Access Now</button>
-          <button class="btn-bypass" style="display: block; margin: 10px auto 0 auto;" onclick="closePaywall()">Continue with Free Limit (4/4)</button>
+          <button type="button" class="btn-manage-sub" style="display: block; margin: 14px auto 0 auto; background: none; border: none; font-size: 13px; font-weight: 700; color: var(--text-muted); text-decoration: underline; cursor: pointer;" onclick="openCustomerPortal()">Manage subscriptions</button>
         </div>
       </div>
     </div>
