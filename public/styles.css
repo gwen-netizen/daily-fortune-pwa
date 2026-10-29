@@ -584,8 +584,8 @@ body::before {
 }
 
 .tier-card-stack { display: flex; flex-direction: column; gap: 10px; }
+
 .tier-card {
- .tier-card {
   border: 2px solid rgba(255, 255, 255, 0.35) !important;
   border-radius: 14px;
   padding: 14px;
@@ -594,19 +594,18 @@ body::before {
   transition: all 0.2s ease;
   text-align: left;
 }
+
 .tier-card.selected { 
   border: 2px solid #ffffff !important; 
   background: rgba(255, 255, 255, 0.08) !important; 
 }
-.tier-card.selected { border-color: var(--accent-gold); background: rgba(var(--accent-gold-rgb), 0.12); }
+
 .tier-top-row { display: flex; justify-content: space-between; align-items: center; }
 .tier-plan-title { font-size: 14px; font-weight: 800; color: var(--text-primary); }
 .tier-price-highlight { font-family: var(--font-mono); font-size: 16px; font-weight: 500; color: var(--text-primary); }
 .tier-price-highlight.price-green { color: var(--accent-safe); }
 .tier-price-highlight.price-red { color: var(--accent-coral); }
 .tier-sub-caption { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
-
-
 .btn-back-focus {
   background: none;
   border: none;
@@ -792,22 +791,36 @@ input:checked + .slider:before { transform: translateX(18px); }
   margin: 0 !important;
   box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.6) !important;
 }
+
 .dock-btn {
-  background: none;
-  border: none;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
   color: var(--text-muted);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 10px;
-  transition: all 0.15s ease;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 3px !important;
+  cursor: pointer !important;
+  padding: 4px 8px !important;
+  border-radius: 10px !important;
+  transition: all 0.15s ease !important;
 }
-.dock-btn:hover, .dock-btn:active { color: var(--text-primary); background: rgba(255, 255, 255, 0.05); }
-.dock-btn-icon { font-size: 17px; line-height: 1; }
-.dock-btn-label { font-family: var(--font-sans); font-size: 11px; font-weight: 700; letter-spacing: 0.02em; color: var(--text-muted); }
-  background-color: var(--bg-color, #08111f) !important;
-  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)) !important;
+
+.dock-btn:hover, .dock-btn:active { 
+  color: var(--text-primary); 
+  background: rgba(255, 255, 255, 0.05) !important; 
+}
+
+.dock-btn-icon { 
+  font-size: 17px !important; 
+  line-height: 1 !important; 
+}
+
+.dock-btn-label { 
+  font-family: var(--font-sans) !important; 
+  font-size: 11px !important; 
+  font-weight: 700 !important; 
+  letter-spacing: 0.02em !important; 
+  color: var(--text-muted) !important; 
 }
