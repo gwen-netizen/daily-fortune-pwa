@@ -395,6 +395,7 @@
     </div>
 
     <!-- MODAL 2: REFERRAL REWARD -->
+    <!-- MODAL 2: REFERRAL REWARD -->
     <div id="referral-reward-modal" class="modal-backdrop">
       <div class="modal-sheet">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -414,12 +415,15 @@
           <div id="referral-completed-count" style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--accent-safe); background: rgba(194, 243, 221, 0.15); padding: 4px 8px; border-radius: 6px;">0 Friends Helped</div>
         </div>
 
-        <button class="btn-primary" onclick="shareReferralLink()">
+        <button class="btn-primary" id="btn-claim-referral-pass" onclick="checkAndClaimReferralReward()" style="background: var(--accent-safe); color: #08111f; margin-bottom: 8px;">
+          ⚡ Claim Unlocked 48h Pass
+        </button>
+
+        <button class="btn-secondary" onclick="shareReferralLink()">
           📤 Share Invite Link &rarr;
         </button>
       </div>
     </div>
-
     <!-- MODAL 3: PROFILE DRAWER -->
     <div id="profile-drawer-modal" class="modal-backdrop">
       <div class="modal-sheet">
