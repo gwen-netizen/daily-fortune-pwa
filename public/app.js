@@ -1025,9 +1025,10 @@ function openInterceptsDrawer() {
   if (modal) modal.classList.add('active');
 }
 
-function openReferralModal() {
-  const modal = document.getElementById('referral-reward-modal');
-  if (modal) modal.classList.add('active');
+async function selectTierAndCheckout(el) {
+  document.querySelectorAll('.tier-card').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  await simulatePurchase();
 }
 
 function openProfileModal() {
