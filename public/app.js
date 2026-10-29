@@ -951,12 +951,9 @@ function updatePassCountdown() {
   const remainingSecs = getPassRemainingSeconds();
   
 let cardHtml = '';
-  if (hasAccess && !currentUserProfile?.pass_expires_at) {
-    cardHtml = `
-      <div style="display:flex; flex-direction:column; gap:2px;">
-        <span style="color:var(--accent-safe); font-weight:800;">✅ ACTIVE PLAN: YEAR-ROUND OVERRIDE</span>
-        <span style="color:var(--text-muted); font-size:11.5px;">Annual unrestricted access.</span>
-      </div>`;
+ if (hasAccess && !currentUserProfile?.pass_expires_at) {
+    cardHtml = '';
+  }
   } else if (remainingSecs > 0) {
     const hours = Math.floor(remainingSecs / 3600);
     const mins = Math.floor((remainingSecs % 3600) / 60);
