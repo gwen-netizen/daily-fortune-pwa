@@ -1334,6 +1334,51 @@ async function shareReferralLink() {
   }
 }
 
+async function checkAndClaimReferralReward() {
+  const userEmail = resolveCurrentAccountEmail();
+  if (!userEmail) {
+    alert("Please log in to claim referral rewards.");
+    return;
+  }
+
+  const claimBtn = document.getElementById('btn-claim-referral-pass');
+  if (claimBtn) {
+    claimBtn.innerText = "Checking Rewards...";
+    claimBtn.disabled = true;
+  }
+
+  try {
+    const response = await fetch('/api/sync-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: userEmail,
+        action: 'claim_referral_reward'
+      })
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+      alert("🎉 48-Hour Unlimited Pass Activated!");
+      localStorage.setItem('nudge_pass_expires_at', data.passExpiresAt);
+      updatePassTicker();
+      updatePaywallPillBadge();
+      closeModal('referral-reward-modal');
+    } else {
+      alert(data.error || "No unlocked referral passes ready to claim yet.");
+    }
+  } catch (err) {
+    console.error("Claim Error:", err);
+    alert("Network error. Could not verify referral rewards.");
+  } finally {
+    if (claimBtn) {
+      claimBtn.innerText = "⚡ Claim Unlocked 48h Pass";
+      claimBtn.disabled = false;
+    }
+  }
+}
+
 async function handleAuthAction() {
   const emailInput = document.getElementById('user-auth-email');
   const btn = document.getElementById('btn-auth-action');
