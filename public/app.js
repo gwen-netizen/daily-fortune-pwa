@@ -990,6 +990,37 @@ function updateMetricDashboard() {
   const focusEl = document.getElementById('profile-stat-focus');
   if (winsEl) winsEl.innerText = totalWinsCount.toString();
   if (focusEl) focusEl.innerText = `${totalFocusReclaimed.toFixed(1)}m`;
+
+  // Render Plan & Subscription Date in Profile Card
+  const planNameEl = document.getElementById('profile-plan-name');
+  const planDateEl = document.getElementById('profile-plan-date');
+
+  if (planNameEl) {
+    const isPremium = isUserPremiumOrPass();
+    const hasPass = currentUserProfile?.pass_expires_at && new Date(currentUserProfile.pass_expires_at) > new Date();
+
+    if (hasPass) {
+      planNameEl.innerText = "⚡ 2-Day Pass Active";
+      if (planDateEl) planDateEl.style.display = 'none';
+    } else if (isPremium) {
+      planNameEl.innerText = "Year-Round Override";
+      
+      if (planDateEl && currentUserProfile?.subscribed_at) {
+        const subDate = new Date(currentUserProfile.subscribed_at).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric'
+        });
+        planDateEl.innerText = `Subscribed on: ${subDate}`;
+        planDateEl.style.display = 'block';
+      } else if (planDateEl) {
+        planDateEl.style.display = 'none';
+      }
+    } else {
+      planNameEl.innerText = "Free Tier";
+      if (planDateEl) planDateEl.style.display = 'none';
+    }
+  }
 }
 
 async function syncLifetimeProgressToCloud() {
