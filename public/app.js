@@ -953,7 +953,6 @@ function updatePassCountdown() {
 let cardHtml = '';
  if (hasAccess && !currentUserProfile?.pass_expires_at) {
     cardHtml = '';
-  }
   } else if (remainingSecs > 0) {
     const hours = Math.floor(remainingSecs / 3600);
     const mins = Math.floor((remainingSecs % 3600) / 60);
