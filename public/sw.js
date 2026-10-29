@@ -42,3 +42,48 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
+/* ========================================================
+   WEB PUSH NOTIFICATIONS & CLICK LISTENERS
+======================================================== */
+
+// 1. Listen for incoming Push Notifications from Vercel/WebPush
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+
+  try {
+    const data = event.data.json();
+    const options = {
+      body: data.body || "Your 48-Hour Unlimited Pass is ready to claim!",
+      icon: '/images/icon-192.png',
+      badge: '/images/icon-192.png',
+      data: { url: data.url || '/app.html?claimReferral=true' }
+    };
+
+    event.waitUntil(
+      self.registration.showNotification(data.title || "🎁 Referral Reward Unlocked!", options)
+    );
+  } catch (err) {
+    console.error('Error parsing push payload:', err);
+  }
+});
+
+// 2. Handle notification tap (opens or focuses app)
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || '/app.html';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes('/app.html') && 'focus' in client) {
+          client.postMessage({ action: 'open_referral_modal' });
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
+  );
+});
