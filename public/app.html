@@ -457,8 +457,8 @@
    <!-- MODAL 4: PAYWALL / SUBSCRIPTION SHEET -->
     <div id="paywall-overlay" class="paywall-modal">
       <div class="paywall-sheet">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <span id="paywall-pill-badge" class="badge" style="background: rgba(255, 93, 93, 0.15); color: var(--accent-coral); border-color: rgba(255, 93, 93, 0.35);">GET LIFETIME ACCESS</span>
+       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span id="paywall-pill-badge" class="badge" style="background: rgba(255, 93, 93, 0.15); color: var(--accent-coral); border-color: rgba(255, 93, 93, 0.35);">GET UNLIMITED ACCESS</span>
           <button style="background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text-muted);" onclick="closePaywall()">&times;</button>
         </div>
         <h2 class="title-large" style="font-size: 21px; margin-bottom: 4px;">Break Free From the Loops</h2>
@@ -483,11 +483,12 @@
 
           <div class="tier-card" data-plan="annual" onclick="selectTier(this)">
             <div class="tier-top-row">
-              <span class="tier-plan-title">Year-Round Override</span>
+              <span class="tier-plan-title">Year-Round Override <span style="background: rgba(255, 93, 93, 0.18); color: var(--accent-coral); border: 1px solid rgba(255, 93, 93, 0.4); font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 6px; margin-left: 6px; font-family: var(--font-mono);">47% OFF</span></span>
               <span class="tier-price-highlight price-red">$18.99/yr</span>
             </div>
             <div class="tier-sub-caption">Billed annually. Full 365-day unrestricted access.</div>
           </div>
+        </div>
           
         <div style="width: 100%; margin-top: 16px;">
           <button class="btn-primary" onclick="simulatePurchase()">Unlock Access Now</button>
@@ -497,7 +498,7 @@
     </div>
 
     <!-- CUSTOM INTERCEPT CREATION MODAL -->
-    <div id="custom-intercept-modal" class="modal-backdrop">
+    <div id="custom-intercept-modal" class="modal-backdrop" style="z-index: 1100 !important;">
       <div class="modal-sheet">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
           <span class="badge">SCHEDULED CIRCUIT BREAKER</span>
