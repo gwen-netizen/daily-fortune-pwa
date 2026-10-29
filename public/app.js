@@ -988,27 +988,17 @@ async function syncLifetimeProgressToCloud() {
 /* ========================================================
    MODALS, DRAWERS & ACCOUNT PROFILE
 ======================================================== */
-function isLifetimeSubscriber() {
-  if (!currentUserProfile) return false;
-  const isPrem = currentUserProfile.premium_user === true || currentUserProfile.premium_user === 'true' || currentUserProfile.is_premium === true || currentUserProfile.is_premium === 'true';
-  const hasPassExpiry = !!currentUserProfile.pass_expires_at;
-  const planType = currentUserProfile.plan_type || currentUserProfile.plan;
-  if (planType === 'lifetime') return true;
-  if (isPrem && !hasPassExpiry && planType !== 'monthly') return true;
-  return false;
-}
-
 function updatePaywallPillBadge() {
   const pill = document.getElementById('paywall-pill-badge');
   if (!pill) return;
   const hasAccess = isUserPremiumOrPass();
   if (hasAccess) {
-    pill.innerText = "YEAR-ROUND ACCESS UNLOCKED";
+    pill.innerText = "UNLIMITED ACCESS UNLOCKED";
     pill.style.background = "rgba(194, 243, 221, 0.15)";
     pill.style.color = "var(--accent-safe)";
     pill.style.borderColor = "rgba(194, 243, 221, 0.35)";
   } else {
-    pill.innerText = "GET YEAR-ROUND OVERRIDE";
+    pill.innerText = "GET UNLIMITED ACCESS";
     pill.style.background = "rgba(255, 93, 93, 0.15)";
     pill.style.color = "var(--accent-coral)";
     pill.style.borderColor = "rgba(255, 93, 93, 0.35)";
@@ -1217,6 +1207,7 @@ function deleteCustomIntercept(index) {
 
 function openCustomInterceptModal() {
   if (!isUserPremiumOrPass()) {
+    closeModal('intercepts-drawer-modal');
     openPaywallModal();
     return;
   }
@@ -1234,11 +1225,20 @@ function saveCustomIntercept() {
     openPaywallModal();
     return;
   }
-  const timeInput = document.getElementById('custom-time-input').value;
+  const timeInput = document.getElementById('custom-time-input')?.value;
   if (!timeInput) return;
 
+  const frictionInput = document.getElementById('custom-friction-input')?.value || 'Mindless Scrolling';
+  const deckInput = document.getElementById('custom-deck-input')?.value || 'The Anti-Overwhelm Deck';
+
   const customs = JSON.parse(localStorage.getItem('nudge_custom_intercepts') || '[]');
-  customs.push({ id: `anc_${Date.now()}`, time: timeInput, enabled: true });
+  customs.push({ 
+    id: `anc_${Date.now()}`, 
+    time: timeInput, 
+    friction: frictionInput,
+    deck: deckInput,
+    enabled: true 
+  });
   localStorage.setItem('nudge_custom_intercepts', JSON.stringify(customs));
 
   closeCustomInterceptModal();
