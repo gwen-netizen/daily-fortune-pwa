@@ -908,12 +908,12 @@ function updatePassCountdown() {
   const cardS3 = document.getElementById('pass-notification-card-s3');
   const remainingSecs = getPassRemainingSeconds();
   
-  let cardHtml = '';
-if (hasAccess && !currentUserProfile?.pass_expires_at) {
+let cardHtml = '';
+  if (hasAccess && !currentUserProfile?.pass_expires_at) {
     cardHtml = `
       <div style="display:flex; flex-direction:column; gap:2px;">
-        <span style="color:var(--accent-safe); font-weight:800;">✅ ACTIVE PLAN: UNLIMITED</span>
-        <span style="color:var(--text-muted); font-size:11.5px;">Permanent unrestricted access.</span>
+        <span style="color:var(--accent-safe); font-weight:800;">✅ ACTIVE PLAN: YEAR-ROUND OVERRIDE</span>
+        <span style="color:var(--text-muted); font-size:11.5px;">Annual unrestricted access.</span>
       </div>`;
   } else if (remainingSecs > 0) {
     const hours = Math.floor(remainingSecs / 3600);
@@ -1001,14 +1001,14 @@ function isLifetimeSubscriber() {
 function updatePaywallPillBadge() {
   const pill = document.getElementById('paywall-pill-badge');
   if (!pill) return;
-  const isLifetime = isLifetimeSubscriber();
-  if (isLifetime) {
-    pill.innerText = "LIFETIME ACCESS UNLOCKED";
+  const hasAccess = isUserPremiumOrPass();
+  if (hasAccess) {
+    pill.innerText = "YEAR-ROUND ACCESS UNLOCKED";
     pill.style.background = "rgba(194, 243, 221, 0.15)";
     pill.style.color = "var(--accent-safe)";
     pill.style.borderColor = "rgba(194, 243, 221, 0.35)";
   } else {
-    pill.innerText = "GET LIFETIME ACCESS";
+    pill.innerText = "GET YEAR-ROUND OVERRIDE";
     pill.style.background = "rgba(255, 93, 93, 0.15)";
     pill.style.color = "var(--accent-coral)";
     pill.style.borderColor = "rgba(255, 93, 93, 0.35)";
