@@ -457,12 +457,11 @@
  <!-- MODAL 4: PAYWALL / SUBSCRIPTION SHEET -->
     <div id="paywall-overlay" class="paywall-modal">
       <div class="paywall-sheet">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
           <span id="paywall-pill-badge" class="badge" style="background: rgba(255, 93, 93, 0.15); color: var(--accent-coral); border-color: rgba(255, 93, 93, 0.35);">GET UNLIMITED ACCESS</span>
           <button style="background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text-muted);" onclick="closePaywall()">&times;</button>
         </div>
-        <h2 class="title-large" style="font-size: 21px; margin-bottom: 4px;">Get Unlimited Premium Access</h2>
-        <p class="body-text" style="margin-bottom: 16px; font-size: 13px;">Unlock behavioral overrides modeled on clinical executive functioning systems.</p>
+        <h2 class="title-large" style="font-size: 26px; margin-bottom: 20px; color: var(--accent-gold); font-weight: 800;">Get Unlimited Premium Access</h2>
         
         <div class="tier-card-stack">
           <div class="tier-card" data-plan="pass" onclick="selectTierAndCheckout(this)" style="border: 2px solid rgba(255, 255, 255, 0.35) !important;">
@@ -482,7 +481,7 @@
           </div>
 
          <div class="tier-card selected" data-plan="annual" onclick="selectTierAndCheckout(this)" style="position: relative; border: 2px solid var(--accent-gold) !important; background: linear-gradient(135deg, rgba(243, 197, 71, 0.16) 0%, rgba(13, 27, 44, 0.9) 100%) !important; box-shadow: 0 0 25px rgba(243, 197, 71, 0.25) !important;">
-            <span style="position: absolute; top: -11px; left: 50%; transform: translateX(-50%); background: var(--accent-gold); color: #08111f; font-family: var(--font-mono); font-size: 10px; font-weight: 800; padding: 2px 12px; border-radius: 9999px; letter-spacing: 0.06em; box-shadow: 0 0 12px rgba(243, 197, 71, 0.45); white-space: nowrap;">BEST VALUE · 47% OFF</span>
+            <span style="position: absolute; top: -11px; left: 16px; background: var(--accent-gold); color: #08111f; font-family: var(--font-mono); font-size: 10px; font-weight: 800; padding: 2px 12px; border-radius: 9999px; letter-spacing: 0.06em; box-shadow: 0 0 12px rgba(243, 197, 71, 0.45); white-space: nowrap;">BEST VALUE · 47% OFF</span>
             <div class="tier-top-row">
               <span class="tier-plan-title" style="color: #ffffff; font-weight: 800;">Year-Round Override</span>
               <span class="tier-price-highlight" style="color: var(--accent-gold) !important; font-weight: 800; font-size: 17px;">$18.99/yr</span>
@@ -490,7 +489,6 @@
             <div class="tier-sub-caption" style="color: rgba(255, 255, 255, 0.8);">Billed annually. Full 365-day unrestricted access.</div>
           </div>
         </div>
-
         <div style="width: 100%; margin-top: 14px; text-align: center;">
           <p style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 5px;">
             <span>🔒</span> Bank-grade 256-bit encrypted checkout powered by Stripe
