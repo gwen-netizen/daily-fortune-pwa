@@ -540,6 +540,7 @@ function switchScreen(screenId, shouldPushHistory = true) {
       updatePassCountdown();
       updateBrainStatusText();
       updatePremiumDeckBadges();
+      syncNeuraFrictions();
     }
   }
 }
@@ -946,6 +947,7 @@ function updateMetricDashboard() {
   updatePassCountdown();
   updatePremiumDeckBadges();
   updateBrainStatusText();
+  syncNeuraFrictions();
 
   const winsEl = document.getElementById('profile-stat-wins');
   const focusEl = document.getElementById('profile-stat-focus');
