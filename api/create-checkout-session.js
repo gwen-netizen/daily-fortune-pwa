@@ -21,12 +21,12 @@ module.exports = async function handler(req, res) {
 
   const prices = {
     test: { 
-      lifetime: process.env.STRIPE_TEST_LIFETIME_PRICE_ID || 'price_1UO7PUG617eW830nZMDod1D8',
+      annual: process.env.STRIPE_PRICE_ANNUAL || process.env.STRIPE_TEST_ANNUAL_PRICE_ID,
       monthly: process.env.STRIPE_TEST_MONTHLY_PRICE_ID || 'price_1UO7QCG617eW830n2gCXVDmY',
       pass: process.env.STRIPE_TEST_PASS_PRICE_ID || 'price_1UOeIWG617eW830naNZ3Dvi6'
     },
     live: { 
-      lifetime: process.env.STRIPE_LIVE_LIFETIME_PRICE_ID || process.env.STRIPE_PRICE_LIFETIME, 
+      annual: process.env.STRIPE_PRICE_ANNUAL || process.env.STRIPE_LIVE_ANNUAL_PRICE_ID, 
       monthly: process.env.STRIPE_LIVE_MONTHLY_PRICE_ID || process.env.STRIPE_PRICE_MONTHLY,
       pass: process.env.STRIPE_PRICE_2_DAY || process.env.STRIPE_LIVE_PASS_PRICE_ID || 'price_1UOeGrG617eW830nwxz6eHsB'
     }
@@ -49,7 +49,7 @@ module.exports = async function handler(req, res) {
       ? `${baseSuccess}&email=${encodeURIComponent(isValidEmail ? cleanEmail : '')}&plan=${encodeURIComponent(planType)}` 
       : `${baseSuccess}?session=success&email=${encodeURIComponent(isValidEmail ? cleanEmail : '')}&plan=${encodeURIComponent(planType)}`;
 
-    const isSubscription = (planType === 'monthly');
+    const isSubscription = (planType === 'monthly' || planType === 'annual' || planType === 'yearly');
 
     const sessionPayload = {
       payment_method_types: ['card'],
@@ -71,16 +71,17 @@ module.exports = async function handler(req, res) {
       const fallbackCatalog = {
         pass: { name: '120Reset 2-Day Unlimited Pass', amount: 99, recurring: false },
         '2day': { name: '120Reset 2-Day Unlimited Pass', amount: 99, recurring: false },
-        monthly: { name: '120Reset Continuous Momentum Plan', amount: 299, recurring: true },
-        lifetime: { name: '120Reset Lifetime Freedom Access', amount: 1499, recurring: false }
+        monthly: { name: '120Reset Continuous Momentum Plan', amount: 299, recurring: true, interval: 'month' },
+        annual: { name: '120Reset Year-Round Override', amount: 1899, recurring: true, interval: 'year' },
+        yearly: { name: '120Reset Year-Round Override', amount: 1899, recurring: true, interval: 'year' }
       };
-      const item = fallbackCatalog[planType] || fallbackCatalog.monthly;
+      const item = fallbackCatalog[planType] || fallbackCatalog.annual;
       sessionPayload.line_items = [{
         price_data: {
           currency: 'usd',
           unit_amount: item.amount,
           product_data: { name: item.name },
-          ...(item.recurring ? { recurring: { interval: 'month' } } : {})
+          ...(item.recurring ? { recurring: { interval: item.interval || 'month' } } : {})
         },
         quantity: 1
       }];
