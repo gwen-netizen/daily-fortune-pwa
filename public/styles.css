@@ -585,13 +585,18 @@ body::before {
 
 .tier-card-stack { display: flex; flex-direction: column; gap: 10px; }
 .tier-card {
-  border: 1px solid var(--card-border);
+ .tier-card {
+  border: 2px solid rgba(255, 255, 255, 0.35) !important;
   border-radius: 14px;
   padding: 14px;
   background: rgba(18, 34, 53, 0.55);
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: left;
+}
+.tier-card.selected { 
+  border: 2px solid #ffffff !important; 
+  background: rgba(255, 255, 255, 0.08) !important; 
 }
 .tier-card.selected { border-color: var(--accent-gold); background: rgba(var(--accent-gold-rgb), 0.12); }
 .tier-top-row { display: flex; justify-content: space-between; align-items: center; }
