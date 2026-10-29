@@ -58,9 +58,10 @@ async function handler(req, res) {
           .upsert({ 
             email: userEmail, 
             premium_user: true,
-            pass_expires_at: passExpiry
+            pass_expires_at: passExpiry,
+            subscribed_at: new Date().toISOString()
           }, { onConflict: 'email' });
-
+        
         if (error) throw error;
       }
     }
