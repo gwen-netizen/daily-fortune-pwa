@@ -86,13 +86,22 @@ window.addEventListener('popstate', () => {
    TASK COMPLETION CREDIT & VISIBILITY (SCREENSHOT 1)
 ======================================================== */
 function getTasksCreditToday() {
+  const storedDate = localStorage.getItem('nudge_tasks_credit_date');
+  const today = getLocalDateString();
+  if (storedDate !== today) {
+    localStorage.setItem('nudge_tasks_credit_date', today);
+    localStorage.setItem('nudge_tasks_credit', '0');
+    return 0;
+  }
   const savedCredit = localStorage.getItem('nudge_tasks_credit');
   return savedCredit ? parseInt(savedCredit, 10) : 0;
 }
 
 function incrementTasksCompletedCredit(amount = 1) {
+  const today = getLocalDateString();
   const current = getTasksCreditToday();
   const nextVal = current + amount;
+  localStorage.setItem('nudge_tasks_credit_date', today);
   localStorage.setItem('nudge_tasks_credit', nextVal.toString());
   updateBrainStatusText();
   syncNeuraFrictions();
@@ -109,15 +118,16 @@ function getVisibilityMetrics() {
   const tasksCredit = getTasksCreditToday();
   const earnedVisibility = tasksCredit * 16.5;
 
-  const rawVisibility = Math.min(100, Math.max(1, baseVisibility + earnedVisibility));
-  const displayVisibility = Math.floor(rawVisibility);
+  // Strictly clamp raw visibility between 1% and 100%
+  const rawVisibility = Math.min(100.0, Math.max(1.0, baseVisibility + earnedVisibility));
+  const displayVisibility = Math.min(100, Math.floor(rawVisibility));
 
   let subtitle = "Clear Signal";
-  if (rawVisibility >= 100) {
+  if (displayVisibility >= 100) {
     subtitle = "Clear Signal";
-  } else if (rawVisibility >= 67) {
+  } else if (displayVisibility >= 67) {
     subtitle = "Mild Foggy";
-  } else if (rawVisibility >= 34) {
+  } else if (displayVisibility >= 34) {
     subtitle = "Mid Foggy";
   } else {
     subtitle = "Intense Foggy";
@@ -130,7 +140,7 @@ function getVisibilityMetrics() {
     displayVisibility,
     subtitle,
     effectiveFogCount,
-    fogCoverageRatio: (100 - rawVisibility) / 100
+    fogCoverageRatio: Math.max(0, (100 - displayVisibility) / 100)
   };
 }
 
@@ -482,6 +492,24 @@ function initBrainConstrictionState() {
   updateBrainStatusText();
 }
 
+const FRICTION_TO_CATEGORY = {
+  'mindless_scrolling': 'dopamine',
+  'task_paralysis': 'overwhelm',
+  'low_lethargy': 'charisma'
+};
+
+function updateSelectedDeckUI(categoryKey) {
+  if (!categoryKey) return;
+  document.querySelectorAll('#screen-dashboard .deck-item').forEach(d => {
+    if (d.getAttribute('data-category') === categoryKey) {
+      d.classList.add('selected');
+    } else {
+      d.classList.remove('selected');
+    }
+  });
+  updateStartScreenHeading(categoryKey);
+}
+
 function toggleFrictionSelection(el, frictionKey) {
   if (window.activeSelectedFrictions.has(frictionKey)) {
     window.activeSelectedFrictions.delete(frictionKey);
@@ -489,17 +517,30 @@ function toggleFrictionSelection(el, frictionKey) {
     window.activeSelectedFrictions.add(frictionKey);
   }
 
+  // Reset task completion credits for the new friction session
+  const today = getLocalDateString();
+  localStorage.setItem('nudge_tasks_credit_date', today);
+  localStorage.setItem('nudge_tasks_credit', '0');
+
   const count = window.activeSelectedFrictions.size;
   brainConstrictionRatio = count === 0 ? 0.0 : (count === 1 ? 0.33 : (count === 2 ? 0.66 : 1.0));
 
   localStorage.setItem('nudge_brain_constriction', brainConstrictionRatio.toFixed(2));
   localStorage.setItem('nudge_selected_frictions', JSON.stringify(Array.from(window.activeSelectedFrictions)));
 
+  // Automatically update active category and deck selection based on selected friction
+  const activeArr = Array.from(window.activeSelectedFrictions);
+  const latestFriction = activeArr[activeArr.length - 1] || frictionKey;
+  if (FRICTION_TO_CATEGORY[latestFriction]) {
+    selectedCategory = FRICTION_TO_CATEGORY[latestFriction];
+    isPremiumSelected = (selectedCategory === 'dopamine' || selectedCategory === 'overwhelm');
+    updateSelectedDeckUI(selectedCategory);
+  }
+
   syncNeuraFrictions();
   syncFrictionChipsUI();
   updateBrainStatusText();
 }
-
 function syncFrictionChipsUI() {
   document.querySelectorAll('.friction-chip').forEach(chip => {
     const key = chip.getAttribute('data-friction');
