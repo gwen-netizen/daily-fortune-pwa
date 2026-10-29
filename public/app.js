@@ -1299,13 +1299,16 @@ function startBackgroundInterceptMonitor() {
       const currentHours = now.getHours();
       const currentMinutes = now.getMinutes();
       const currentTimeStr = `${String(currentHours).padStart(2, '0')}:${String(currentMinutes).padStart(2, '0')}`;
+      
       const presets = getStoredPresetIntercepts();
+      const customs = JSON.parse(localStorage.getItem('nudge_custom_intercepts') || '[]');
+      const allIntercepts = [...presets, ...customs];
 
-      presets.forEach(p => {
+      allIntercepts.forEach(p => {
         if (p.enabled && p.time === currentTimeStr) {
           const activeScreen = document.querySelector('.screen.active');
           if (activeScreen && activeScreen.id !== 'screen-countdown') {
-            selectedCategory = mapDeckNameToCategory(p.deck);
+            selectedCategory = mapDeckNameToCategory(p.deck || 'The Anti-Overwhelm Deck');
             updateStartScreenHeading(selectedCategory);
             switchScreen('screen-trigger', true);
           }
@@ -1313,6 +1316,24 @@ function startBackgroundInterceptMonitor() {
       });
     } catch (err) {}
   }, 15000);
+}
+
+/* ========================================================
+   WEB PUSH NOTIFICATION & SERVICE WORKER RECEIVER
+======================================================== */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    if (event.data && event.data.action === 'open_referral_modal') {
+      openReferralModal();
+    } else if (event.data && event.data.action === 'trigger_reset_intercept') {
+      const targetDeck = event.data.deck || 'The Anti-Overwhelm Deck';
+      if (typeof mapDeckNameToCategory === 'function') {
+        selectedCategory = mapDeckNameToCategory(targetDeck);
+        updateStartScreenHeading(selectedCategory);
+      }
+      switchScreen('screen-trigger', true);
+    }
+  });
 }
 
 async function shareReferralLink() {
