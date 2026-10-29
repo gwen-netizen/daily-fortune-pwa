@@ -5,6 +5,7 @@
   "main": "app.js",
   "dependencies": {
     "stripe": "^14.24.0",
-    "@supabase/supabase-js": "^2.39.0"
+    "@supabase/supabase-js": "^2.39.0",
+    "web-push": "^3.6.7"
   }
 }
