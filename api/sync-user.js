@@ -56,6 +56,26 @@ module.exports = async function handler(req, res) {
     return { profile, tableName };
   }
 
+  // Cross-table query helper: checks user_profiles, then falls back to profiles by referral_code
+  async function queryProfileByRefCode(refCode) {
+    let { data } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('referral_code', refCode)
+      .limit(1);
+
+    if (!data || data.length === 0) {
+      let { data: pData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('referral_code', refCode)
+        .limit(1);
+      if (pData && pData.length > 0) data = pData;
+    }
+
+    return data && data.length > 0 ? data[0] : null;
+  }
+  
   const { email, action, clientDate } = (req.method === 'POST') ? req.body : req.query;
 
   if (!email) {
@@ -124,6 +144,50 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ success: true, profile });
     }
 
+   // 2b. ACTION: CLAIM REFERRAL REWARD (48-Hour Pass)
+    if (action === 'claim_referral_reward') {
+      let { profile: existing, tableName } = await queryUserProfile(cleanEmail);
+      const targetTable = tableName || 'user_profiles';
+
+      const { data: pendingRewards } = await supabase
+        .from('referrals')
+        .select('id')
+        .ilike('referrer_email', cleanEmail)
+        .eq('status', 'completed');
+
+      if (!pendingRewards || pendingRewards.length === 0) {
+        return res.status(400).json({
+          error: "No unlocked referral passes ready to claim yet. Make sure your friend completed at least 1 task!"
+        });
+      }
+
+      const now = new Date();
+      let baseTime = now;
+
+      if (existing?.pass_expires_at && new Date(existing.pass_expires_at) > now) {
+        baseTime = new Date(existing.pass_expires_at);
+      }
+
+      const newExpiry = new Date(baseTime.getTime() + 48 * 60 * 60 * 1000).toISOString();
+
+      await supabase
+        .from(targetTable)
+        .update({ pass_expires_at: newExpiry })
+        .eq('email', cleanEmail);
+
+      const rewardIds = pendingRewards.map(r => r.id);
+      await supabase
+        .from('referrals')
+        .update({ status: 'claimed', claimed_at: now.toISOString() })
+        .in('id', rewardIds);
+
+      return res.status(200).json({
+        success: true,
+        message: "48-hour pass activated!",
+        passExpiresAt: newExpiry
+      });
+    }
+   
     // 3. GET User Profile
     if (req.method === 'GET' || action === 'get_profile') {
       let { profile, tableName } = await queryUserProfile(cleanEmail);
@@ -153,9 +217,43 @@ module.exports = async function handler(req, res) {
     }
 
     // 4. POST User Progress Update
+    // 4. POST User Progress Update
     if (req.method === 'POST') {
-      const { total_wins, focus_reclaimed, daily_clicks } = req.body;
+      const { total_wins, focus_reclaimed, daily_clicks, referralCodeInput } = req.body;
       const { profile: existing, tableName } = await queryUserProfile(cleanEmail);
+
+      // --- LINK REFEREE TO REFERRER IF CODE PROVIDED ---
+      if (referralCodeInput) {
+        const cleanCode = referralCodeInput.trim().toUpperCase();
+        const referrerProfile = await queryProfileByRefCode(cleanCode);
+
+        if (referrerProfile && referrerProfile.email !== cleanEmail) {
+          const { data: existingRef } = await supabase
+            .from('referrals')
+            .select('id')
+            .ilike('referee_email', cleanEmail)
+            .limit(1);
+
+          if (!existingRef || existingRef.length === 0) {
+            await supabase.from('referrals').insert([
+              {
+                referrer_email: referrerProfile.email,
+                referee_email: cleanEmail,
+                status: 'pending'
+              }
+            ]);
+          }
+        }
+      }
+
+      // --- UPGRADE REFERRAL STATUS IF REFEREE COMPLETED 1ST TASK ---
+      if (parseInt(total_wins, 10) >= 1) {
+        await supabase
+          .from('referrals')
+          .update({ status: 'completed' })
+          .ilike('referee_email', cleanEmail)
+          .eq('status', 'pending');
+      }
 
       const targetTable = tableName || 'user_profiles';
       const upsertPayload = {
