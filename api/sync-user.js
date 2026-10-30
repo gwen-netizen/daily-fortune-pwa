@@ -187,6 +187,27 @@ module.exports = async function handler(req, res) {
         passExpiresAt: newExpiry
       });
     }
+
+   // 2c. ACTION: CHECK REFERRAL ELIGIBILITY
+    if (action === 'check_referral_eligibility') {
+      const { data: completedList } = await supabase
+        .from('referrals')
+        .select('id')
+        .ilike('referrer_email', cleanEmail)
+        .eq('status', 'completed');
+
+      const { data: allHelped } = await supabase
+        .from('referrals')
+        .select('id')
+        .ilike('referrer_email', cleanEmail)
+        .in('status', ['completed', 'claimed']);
+
+      return res.status(200).json({
+        success: true,
+        eligibleCount: completedList ? completedList.length : 0,
+        helpedCount: allHelped ? allHelped.length : 0
+      });
+    }
    
     // 3. GET User Profile
     if (req.method === 'GET' || action === 'get_profile') {
