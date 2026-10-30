@@ -779,6 +779,12 @@ function triggerVictoryPhase(minutesEarned) {
   const victoryTitle = document.getElementById('victory-title-text');
   const victoryPoints = document.getElementById('victory-points-reclaimed-badge');
   const noticeEl = document.getElementById('victory-unwind-notice');
+  const validationCopyEl = document.getElementById('victory-validation-copy');
+
+  // Dynamically populate Screen 6 with the task's affirmation
+  if (validationCopyEl && currentActiveTask && currentActiveTask.affirmation) {
+    validationCopyEl.innerText = currentActiveTask.affirmation;
+  }
 
   if (isOverwhelm && overwhelmCurrentStep >= 4) {
     totalWinsCount += 1;
