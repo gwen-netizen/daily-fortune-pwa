@@ -1062,17 +1062,10 @@ function updatePaywallPillBadge() {
   const pill = document.getElementById('paywall-pill-badge');
   if (!pill) return;
   const hasAccess = isUserPremiumOrPass();
-  if (hasAccess) {
-    pill.innerText = "UNLIMITED ACCESS UNLOCKED";
-    pill.style.background = "rgba(194, 243, 221, 0.15)";
-    pill.style.color = "var(--accent-safe)";
-    pill.style.borderColor = "rgba(194, 243, 221, 0.35)";
-  } else {
-    pill.innerText = "GET UNLIMITED ACCESS";
-    pill.style.background = "rgba(255, 93, 93, 0.15)";
-    pill.style.color = "var(--accent-coral)";
-    pill.style.borderColor = "rgba(255, 93, 93, 0.35)";
-  }
+  pill.innerText = hasAccess ? "UNLIMITED ACCESS UNLOCKED" : "GET UNLIMITED ACCESS";
+  pill.style.background = "rgba(255, 255, 255, 0.08)";
+  pill.style.color = "#FFFFFF";
+  pill.style.borderColor = "rgba(255, 255, 255, 0.22)";
 }
 
 function openPaywallModal() {
