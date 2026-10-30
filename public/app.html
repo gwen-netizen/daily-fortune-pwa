@@ -269,8 +269,7 @@
 
       <!-- ACTION BUTTON -->
       <div style="width: 100%;">
-        <<button class="btn-primary" onclick="startTriggerPhase()" style="min-height: 50px; height: 50px;">Open Circuit Breaker &rarr;</button>
-      </div>
+       <button class="btn-primary" onclick="startTriggerPhase()" style="min-height: 50px; height: 50px;">Open Circuit Breaker &rarr;</button>
 
       <!-- BOTTOM ROW UTILITY DOCK -->
       <div class="bottom-utility-dock">
@@ -483,8 +482,9 @@
 <!-- MODAL 4: PAYWALL / SUBSCRIPTION SHEET -->
     <div id="paywall-overlay" class="paywall-modal">
       <div class="paywall-sheet">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
           <span id="paywall-pill-badge" class="badge">GET UNLIMITED ACCESS</span>
+          <button type="button" aria-label="Close" onclick="closePaywall()" style="background: none; border: none; font-size: 24px; color: var(--text-muted); cursor: pointer; padding: 0 4px; line-height: 1;">&times;</button>
         </div>
         <h2 class="title-large" style="font-size: 26px; margin-bottom: 20px; color: var(--accent-gold); font-weight: 800;">Get Unlimited Premium Access</h2>
         
