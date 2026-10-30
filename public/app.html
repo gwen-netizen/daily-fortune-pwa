@@ -408,27 +408,34 @@
           <span class="badge">REFERRAL REWARD</span>
           <button style="background: none; border: none; font-size: 22px; color: var(--text-muted); cursor: pointer;" onclick="closeModal('referral-reward-modal')">&times;</button>
         </div>
-        <h3 style="font-size: 17px; font-weight: 800; color: var(--text-primary); margin-bottom: 4px;">Help a friend. Get 48 hours free unlimited.</h3>
+       <h3 style="font-size: 18px; font-weight: 800; color: var(--accent-gold); margin-bottom: 4px;">Get 48 Hours Free Unlimited</h3>
         <p class="body-text" style="margin-bottom: 14px;">
-          Send your invite link to a friend. Once they complete their first 120s task win, your account instantly unlocks or resets to a full 48 hours of unlimited access.
+          Send your invite link to a friend. Once they complete their first 120s task win, your account instantly unlocks to a full 48 hours of unlimited access.
         </p>
 
+        <!-- REFERRAL CODE DISPLAY WITH ONE-TOUCH COPY -->
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: rgba(13, 27, 44, 0.65); border: 1.5px dashed var(--card-border); border-radius: 12px; margin-bottom: 14px;">
           <div>
             <div style="font-family: var(--font-mono); font-size: 9.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Your Referral Code</div>
             <div id="user-referral-code-display" style="font-family: var(--font-mono); font-size: 17px; font-weight: 700; color: var(--text-primary); letter-spacing: 1.5px;">120R-...</div>
           </div>
-          <div id="referral-completed-count" style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--accent-safe); background: rgba(194, 243, 221, 0.15); padding: 4px 8px; border-radius: 6px;">0 Friends Helped</div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" id="btn-copy-ref-code" onclick="copyReferralCode()" style="background: rgba(243, 197, 71, 0.16); border: 1px solid var(--accent-gold); color: var(--accent-gold); font-family: var(--font-mono); font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease;">
+              📋 Copy
+            </button>
+            <div id="referral-completed-count" style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--accent-safe); background: rgba(194, 243, 221, 0.15); padding: 4px 8px; border-radius: 6px;">0 Helped</div>
+          </div>
         </div>
 
-        <button class="btn-primary" id="btn-claim-referral-pass" onclick="checkAndClaimReferralReward()" style="background: var(--accent-safe); color: #08111f; margin-bottom: 8px;">
-          ⚡ Claim Unlocked 48h Pass
-        </button>
-
-        <button class="btn-secondary" onclick="shareReferralLink()">
+        <!-- 1. SHARE INVITE LINK (NOW ON TOP WITH WARM GOLD BACKGROUND) -->
+        <button class="btn-primary" onclick="shareReferralLink()" style="background: var(--accent-gold); color: #08111f; font-weight: 800; margin-bottom: 10px;">
           📤 Share Invite Link &rarr;
         </button>
-      </div>
+
+        <!-- 2. CLAIM FREE PASS (SWAPPED BELOW, DYNAMIC COLOR) -->
+        <button class="btn-secondary" id="btn-claim-referral-pass" onclick="checkAndClaimReferralReward()" style="background: rgba(194, 243, 221, 0.12); color: var(--accent-safe); border: 1px solid rgba(194, 243, 221, 0.35); font-weight: 700;">
+          ⚡ Claim Free Pass
+        </button>
     </div>
     <!-- MODAL 3: PROFILE DRAWER -->
     <div id="profile-drawer-modal" class="modal-backdrop">
