@@ -1106,36 +1106,69 @@ function openReferralModal() {
   }
 }
 
-// One-Touch Copy for Referral Code
-async function copyReferralCode() {
-  const refCode = currentUserProfile?.referral_code || localStorage.getItem('nudge_cached_ref_code') || '120R-SYNC';
+// Safari & iOS-Compatible One-Touch Copy
+function copyReferralCode() {
+  const codeEl = document.getElementById('user-referral-code-display');
+  let refCode = currentUserProfile?.referral_code || '';
+  
+  if (!refCode || refCode.includes('...')) {
+    refCode = codeEl ? codeEl.innerText.trim() : '120R-SYNC';
+  }
+
   const copyBtn = document.getElementById('btn-copy-ref-code');
 
-  try {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      await navigator.clipboard.writeText(refCode);
-    } else {
-      const tempInput = document.createElement('input');
-      tempInput.value = refCode;
-      document.body.appendChild(tempInput);
-      tempInput.select();
-      document.execCommand('copy');
-      document.body.removeChild(tempInput);
-    }
+  function showSuccess() {
+    if (!copyBtn) return;
+    copyBtn.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>`;
+    copyBtn.style.borderColor = "#22c55e";
+    copyBtn.style.background = "rgba(34, 197, 94, 0.18)";
 
-    if (copyBtn) {
-      copyBtn.innerText = "✅ Copied!";
-      copyBtn.style.background = "var(--accent-gold)";
-      copyBtn.style.color = "#08111f";
-      setTimeout(() => {
-        copyBtn.innerText = "📋 Copy";
-        copyBtn.style.background = "rgba(243, 197, 71, 0.16)";
-        copyBtn.style.color = "var(--accent-gold)";
-      }, 2000);
+    setTimeout(() => {
+      copyBtn.innerHTML = `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>`;
+      copyBtn.style.borderColor = "var(--accent-gold)";
+      copyBtn.style.background = "rgba(243, 197, 71, 0.16)";
+    }, 2000);
+  }
+
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(refCode).then(showSuccess).catch(() => {
+      fallbackCopyText(refCode, showSuccess);
+    });
+  } else {
+    fallbackCopyText(refCode, showSuccess);
+  }
+}
+
+function fallbackCopyText(text, onSuccess) {
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.position = 'fixed';
+  textarea.style.top = '0';
+  textarea.style.left = '0';
+  textarea.style.opacity = '0';
+  textarea.setAttribute('readonly', '');
+  document.body.appendChild(textarea);
+
+  textarea.focus();
+  textarea.select();
+  textarea.setSelectionRange(0, textarea.value.length);
+
+  try {
+    const successful = document.execCommand('copy');
+    if (successful && typeof onSuccess === 'function') {
+      onSuccess();
     }
   } catch (err) {
-    prompt("Copy referral code:", refCode);
+    prompt("Copy referral code:", text);
   }
+  document.body.removeChild(textarea);
 }
 
 // Check if user has unlocked passes ready to claim
