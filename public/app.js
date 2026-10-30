@@ -1097,7 +1097,80 @@ function openInterceptsDrawer() {
 
 function openReferralModal() {
   const modal = document.getElementById('referral-reward-modal');
-  if (modal) modal.classList.add('active');
+  if (modal) {
+    modal.classList.add('active');
+    const refCode = currentUserProfile?.referral_code || localStorage.getItem('nudge_cached_ref_code') || '120R-SYNC';
+    const refCodeEl = document.getElementById('user-referral-code-display');
+    if (refCodeEl) refCodeEl.innerText = refCode;
+    checkReferralEligibility();
+  }
+}
+
+// One-Touch Copy for Referral Code
+async function copyReferralCode() {
+  const refCode = currentUserProfile?.referral_code || localStorage.getItem('nudge_cached_ref_code') || '120R-SYNC';
+  const copyBtn = document.getElementById('btn-copy-ref-code');
+
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(refCode);
+    } else {
+      const tempInput = document.createElement('input');
+      tempInput.value = refCode;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempInput);
+    }
+
+    if (copyBtn) {
+      copyBtn.innerText = "✅ Copied!";
+      copyBtn.style.background = "var(--accent-gold)";
+      copyBtn.style.color = "#08111f";
+      setTimeout(() => {
+        copyBtn.innerText = "📋 Copy";
+        copyBtn.style.background = "rgba(243, 197, 71, 0.16)";
+        copyBtn.style.color = "var(--accent-gold)";
+      }, 2000);
+    }
+  } catch (err) {
+    prompt("Copy referral code:", refCode);
+  }
+}
+
+// Check if user has unlocked passes ready to claim
+async function checkReferralEligibility() {
+  const userEmail = resolveCurrentAccountEmail();
+  const claimBtn = document.getElementById('btn-claim-referral-pass');
+  const countEl = document.getElementById('referral-completed-count');
+  if (!userEmail || !claimBtn) return;
+
+  try {
+    const res = await fetch(`/api/sync-user?email=${encodeURIComponent(userEmail)}&action=check_referral_eligibility`);
+    if (res.ok) {
+      const data = await res.json();
+      const eligibleCount = data.eligibleCount || 0;
+      const helpedCount = data.helpedCount || 0;
+
+      if (countEl) countEl.innerText = `${helpedCount} Helped`;
+
+      if (eligibleCount > 0) {
+        // User is eligible: Change CTA background to Warm Gold
+        claimBtn.style.background = "var(--accent-gold)";
+        claimBtn.style.color = "#08111f";
+        claimBtn.style.border = "1px solid var(--accent-gold)";
+        claimBtn.style.fontWeight = "800";
+        claimBtn.innerText = `⚡ Claim Unlocked Free Pass (${eligibleCount} Ready!)`;
+      } else {
+        // Retain original default color
+        claimBtn.style.background = "rgba(194, 243, 221, 0.12)";
+        claimBtn.style.color = "var(--accent-safe)";
+        claimBtn.style.border = "1px solid rgba(194, 243, 221, 0.35)";
+        claimBtn.style.fontWeight = "700";
+        claimBtn.innerText = "⚡ Claim Free Pass";
+      }
+    }
+  } catch (e) {}
 }
 async function selectTierAndCheckout(el) {
   document.querySelectorAll('.tier-card').forEach(b => b.classList.remove('selected'));
@@ -1364,24 +1437,31 @@ if ('serviceWorker' in navigator) {
 }
 
 async function shareReferralLink() {
-  const refCode = currentUserProfile?.referral_code || '120R-SYNC';
+  const refCode = currentUserProfile?.referral_code || localStorage.getItem('nudge_cached_ref_code') || '120R-SYNC';
   const shareUrl = `${window.location.origin}/?ref=${encodeURIComponent(refCode)}`;
-  const shareText = 'A physical 2-minute reset for when you hit a mental wall today:';
+  const shareText = `Use my code "${refCode}" for a free 48h unlimited reset pass on 120Reset:`;
 
   if (navigator.share) {
     try {
-      await navigator.share({ title: '120Reset', text: shareText, url: shareUrl });
-    } catch (e) {}
-  } else {
-    try {
-      await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
-      alert("📋 Invite link copied to clipboard!");
-    } catch (err) {
-      prompt("Copy invite link:", shareUrl);
+      await navigator.share({
+        title: '120Reset 48h Pass',
+        text: shareText,
+        url: shareUrl
+      });
+      return;
+    } catch (e) {
+      if (e.name === 'AbortError') return;
     }
   }
-}
 
+  // Fallback if system share is not supported (Desktop/Web)
+  try {
+    await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
+    alert("📋 Invite link copied! Paste it in WhatsApp, Telegram, or any chat app.");
+  } catch (err) {
+    prompt("Copy and share your invite link:", `${shareText} ${shareUrl}`);
+  }
+}
 async function checkAndClaimReferralReward() {
   const userEmail = resolveCurrentAccountEmail();
   if (!userEmail) {
