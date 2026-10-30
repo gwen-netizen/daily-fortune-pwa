@@ -1180,12 +1180,14 @@ async function checkReferralEligibility() {
 
       if (countEl) countEl.innerText = `${helpedCount} Helped`;
 
-      if (eligibleCount > 0) {
+     if (eligibleCount > 0) {
         // User is eligible: Change CTA background to Warm Gold
         claimBtn.style.background = "var(--accent-gold)";
         claimBtn.style.color = "#08111f";
         claimBtn.style.border = "1px solid var(--accent-gold)";
         claimBtn.style.fontWeight = "800";
+        claimBtn.style.height = "50px";
+        claimBtn.style.minHeight = "50px";
         claimBtn.innerText = `⚡ Claim Unlocked Free Pass (${eligibleCount} Ready!)`;
       } else {
         // Retain original default color
@@ -1193,6 +1195,8 @@ async function checkReferralEligibility() {
         claimBtn.style.color = "var(--accent-safe)";
         claimBtn.style.border = "1px solid rgba(194, 243, 221, 0.35)";
         claimBtn.style.fontWeight = "700";
+        claimBtn.style.height = "50px";
+        claimBtn.style.minHeight = "50px";
         claimBtn.innerText = "⚡ Claim Free Pass";
       }
     }
